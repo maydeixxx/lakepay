@@ -7,6 +7,6 @@ spring:
     username: postgres
     password: admin
     driver-class-name: org.postgresql.Driver
-#  jpa:
-#    hibernate:
-#      ddl-auto:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
