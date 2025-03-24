@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Map;
@@ -31,8 +33,13 @@ public class UserController {
 
     @PostMapping("/save_user")
     public ResponseEntity<Void> saveUser(@RequestBody UserDTO userDTO) {
-        service.saveUser(mapper.userDTOToUser(userDTO));
-        return new ResponseEntity<>(HttpStatus.OK);
+        User userByTgId = service.findUserByTgId(userDTO.getTgId());
+        if (userByTgId != null) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "user already exists!");
+        } else {
+            service.saveUser(mapper.userDTOToUser(userDTO));
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
     }
 
     @PatchMapping("/update_user/{id}")

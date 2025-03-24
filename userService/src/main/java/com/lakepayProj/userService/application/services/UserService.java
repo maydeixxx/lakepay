@@ -53,6 +53,12 @@ public class UserService implements IUserService {
     }
 
     @Override
+    public User findUserByTgId(Long id) {
+        UserEntity userByTgId = repository.findUserByTgId(id);
+        return mapper.userEntityToUser(userByTgId);
+    }
+
+    @Override
     @Transactional
     public void deleteUserByID(Long id) {
         UserEntity userById = repository.findUserById(id);
