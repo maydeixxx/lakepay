@@ -4,6 +4,7 @@ import com.lakepayProj.userService.api.DTOs.UserDTO;
 import com.lakepayProj.userService.application.interfaces.mappers.IUserMapper;
 import com.lakepayProj.userService.application.services.UserService;
 import com.lakepayProj.userService.domain.model.User;
+import com.lakepayProj.userService.domain.valueObject.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,5 +39,27 @@ public class UserController {
     public ResponseEntity<Void> updatesUser(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
         service.updateUser(id, updates);
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @DeleteMapping("/delete_user/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        service.deleteUserByID(id);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @GetMapping("/user/{id}")
+    public ResponseEntity<UserDTO> findUserById(@PathVariable Long id) {
+        User userDom = service.findUserById(id);
+        UserDTO userDTO = mapper.userToUserDTO(userDom);
+        return new ResponseEntity<>(userDTO, HttpStatus.OK);
+    }
+
+    @GetMapping("/{role}")
+    public ResponseEntity<List<UserDTO>> findUsersByRole(@PathVariable Role role) {
+        List<User> usersByRole = service.findUsersByRole(role);
+        List<UserDTO> usersDTO = usersByRole.stream()
+                .map(mapper::userToUserDTO)
+                .toList();
+        return new ResponseEntity<>(usersDTO, HttpStatus.OK);
     }
 }

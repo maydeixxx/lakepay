@@ -1,6 +1,7 @@
 package com.lakepayProj.userService.application.interfaces.services;
 
 import com.lakepayProj.userService.domain.model.User;
+import com.lakepayProj.userService.domain.valueObject.Role;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -14,5 +15,5 @@ public interface IUserService {
     User findUserById(Long id);
     void deleteUserByID(Long id);
     void saveUser(User user);
-    User findUserByRole(String role);
+    List<User> findUsersByRole(Role role);
 }

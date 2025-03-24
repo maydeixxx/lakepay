@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -54,6 +53,7 @@ public class UserService implements IUserService {
     }
 
     @Override
+    @Transactional
     public void deleteUserByID(Long id) {
         UserEntity userById = repository.findUserById(id);
         repository.delete(userById);
@@ -65,7 +65,10 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public User findUserByRole(String role) {
-        return mapper.userEntityToUser(repository.findUserByRole(role));
+    public List<User> findUsersByRole(Role role) {
+        List<UserEntity> usersByRole = repository.findUsersByRole(role);
+        return usersByRole.stream()
+                .map(mapper::userEntityToUser)
+                .toList();
     }
 }
