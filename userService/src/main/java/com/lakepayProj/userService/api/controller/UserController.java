@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -30,6 +31,12 @@ public class UserController {
     @PostMapping("/save_user")
     public ResponseEntity<Void> saveUser(@RequestBody UserDTO userDTO) {
         service.saveUser(mapper.userDTOToUser(userDTO));
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PatchMapping("/update_user/{id}")
+    public ResponseEntity<Void> updatesUser(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
+        service.updateUser(id, updates);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }
