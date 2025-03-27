@@ -4,21 +4,18 @@ import com.lakepayProj.userService.api.DTOs.UserDTO;
 import com.lakepayProj.userService.domain.model.User;
 import com.lakepayProj.userService.infrastructure.UserEntity;
 import org.mapstruct.Mapper;
-import org.mapstruct.MappingConstants;
+import org.mapstruct.Mapping;
 
-@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
+@Mapper(componentModel = "spring")
 public interface IUserMapper {
     User userEntityToUser(UserEntity userEntity);
 
     UserEntity userToUserEntity(User user);
 
+    @Mapping(target = "tgId", ignore = true)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "balance", ignore = true)
     UserDTO userToUserDTO(User user);
 
-    //    @Mapping(target = "dateOfReg", source = "dateOfReg")
-//    @Mapping(target = "balance", source = "balance")
     User userDTOToUser(UserDTO userDTO);
-
-    UserEntity toEntity(UserDTO userEntityDto);
-
-    UserDTO toUserEntityDto(UserEntity userEntity);
 }
