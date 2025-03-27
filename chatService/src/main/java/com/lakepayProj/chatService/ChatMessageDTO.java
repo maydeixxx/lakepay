@@ -1,6 +1,5 @@
 package com.lakepayProj.chatService;
 
-import com.lakepayProj.chatService.enums.MessageType;
 import lombok.*;
 
 @Getter
@@ -8,9 +7,8 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ChatMessage {
+public class ChatMessageDTO {
 
-    private MessageType type;
     private String content;
     private String sender;
 

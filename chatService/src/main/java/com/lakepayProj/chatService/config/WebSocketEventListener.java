@@ -1,7 +1,6 @@
 package com.lakepayProj.chatService.config;
 
-import com.lakepayProj.chatService.ChatMessage;
-import com.lakepayProj.chatService.enums.MessageType;
+import com.lakepayProj.chatService.ChatMessageDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -24,8 +23,7 @@ public class WebSocketEventListener {
 
         if (username != null) {
             log.info("User disconnected: {}", username);
-            ChatMessage chatMessage = ChatMessage.builder()
-                    .type(MessageType.LEAVE)
+            ChatMessageDTO chatMessage = ChatMessageDTO.builder()
                     .sender(username)
                     .build();
             messageTemplate.convertAndSend("/topic/public", chatMessage);
