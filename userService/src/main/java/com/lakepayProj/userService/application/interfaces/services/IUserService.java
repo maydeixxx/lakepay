@@ -16,5 +16,7 @@ public interface IUserService {
     void deleteUserByID(Long id);
     void saveUser(User user);
     List<User> findUsersByRole(Role role);
-    public void updateChatId(Long tgId, Long chatId);
+    void updateChatId(Long tgId, Long chatId);
+    Long getChatIdByTgId(Long tgId);
+
 }
