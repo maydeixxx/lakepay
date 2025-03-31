@@ -77,4 +77,13 @@ public class UserService implements IUserService {
                 .map(mapper::userEntityToUser)
                 .toList();
     }
+
+    @Override
+    public void updateChatId(Long tgId, Long chatId) {
+        UserEntity userByTgId = repository.findUserByTgId(tgId);
+        if (userByTgId != null) {
+            User user = mapper.userEntityToUser(userByTgId);
+            user.setChatId(chatId);
+        }
+    }
 }

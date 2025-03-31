@@ -17,6 +17,7 @@ public class UserEntity {
     @Column(unique = true)
     private String userName;
     private Long tgId;
+    private Long chatId;
     private String urlPhoto;
     private LocalDate dateOfReg;
     private BigDecimal balance;

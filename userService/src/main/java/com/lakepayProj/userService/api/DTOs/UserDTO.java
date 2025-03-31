@@ -14,6 +14,7 @@ public class UserDTO {
     Long id;
     String userName;
     Long tgId;
+    Long chatId;
     String urlPhoto;
     LocalDate dateOfReg;
     BigDecimal balance;
