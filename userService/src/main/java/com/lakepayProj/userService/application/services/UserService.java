@@ -86,4 +86,10 @@ public class UserService implements IUserService {
             user.setChatId(chatId);
         }
     }
+
+    @Override
+    public Long getChatIdByTgId(Long tgId) {
+        UserEntity userByTgId = repository.findUserByTgId(tgId);
+        return userByTgId.getChatId();
+    }
 }
