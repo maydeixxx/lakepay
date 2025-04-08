@@ -1,0 +1,12 @@
+spring:
+  kafka:
+    bootstrap-servers: amaevalx:9092
+    consumer:
+      group-id: users
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  application:
+    name: notificationService
+server:
+  port: 9090

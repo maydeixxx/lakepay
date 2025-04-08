@@ -2,15 +2,19 @@ package com.lakepayProj.userService.api.controller;
 
 
 import com.lakepayProj.userService.application.interfaces.mappers.IUserMapper;
+import com.lakepayProj.userService.application.kafka.UserProducer;
 import com.lakepayProj.userService.application.services.UserService;
 import com.lakepayProj.userService.domain.model.User;
 import com.lakepayProj.userService.domain.valueObject.Role;
 import com.lakepayProj.userService.infrastructure.UserEntity;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.web.bind.annotation.*;
 
 import javax.crypto.Mac;
@@ -21,16 +25,19 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+@Slf4j
 @RestController
 @RequestMapping("/auth/telegram")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class AuthController {
     private final UserService service;
     private final IUserMapper mapper;
-
+    private final ConcurrentHashMap<Long, Long> hash= new ConcurrentHashMap<>();
+    private final UserProducer producer;
     private final String tgBotToken = "7906616449:AAGLMQphhjOTHCgyAW9d9xlV94vN-Deai54";
 
     @GetMapping
@@ -84,13 +91,24 @@ public class AuthController {
         }
     }
 
+    @KafkaListener(topics = "userTgChatId", groupId = "user-notifications")
+    public void getTgChatId(ConsumerRecord<String, String> record) {
+        hash.put(Long.valueOf(record.key()), Long.valueOf(record.value()));
+    }
+
     @PostMapping("/token")
     public String authenticate(@RequestBody Map<String, Object> telegramData) {
         System.out.println("Полученные данные: " + telegramData);
+
         if (telegramDataIsValid(telegramData)) {
             Long tgId = Long.valueOf((Integer) telegramData.get("id"));
+
             String userName = (String) telegramData.get("username");
             String urlPhoto = (String) telegramData.get("photo_url");
+            Long chatId = hash.get(tgId);
+            if (chatId == null) {
+                return "Chat id is null";
+            }
 
             User user = service.findUserByTgId(tgId);
             if (user != null) {
@@ -98,6 +116,7 @@ public class AuthController {
             } else {
                 UserEntity createUser = new UserEntity();
                 createUser.setTgId(tgId);
+                createUser.setChatId(chatId);
                 createUser.setUserName(userName);
                 createUser.setUrlPhoto(urlPhoto);
                 createUser.setDateOfReg(LocalDate.now());
@@ -106,6 +125,9 @@ public class AuthController {
 
                 User newUser = mapper.userEntityToUser(createUser);
                 service.saveUser(newUser);
+
+                producer.sendUser(newUser);
+
                 return "User logged in successfully!";
             }
         }
