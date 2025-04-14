@@ -12,6 +12,13 @@ spring:
           filters:
             - StripPrefix=1
 
+        - id: adService
+          uri: lb://adService
+          predicates:
+            - Path=/adService/**
+          filters:
+            - StripPrefix=1
+
 server:
   port: 8990
 
