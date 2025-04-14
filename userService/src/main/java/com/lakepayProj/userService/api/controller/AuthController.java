@@ -24,6 +24,7 @@ import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -122,6 +123,7 @@ public class AuthController {
                 createUser.setDateOfReg(LocalDate.now());
                 createUser.setBalance(new BigDecimal(0));
                 createUser.setRole(Role.User);
+                createUser.setSubscriptions(List.of());
 
                 User newUser = mapper.userEntityToUser(createUser);
                 service.saveUser(newUser);
