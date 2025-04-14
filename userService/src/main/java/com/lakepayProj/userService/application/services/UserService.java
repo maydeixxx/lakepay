@@ -41,6 +41,16 @@ public class UserService implements IUserService {
                 case "urlPhoto" -> userById.setUrlPhoto((String) value);
                 case "balance" -> userById.setBalance(BigDecimal.valueOf((Double) value));
                 case "role" -> userById.setRole(Role.valueOf(value.toString()));
+                case "adSub" -> {
+                    List<String> subscriptions = userById.getSubscriptions();
+                    subscriptions.addLast(value.toString());
+                    userById.setSubscriptions(subscriptions);
+                }
+                case "delSub" -> {
+                    List<String> subscriptions = userById.getSubscriptions();
+                    subscriptions.removeIf(category -> category.equals(value.toString()));
+                    userById.setSubscriptions(subscriptions);
+                }
             }
         });
         repository.save(userById);

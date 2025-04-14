@@ -60,7 +60,7 @@ public class TelegramService extends TelegramLongPollingBot {
                 case "/start" ->
                         sendMessage.setText("Привет! Я LakePayBot, выбери команду чтобы дальше взаимодействовать со мной\n");
                 case "/reg" ->
-                        sendMessage.setText("Вот твоя ссылка на регистрацию! -> https://right-terminally-humpback.ngrok-free.app/auth/telegram");
+                        sendMessage.setText("Вот твоя ссылка на регистрацию! -> https://right-terminally-humpback.ngrok-free.app/userService/auth/telegram");
                 case "/help" -> sendMessage.setText("Вот список команд:\n/start\n/reg\n/help\n/info");
                 case "/info" ->
                         sendMessage.setText("Я бот биржи аккаунтов LakePay!\nЧерез меня можно зарегистрироваться на сайте и получать информацию на новых объявлениях по аккаунтам!");

@@ -10,9 +10,18 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create
+
   kafka:
     bootstrap-servers: amaevalx:9092
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+  application:
+    name: userService
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
 
