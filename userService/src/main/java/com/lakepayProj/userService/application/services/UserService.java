@@ -95,18 +95,21 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public void updateChatId(Long tgId, Long chatId) {
+    public void subscribe(Long tgId, String category) {
         UserEntity userByTgId = repository.findUserByTgId(tgId);
-        if (userByTgId != null) {
-            User user = mapper.userEntityToUser(userByTgId);
-            user.setChatId(chatId);
-        }
+        List<String> subscriptions = userByTgId.getSubscriptions();
+        subscriptions.addLast(category);
+        userByTgId.setSubscriptions(subscriptions);
+        repository.saveAndFlush(userByTgId);
     }
 
     @Override
-    public Long getChatIdByTgId(Long tgId) {
+    public void unSubscribe(Long tgId, String category) {
         UserEntity userByTgId = repository.findUserByTgId(tgId);
-        return userByTgId.getChatId();
+        List<String> subscriptions = userByTgId.getSubscriptions();
+        subscriptions.removeIf(category1 -> category1.equals(category));
+        userByTgId.setSubscriptions(subscriptions);
+        repository.saveAndFlush(userByTgId);
     }
 
     /**
