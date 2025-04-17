@@ -2,6 +2,7 @@ package com.LakePayProj.adService.api.DTOs;
 
 import lombok.Value;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 /**
@@ -13,6 +14,7 @@ public class AdDto {
     String title;
     String body;
     String category;
+    BigDecimal price;
     Integer countOfViews;
     Integer quantity;
     LocalDate dateOfPush;

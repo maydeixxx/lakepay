@@ -12,4 +12,12 @@ public class TelegramProducer {
     public void sendTgAndChatId(Long tgId, Long chatId) {
         template.send("userTgChatId", String.valueOf(tgId), String.valueOf(chatId));
     }
+
+    public void sendCategoryToSubscribe(Long tgId, String category) {
+        template.send("ads-sub", 0, String.valueOf(tgId), category);
+    }
+
+    public void sendToUNSUB(Long tgId, String category) {
+        template.send("ads-sub", 1, String.valueOf(tgId), category);
+    }
 }
