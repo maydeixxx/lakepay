@@ -3,7 +3,6 @@ package com.LakePayProj.notificationService.tgBot;
 import com.LakePayProj.notificationService.kafka.TelegramProducer;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;

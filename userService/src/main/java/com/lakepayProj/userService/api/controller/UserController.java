@@ -68,4 +68,13 @@ public class UserController {
                 .toList();
         return new ResponseEntity<>(usersDTO, HttpStatus.OK);
     }
+
+    @GetMapping("/category/{category}")
+    public ResponseEntity<List<UserDTO>> findUserBySubs(@PathVariable String category) {
+        List<User> userBySubs = service.findUserBySubs(category);
+        List<UserDTO> list = userBySubs.stream()
+                .map(mapper::userToUserDTO)
+                .toList();
+        return new ResponseEntity<>(list, HttpStatus.OK);
+    }
 }

@@ -105,4 +105,13 @@ public class UserService implements IUserService {
         userByTgId.setSubscriptions(subscriptions);
         repository.saveAndFlush(userByTgId);
     }
+
+    @Override
+    public List<User> findUserBySubs(String category) {
+        List<UserEntity> all = repository.findAll();
+        return all.stream()
+                .filter(userEntity -> userEntity.getSubscriptions().stream().anyMatch(category1 -> category1.equals(category)))
+                .map(mapper ::userEntityToUser)
+                .toList();
+    }
 }

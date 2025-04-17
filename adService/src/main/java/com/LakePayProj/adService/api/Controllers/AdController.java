@@ -3,6 +3,7 @@ package com.LakePayProj.adService.api.Controllers;
 import com.LakePayProj.adService.api.DTOs.AdDto;
 import com.LakePayProj.adService.application.interfaces.mappers.IAdMapper;
 import com.LakePayProj.adService.application.services.AdService;
+import com.LakePayProj.adService.application.services.kafka.AdProducer;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,10 +17,12 @@ import java.util.List;
 public class AdController {
     private final AdService service;
     private final IAdMapper mapper;
+    private final AdProducer producer;
 
     @PostMapping("/save_ad")
     public ResponseEntity<Void> saveAd(@RequestBody AdDto adDto) {
         service.saveAd(mapper.adDtoToDomain(adDto));
+        producer.sendNewAd(adDto.getCategory(), adDto);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

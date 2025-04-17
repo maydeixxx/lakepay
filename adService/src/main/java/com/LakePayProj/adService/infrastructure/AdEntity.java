@@ -3,6 +3,7 @@ package com.LakePayProj.adService.infrastructure;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
@@ -15,6 +16,7 @@ public class AdEntity {
     private String title;
     private String body;
     private String category;
+    private BigDecimal price;
     private Integer countOfViews;
     private Integer quantity;
     private LocalDate dateOfPush;

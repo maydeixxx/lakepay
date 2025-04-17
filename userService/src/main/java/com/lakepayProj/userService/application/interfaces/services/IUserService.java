@@ -18,4 +18,5 @@ public interface IUserService {
     List<User> findUsersByRole(Role role);
     void subscribe(Long tgId, String category);
     void unSubscribe(Long tgId, String category);
+    List<User> findUserBySubs(String category);
 }

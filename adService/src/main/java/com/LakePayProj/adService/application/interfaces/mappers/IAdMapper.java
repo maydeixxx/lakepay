@@ -14,6 +14,5 @@ public interface IAdMapper {
 
     Ad adDtoToDomain(AdDto adDto);
 
-    @Mapping(target = "id", ignore = true)
     AdDto adDomainToDto(Ad ad);
 }
