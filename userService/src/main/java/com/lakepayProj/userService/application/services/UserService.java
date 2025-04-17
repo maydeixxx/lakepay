@@ -143,4 +143,13 @@ public class UserService implements IUserService {
         var username = SecurityContextHolder.getContext().getAuthentication().getName();
         return getByUsername(username);
     }
+
+    @Override
+    public List<User> findUserBySubs(String category) {
+        List<UserEntity> all = repository.findAll();
+        return all.stream()
+                .filter(userEntity -> userEntity.getSubscriptions().stream().anyMatch(category1 -> category1.equals(category)))
+                .map(mapper ::userEntityToUser)
+                .toList();
+    }
 }
