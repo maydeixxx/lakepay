@@ -19,6 +19,7 @@ import java.util.Map;
 public class TelegramConsumer {
     private final TelegramService service;
     private final WebClient webClient;
+    private Long hashTgId;
 
     @KafkaListener(topics = "usersLog", groupId = "user-notifications")
     public void sendNewUser(ConsumerRecord<String, String> record) {
@@ -30,12 +31,94 @@ public class TelegramConsumer {
 
     public List<String> getSubScribedUsers(String category) {
         return webClient.get()
-                .uri("https://right-terminally-humpback.ngrok-free.app/userService/category/{category}", category)
+                .uri("https://quickly-resilient-planthopper.cloudpub.ru/userService/category/{category}", category)
                 .retrieve()
-                .bodyToFlux(new ParameterizedTypeReference<Map<String, Object>>() {})
+                .bodyToFlux(new ParameterizedTypeReference<Map<String, Object>>() {
+                })
                 .map(userMap -> String.valueOf(userMap.get("chatId")))
                 .collectList()
                 .block();
+    }
+
+    public List<String> getCategoriesByTgId(Long tgId) {
+        return webClient.get()
+                .uri("https://quickly-resilient-planthopper.cloudpub.ru/userService/categoriesById/{tgId}", tgId)
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<List<String>>() {
+                })
+                .block();
+    }
+
+    @KafkaListener(topics = "availableAds", groupId = "user-notifications")
+    public void saveTgId(ConsumerRecord<String, String> record) {
+        hashTgId = Long.valueOf(record.value());
+        getAdsByCategories();
+    }
+
+    public void getAdsByCategories() {
+        List<String> categoriesByTgId = getCategoriesByTgId(hashTgId);
+        StringBuilder adBuilder = new StringBuilder();
+        for (String cat : categoriesByTgId) {
+            List<Map<String, Object>> ads = (webClient.get()
+                    .uri("https://quickly-resilient-planthopper.cloudpub.ru/adService/category/{category}", cat)
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<List<Map<String, Object>>>() {
+                    })
+                    .block());
+
+            if (ads == null || ads.isEmpty()) {
+                continue;
+            }
+
+            adBuilder.append("\n*Объявление в категории:* ").append(cat).append("\n");
+            boolean hasActiveAds = false;
+
+            for (Map<String, Object> ad : ads) {
+                Boolean isSold = (Boolean) ad.getOrDefault("sold", false);
+                if (!isSold) {
+                    adBuilder.append(formatAdForTelegram(ad)).append("\n");
+                    hasActiveAds = true;
+                }
+            }
+
+            if (!hasActiveAds) {
+                adBuilder.append("Нет активных объявлений\n");
+            }
+        }
+        String finalMessage = adBuilder.toString().trim();
+        if (finalMessage.isEmpty()) {
+            service.sendMessage(String.valueOf(hashTgId), "В ваших подписках пока что нет " +
+                    "досупных объявлений");
+        } else {
+            service.sendMessage(String.valueOf(hashTgId), finalMessage);
+        }
+    }
+
+    private String formatAdForTelegram(Map<String, Object> ad) {
+        String price = ad.containsKey("price") && ad.get("price") != null ?
+                ad.get("price") + "₽" : "уточните у продавца";
+        boolean isSold = ad.containsKey("sold") && Boolean.TRUE.equals(ad.get("sold"));
+        String status = isSold ? "🔴 Продано" : "🟢 В продаже";
+
+        return String.format("""
+                        🎮 *Продаётся аккаунт %s!*
+                        🕒 *Информация:* %s часов
+                        👁 *Просмотров:* %s
+                        📅 *Дата публикации:* %s
+                        📦 *В наличии:* %s шт.
+                        💰 *Цена:* %s
+                        📌 *Категория:* %s
+                        %s
+                        """,
+                ad.getOrDefault("category", "не указана"),
+                ad.getOrDefault("body", "нет описания"),
+                ad.getOrDefault("countOfViews", 0),
+                ad.getOrDefault("dateOfPush", "не указана"),
+                ad.getOrDefault("quantity", 0),
+                price,
+                ad.getOrDefault("category", "не указана"),
+                status
+        );
     }
 
     @KafkaListener(topics = "ads", groupId = "ads-sub")

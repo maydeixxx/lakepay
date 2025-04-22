@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/")
@@ -54,5 +55,11 @@ public class AdController {
     public ResponseEntity<AdDto> findAdById(@PathVariable Long id) {
         AdDto adDto = mapper.adDomainToDto(service.findAdById(id));
         return new ResponseEntity<>(adDto, HttpStatus.OK);
+    }
+
+    @PatchMapping("update/{id}")
+    public ResponseEntity<Void> updateAd(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
+        service.updateAd(id, updates);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }

@@ -20,4 +20,8 @@ public class TelegramProducer {
     public void sendToUNSUB(Long tgId, String category) {
         template.send("ads-sub", 1, String.valueOf(tgId), category);
     }
+
+    public void availableAds(Long tgId) {
+        template.send("availableAds", String.valueOf(tgId));
+    }
 }

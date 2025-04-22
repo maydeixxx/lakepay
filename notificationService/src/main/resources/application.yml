@@ -3,7 +3,7 @@ server:
 
 spring:
   kafka:
-    bootstrap-servers: amaevalx:9092
+    bootstrap-servers: LAPTOP-Q49GS90R:9092
     consumer:
       group-id: users
       auto-offset-reset: earliest

@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 @AllArgsConstructor
@@ -23,6 +24,21 @@ public class AdService implements IAdService {
         return adsByCategory.stream()
                 .map(mapper::adEntityToAdDomain)
                 .toList();
+    }
+
+    @Override
+    public void updateAd(Long id, Map<String, Object> updates) {
+        AdEntity adById = repository.findAdById(id);
+        updates.forEach((key, value) -> {
+                switch (key) {
+                    case "title" -> adById.setTitle(String.valueOf(value));
+                    case "body" -> adById.setBody(String.valueOf(value));
+                    case "category" -> adById.setCategory(String.valueOf(value));
+                    case "quantity" -> adById.setQuantity((Integer) value);
+                    case "sold" -> adById.setSold((Boolean) value);
+                }
+        });
+        repository.saveAndFlush(adById);
     }
 
     @Override
