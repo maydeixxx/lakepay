@@ -46,7 +46,8 @@ public class TelegramService extends TelegramLongPollingBot {
                     new BotCommand("/info", "получить информацию про LakePay"),
                     new BotCommand("/categories", "список доступных категорий"),
                     new BotCommand("/subscribe", "подписка на категорию (выбор по кнопке)"),
-                    new BotCommand("/unsubscribe", "отписка от категории (выбор по кнопке)")
+                    new BotCommand("/unsubscribe", "отписка от категории (выбор по кнопке)"),
+                    new BotCommand("/availableAds", "доступные объявления")
             );
             this.execute(new SetMyCommands(commandList, new BotCommandScopeDefault(), null));
         } catch (TelegramApiException e) {
@@ -99,7 +100,7 @@ public class TelegramService extends TelegramLongPollingBot {
 
         switch (text) {
             case "/start" -> sendMessage.setText("Привет! Я LakePayBot, выбери команду для взаимодействия.");
-            case "/reg" -> sendMessage.setText("Вот твоя ссылка на регистрацию:\nhttps://right-terminally-humpback.ngrok-free.app/userService/auth/telegram");
+            case "/reg" -> sendMessage.setText("Вот твоя ссылка на регистрацию:\nhttps://quickly-resilient-planthopper.cloudpub.ru/userService/auth/telegram");
             case "/help" -> sendMessage.setText("Список команд:\n/start\n/reg\n/help\n/info\n/categories\n/subscribe\n/unsubscribe");
             case "/info" -> sendMessage.setText("Я бот биржи аккаунтов LakePay. Через меня можно зарегистрироваться и получать уведомления о новых объявлениях.");
             case "/categories" -> sendMessage.setText("Доступные категории:\n" + String.join("\n", categories));
@@ -110,6 +111,9 @@ public class TelegramService extends TelegramLongPollingBot {
             case "/unsubscribe" -> {
                 sendMessage.setText("Выберите категорию для отписки:");
                 sendMessage.setReplyMarkup(categoryButtons("/unsubscribe"));
+            }
+            case "/availableAds" -> {
+                producer.availableAds(tgId);
             }
             default -> sendMessage.setText("Неизвестная команда. Напишите /help для списка доступных команд.");
         }

@@ -25,7 +25,7 @@ public class AdProducer {
                         %s
                         """,
                 ad.getCategory(),
-                ad.getBody().replaceAll("[^0-9]", ""), // извлекаем часы
+                ad.getBody(),
                 ad.getCountOfViews(),
                 ad.getDateOfPush(),
                 ad.getQuantity(),

@@ -4,6 +4,7 @@ import com.LakePayProj.adService.domain.Ad;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public interface IAdService {
@@ -12,4 +13,5 @@ public interface IAdService {
     Ad findAdById(Long id);
     List<Ad> findAllAds();
     List<Ad> findAdsByCategory(String category);
+    void updateAd(Long id, Map<String, Object> updates);
 }

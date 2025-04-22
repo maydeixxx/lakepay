@@ -30,6 +30,13 @@ public class UserController {
         return new ResponseEntity<>(list, HttpStatus.OK);
     }
 
+    @GetMapping("/categoriesById/{id}")
+        public ResponseEntity<List<String>> findCategoriesByTgId(@PathVariable Long id) {
+        User userByTgId = service.findUserByTgId(id);
+        List<String> subscriptions = userByTgId.getSubscriptions();
+        return new ResponseEntity<>(subscriptions, HttpStatus.OK);
+    }
+
     @PostMapping("/save_user")
     public ResponseEntity<Void> saveUser(@RequestBody UserDTO userDTO) {
         User userByTgId = service.findUserByTgId(userDTO.getTgId());

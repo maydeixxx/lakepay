@@ -114,4 +114,10 @@ public class UserService implements IUserService {
                 .map(mapper ::userEntityToUser)
                 .toList();
     }
+
+    @Override
+    public List<String> getCategoriesById(Long tgId) {
+        UserEntity userById = repository.findUserById(tgId);
+        return mapper.userEntityToUser(userById).getSubscriptions();
+    }
 }

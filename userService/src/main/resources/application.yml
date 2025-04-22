@@ -12,7 +12,7 @@ spring:
       ddl-auto: create
 
   kafka:
-    bootstrap-servers: amaevalx:9092
+    bootstrap-servers: LAPTOP-Q49GS90R:9092
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
