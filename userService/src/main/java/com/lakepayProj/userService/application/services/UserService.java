@@ -97,8 +97,18 @@ public class UserService implements IUserService {
     @Override
     public void subscribe(Long tgId, String category) {
         UserEntity userByTgId = repository.findUserByTgId(tgId);
+        if (userByTgId == null) {
+            throw new IllegalArgumentException("User with tgId [" + tgId + "] not found");
+        }
+
         List<String> subscriptions = userByTgId.getSubscriptions();
-        subscriptions.addLast(category);
+
+        if (subscriptions.contains(category)) {
+            System.err.println("Пользователь уже подписан на эту категорию!");
+            return;
+        }
+
+        subscriptions.add(category);
         userByTgId.setSubscriptions(subscriptions);
         repository.saveAndFlush(userByTgId);
     }
@@ -106,6 +116,9 @@ public class UserService implements IUserService {
     @Override
     public void unSubscribe(Long tgId, String category) {
         UserEntity userByTgId = repository.findUserByTgId(tgId);
+        if (userByTgId == null) {
+            throw new IllegalArgumentException("User with id = [" + tgId + "] is null");
+        }
         List<String> subscriptions = userByTgId.getSubscriptions();
         subscriptions.removeIf(category1 -> category1.equals(category));
         userByTgId.setSubscriptions(subscriptions);

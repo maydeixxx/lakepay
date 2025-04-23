@@ -23,6 +23,11 @@ spring:
   application:
     name: userService
 
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-service:8761/eureka/
+
 token:
   signing:
     key: * # JWT signing key
