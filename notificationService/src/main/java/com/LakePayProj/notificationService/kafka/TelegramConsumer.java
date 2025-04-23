@@ -5,9 +5,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.MediaType;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Map;
@@ -30,19 +32,28 @@ public class TelegramConsumer {
     }
 
     public List<String> getSubScribedUsers(String category) {
-        return webClient.get()
-                .uri("https://quickly-resilient-planthopper.cloudpub.ru/userService/category/{category}", category)
-                .retrieve()
-                .bodyToFlux(new ParameterizedTypeReference<Map<String, Object>>() {
-                })
-                .map(userMap -> String.valueOf(userMap.get("chatId")))
-                .collectList()
-                .block();
+        try {
+            return webClient.get()
+                    .uri("https://movingly-abiding-triggerfish.cloudpub.ru/userService/category/{category}", category)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .onStatus(status -> status.isError(), response -> {
+                        log.error("Ошибка при запросе подписчиков категории {}: {}", category, response.statusCode());
+                        return Mono.error(new RuntimeException("Сервер вернул ошибку: " + response.statusCode()));
+                    })
+                    .bodyToFlux(new ParameterizedTypeReference<Map<String, Object>>() {})
+                    .map(userMap -> String.valueOf(userMap.get("chatId")))
+                    .collectList()
+                    .block();
+        } catch (Exception e) {
+            log.error("Не удалось получить подписчиков категории {}: {}", category, e.getMessage());
+            return List.of();
+        }
     }
 
     public List<String> getCategoriesByTgId(Long tgId) {
         return webClient.get()
-                .uri("https://quickly-resilient-planthopper.cloudpub.ru/userService/categoriesById/{tgId}", tgId)
+                .uri("https://movingly-abiding-triggerfish.cloudpub.ru/userService/categoriesById/{tgId}", tgId)
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<List<String>>() {
                 })
@@ -60,7 +71,7 @@ public class TelegramConsumer {
         StringBuilder adBuilder = new StringBuilder();
         for (String cat : categoriesByTgId) {
             List<Map<String, Object>> ads = (webClient.get()
-                    .uri("https://quickly-resilient-planthopper.cloudpub.ru/adService/category/{category}", cat)
+                    .uri("https://movingly-abiding-triggerfish.cloudpub.ru/adService/category/{category}", cat)
                     .retrieve()
                     .bodyToMono(new ParameterizedTypeReference<List<Map<String, Object>>>() {
                     })
@@ -101,16 +112,17 @@ public class TelegramConsumer {
         String status = isSold ? "🔴 Продано" : "🟢 В продаже";
 
         return String.format("""
-                        🎮 *Продаётся аккаунт %s!*
-                        🕒 *Информация:* %s часов
-                        👁 *Просмотров:* %s
+                        🎮 *Продаётся аккаунт*
+                        💬 *Заголовок:* %s
+                        🕒 *Информация:* %s
+                        👁  *Просмотров:* %s
                         📅 *Дата публикации:* %s
                         📦 *В наличии:* %s шт.
                         💰 *Цена:* %s
                         📌 *Категория:* %s
                         %s
                         """,
-                ad.getOrDefault("category", "не указана"),
+                ad.getOrDefault("title", "не указан"),
                 ad.getOrDefault("body", "нет описания"),
                 ad.getOrDefault("countOfViews", 0),
                 ad.getOrDefault("dateOfPush", "не указана"),

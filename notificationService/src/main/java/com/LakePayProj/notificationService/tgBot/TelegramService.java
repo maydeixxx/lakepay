@@ -55,19 +55,6 @@ public class TelegramService extends TelegramLongPollingBot {
         }
     }
 
-    @Override
-    public void onUpdateReceived(Update update) {
-        try {
-            if (update.hasCallbackQuery()) {
-                handleCallback(update);
-            } else if (update.hasMessage() && update.getMessage().hasText()) {
-                handleMessage(update);
-            }
-        } catch (Exception e) {
-            log.error("Ошибка в onUpdateReceived: ", e);
-        }
-    }
-
     private void handleCallback(Update update) throws TelegramApiException {
         Long chatId = update.getCallbackQuery().getMessage().getChatId();
         Long tgId = update.getCallbackQuery().getFrom().getId();
@@ -89,6 +76,20 @@ public class TelegramService extends TelegramLongPollingBot {
         message.setText("Вы " + (action.equals("/subscribe") ? "подписались на " : "отписались от ") + category);
         execute(message);
     }
+
+    @Override
+    public void onUpdateReceived(Update update) {
+        try {
+            if (update.hasCallbackQuery()) {
+                handleCallback(update);
+            } else if (update.hasMessage() && update.getMessage().hasText()) {
+                handleMessage(update);
+            }
+        } catch (Exception e) {
+            log.error("Ошибка в onUpdateReceived: ", e);
+        }
+    }
+
 
     private void handleMessage(Update update) throws TelegramApiException {
         Long chatId = update.getMessage().getChatId();

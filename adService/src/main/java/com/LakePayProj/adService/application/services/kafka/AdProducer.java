@@ -15,16 +15,17 @@ public class AdProducer {
         String status = ad.getSold() ? "🔴 Продано" : "🟢 В продаже";
 
         return String.format("""
-                        🎮 *Продаётся аккаунт %s!*
-                        🕒 *Информация:* %s часов
-                        👁 *Просмотров:* %d
+                        🎮 *Продаётся аккаунт*
+                        💬 *Заголовок:* %s
+                        🕒 *Информация:* %s
+                        👁  *Просмотров:* %s
                         📅 *Дата публикации:* %s
-                        📦 *В наличии:* %d шт.
+                        📦 *В наличии:* %s шт.
                         💰 *Цена:* %s
                         📌 *Категория:* %s
                         %s
                         """,
-                ad.getCategory(),
+                ad.getTitle(),
                 ad.getBody(),
                 ad.getCountOfViews(),
                 ad.getDateOfPush(),
