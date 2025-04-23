@@ -7,6 +7,7 @@ import com.lakepayProj.userService.domain.model.User;
 import com.lakepayProj.userService.domain.valueObject.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -76,7 +77,7 @@ public class UserController {
         return new ResponseEntity<>(usersDTO, HttpStatus.OK);
     }
 
-    @GetMapping("/category/{category}")
+    @GetMapping(value = "/category/{category}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<UserDTO>> findUserBySubs(@PathVariable String category) {
         List<User> userBySubs = service.findUserBySubs(category);
         List<UserDTO> list = userBySubs.stream()
