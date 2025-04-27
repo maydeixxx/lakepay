@@ -1,2 +1,12 @@
-spring.application.name=paymentService
-server.port=8080
+
+server:
+  port=8080
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/users_db
+    username: postgres
+    password: admin
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create

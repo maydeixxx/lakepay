@@ -1,51 +1,45 @@
 package com.LakePayProj.paymentService.application.services;
-
-import com.LakePayProj.paymentService.application.interfaces.repos.AccountRepository;
-import com.LakePayProj.paymentService.application.interfaces.repos.TransactionRepository;
-import com.LakePayProj.paymentService.domain.Account;
-import com.LakePayProj.paymentService.domain.Transaction;
+import com.LakePayProj.paymentService.infrastructure.external.clients.AdClient;
+import com.LakePayProj.paymentService.application.interfaces.repos.UserPaymentRepository;
+import com.LakePayProj.paymentService.domain.UserPayment;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 @Service
 public class PaymentService {
 
     @Autowired
-    private AccountRepository accountRepo;
+    private UserPaymentRepository paymentRepo;
 
     @Autowired
-    private TransactionRepository transactionRepo;
-
+    private AdClient adClient;
 
     public void topUp(Long userId, BigDecimal amount) {
-        Account account = accountRepo.findById(userId)
-                .orElse(new Account(userId, BigDecimal.ZERO));
+        UserPayment user = paymentRepo.findById(userId)
+                .orElse(new UserPayment(userId, BigDecimal.ZERO, new ArrayList<>()));
 
-        account.setBalance(account.getBalance().add(amount));
-        accountRepo.save(account);
+        user.setBalance(user.getBalance().add(amount));
+        user.addTransaction("TOP_UP", amount);
 
-        transactionRepo.save(new Transaction(userId, amount, "TOP_UP", LocalDateTime.now()));
+        paymentRepo.save(user);
     }
 
-    public boolean purchase(Long userId, BigDecimal totalPrice) {
-        Account account = accountRepo.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Аккаунт не найден"));
+    public boolean buy(Long userId, Long adId) {
+        BigDecimal price = adClient.getAdPrice(adId);
 
-        if (account.getBalance().compareTo(totalPrice) >= 0) {
-            account.setBalance(account.getBalance().subtract(totalPrice));
-            accountRepo.save(account);
+        UserPayment user = paymentRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-            transactionRepo.save(new Transaction(userId, totalPrice.negate(), "PURCHASE", LocalDateTime.now()));
+        if (user.getBalance().compareTo(price) >= 0) {
+            user.setBalance(user.getBalance().subtract(price));
+            user.addTransaction("PURCHASE", price.negate());
+            paymentRepo.save(user);
             return true;
         }
-
         return false;
     }
-}
 
+}
