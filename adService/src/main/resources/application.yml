@@ -12,7 +12,7 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
 
   datasource:
-    url: jdbc:postgresql://adPostgres:5432/ads_db
+    url: jdbc:postgresql://lakePayPostgres:5432/lakepay_db
     driver-class-name: org.postgresql.Driver
     username: postgres
     password: admin

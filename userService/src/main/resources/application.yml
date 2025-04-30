@@ -4,7 +4,7 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://userPostgres:5432/users_db
+    url: jdbc:postgresql://lakePayPostgres:5432/lakepay_db
     username: postgres
     password: admin
     driver-class-name: org.postgresql.Driver

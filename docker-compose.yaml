@@ -27,7 +27,7 @@ services:
     depends_on:
       - gateway-api
       - eureka-service
-      - adPostgres
+      - lakePayPostgres
       - kafka
 
   user-service:
@@ -43,7 +43,7 @@ services:
     depends_on:
       - gateway-api
       - eureka-service
-      - userPostgres
+      - lakePayPostgres
       - kafka
 
   gateway-api:
@@ -56,6 +56,8 @@ services:
     restart: unless-stopped
     ports:
       - "8990:8990"
+    depends_on:
+      - eureka-service
 
   notification-service:
     networks:
@@ -69,34 +71,6 @@ services:
       - "9090:9090"
     depends_on:
       - kafka
-
-  userPostgres:
-    networks:
-      - myNetwork
-    image: postgres:17.4
-    restart: unless-stopped
-    ports:
-      - "5432:5432"
-    volumes:
-      - userPostgres_data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: admin
-      POSTGRES_DB: users_db
-
-  adPostgres:
-    networks:
-      - myNetwork
-    image: postgres:17.4
-    restart: unless-stopped
-    ports:
-      - "5433:5432"
-    volumes:
-      - adPostgres_data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: admin
-      POSTGRES_DB: ads_db
 
   zookeeper:
     networks:
@@ -128,7 +102,22 @@ services:
     labels:
       amplicode.image: confluent/kafka
 
+  lakePayPostgres:
+    image: postgres:17.4
+    restart: unless-stopped
+    networks:
+      - myNetwork
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: lakepay_db
+
 volumes:
   userPostgres_data:
   adPostgres_data:
   kafka_data:
+  postgres_data:

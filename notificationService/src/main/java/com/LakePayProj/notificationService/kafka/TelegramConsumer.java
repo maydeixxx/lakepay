@@ -34,7 +34,7 @@ public class TelegramConsumer {
     public List<String> getSubScribedUsers(String category) {
         try {
             return webClient.get()
-                    .uri("https://stockily-dashing-copperhead.cloudpub.ru/userService/category/{category}", category)
+                    .uri("https://lakepay.ru/userService/category/{category}", category)
                     .accept(MediaType.APPLICATION_JSON)
                     .retrieve()
                     .onStatus(status -> status.isError(), response -> {
@@ -53,7 +53,7 @@ public class TelegramConsumer {
 
     public List<String> getCategoriesByTgId(Long tgId) {
         return webClient.get()
-                .uri("https://stockily-dashing-copperhead.cloudpub.ru/userService/categoriesById/{tgId}", tgId)
+                .uri("https://lakepay.ru/userService/categoriesById/{tgId}", tgId)
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<List<String>>() {
                 })
@@ -71,7 +71,7 @@ public class TelegramConsumer {
         StringBuilder adBuilder = new StringBuilder();
         for (String cat : categoriesByTgId) {
             List<Map<String, Object>> ads = (webClient.get()
-                    .uri("https://stockily-dashing-copperhead.cloudpub.ru/adService/category/{category}", cat)
+                    .uri("https://lakepay.ru/adService/category/{category}", cat)
                     .retrieve()
                     .bodyToMono(new ParameterizedTypeReference<List<Map<String, Object>>>() {
                     })
