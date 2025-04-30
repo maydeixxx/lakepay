@@ -54,14 +54,14 @@ public class UserController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @GetMapping("/user/{id}")
+    @GetMapping("/user_id/{id}")
     public ResponseEntity<UserDTO> findUserById(@PathVariable Long id) {
         User userDom = service.findUserById(id);
         UserDTO userDTO = mapper.userToUserDTO(userDom);
         return new ResponseEntity<>(userDTO, HttpStatus.OK);
     }
 
-    @GetMapping("/{role}")
+    @GetMapping("user_role/{role}")
     public ResponseEntity<List<UserDTO>> findUsersByRole(@PathVariable Role role) {
         List<User> usersByRole = service.findUsersByRole(role);
         List<UserDTO> usersDTO = usersByRole.stream()
@@ -70,7 +70,7 @@ public class UserController {
         return new ResponseEntity<>(usersDTO, HttpStatus.OK);
     }
 
-    @GetMapping(value = "/category/{category}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/user_category/{category}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<UserDTO>> findUserBySubs(@PathVariable String category) {
         List<User> userBySubs = service.findUserBySubs(category);
         List<UserDTO> list = userBySubs.stream()

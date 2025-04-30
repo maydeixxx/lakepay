@@ -15,7 +15,7 @@
     function onTelegramAuth(user) {
         console.log("Telegram user data:", user);
 
-        fetch("https://right-terminally-humpback.ngrok-free.app/auth/telegram/token", {
+        fetch("https://lakepay.ru/auth/telegram/token", {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(user)

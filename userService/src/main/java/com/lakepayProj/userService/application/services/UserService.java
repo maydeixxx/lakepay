@@ -54,6 +54,9 @@ public class UserService implements IUserService {
                     subscriptions.removeIf(category -> category.equals(value.toString()));
                     userById.setSubscriptions(subscriptions);
                 }
+                default -> {
+                    throw new IllegalArgumentException("Unknown field to update");
+                }
             }
         });
         repository.save(userById);
