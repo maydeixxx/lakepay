@@ -34,7 +34,7 @@ public class TelegramConsumer {
     public List<String> getSubScribedUsers(String category) {
         try {
             return webClient.get()
-                    .uri("https://lakepay.ru/userService/category/{category}", category)
+                    .uri("https://lakepay.ru/user_category/{category}", category)
                     .accept(MediaType.APPLICATION_JSON)
                     .retrieve()
                     .onStatus(status -> status.isError(), response -> {
@@ -53,11 +53,21 @@ public class TelegramConsumer {
 
     public List<String> getCategoriesByTgId(Long tgId) {
         return webClient.get()
-                .uri("https://lakepay.ru/userService/categoriesById/{tgId}", tgId)
+                .uri("https://lakepay.ru/categoriesById/{tgId}", tgId)
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<List<String>>() {
                 })
                 .block();
+    }
+
+    @KafkaListener(topics = "myAds", groupId = "user-notifications")
+    public void subAds(ConsumerRecord<String, String> record) {
+        String tgId = record.value();
+        List<String> categoriesByTgId = getCategoriesByTgId(Long.valueOf(tgId));
+        StringBuilder message = new StringBuilder();
+        message.append("*Ваши подписки*\n");
+        categoriesByTgId.forEach(ad -> message.append(ad).append("\n"));
+        service.sendMessage(tgId, message.toString().trim());
     }
 
     @KafkaListener(topics = "availableAds", groupId = "user-notifications")
@@ -71,7 +81,7 @@ public class TelegramConsumer {
         StringBuilder adBuilder = new StringBuilder();
         for (String cat : categoriesByTgId) {
             List<Map<String, Object>> ads = (webClient.get()
-                    .uri("https://lakepay.ru/adService/category/{category}", cat)
+                    .uri("https://lakepay.ru/ad_category/{category}", cat)
                     .retrieve()
                     .bodyToMono(new ParameterizedTypeReference<List<Map<String, Object>>>() {
                     })

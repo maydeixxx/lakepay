@@ -24,7 +24,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TelegramService extends TelegramLongPollingBot {
     private final TelegramProducer producer;
-    private final List<String> categories = List.of("PUBG", "CS2", "FORTNITE");
+    private final List<String> categories = List.of("PUBG", "CS2", "FORTNITE", "DEADLOCK", "DOTA2");
 
     @Override
     public String getBotUsername() {
@@ -47,7 +47,8 @@ public class TelegramService extends TelegramLongPollingBot {
                     new BotCommand("/categories", "список доступных категорий"),
                     new BotCommand("/subscribe", "подписка на категорию (выбор по кнопке)"),
                     new BotCommand("/unsubscribe", "отписка от категории (выбор по кнопке)"),
-                    new BotCommand("/availableAds", "доступные объявления")
+                    new BotCommand("/available_ads", "доступные объявления"),
+                    new BotCommand("/my_ads", "мои подписки")
             );
             this.execute(new SetMyCommands(commandList, new BotCommandScopeDefault(), null));
         } catch (TelegramApiException e) {
@@ -101,7 +102,7 @@ public class TelegramService extends TelegramLongPollingBot {
 
         switch (text) {
             case "/start" -> sendMessage.setText("Привет! Я LakePayBot, выбери команду для взаимодействия.");
-            case "/reg" -> sendMessage.setText("Вот твоя ссылка на регистрацию:\nlakepay.ru/userService/auth/telegram");
+            case "/reg" -> sendMessage.setText("Вот твоя ссылка на регистрацию:\nlakepay.ru/auth/telegram");
             case "/help" -> sendMessage.setText("Список команд:\n/start\n/reg\n/help\n/info\n/categories\n/subscribe\n/unsubscribe");
             case "/info" -> sendMessage.setText("Я бот биржи аккаунтов LakePay. Через меня можно зарегистрироваться и получать уведомления о новых объявлениях.");
             case "/categories" -> sendMessage.setText("Доступные категории:\n" + String.join("\n", categories));
@@ -113,8 +114,11 @@ public class TelegramService extends TelegramLongPollingBot {
                 sendMessage.setText("Выберите категорию для отписки:");
                 sendMessage.setReplyMarkup(categoryButtons("/unsubscribe"));
             }
-            case "/availableAds" -> {
+            case "/available_ads" -> {
                 producer.availableAds(tgId);
+            }
+            case "/my_ads" -> {
+                producer.myAds(tgId);
             }
             default -> sendMessage.setText("Неизвестная команда. Напишите /help для списка доступных команд.");
         }

@@ -24,4 +24,8 @@ public class TelegramProducer {
     public void availableAds(Long tgId) {
         template.send("availableAds", String.valueOf(tgId));
     }
+
+    public void myAds(Long tgId) {
+        template.send("myAds", String.valueOf(tgId));
+    }
 }
