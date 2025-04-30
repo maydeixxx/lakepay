@@ -1,4 +1,4 @@
-package com.LakePayProj.paymentService.api;
+package com.LakePayProj.paymentService.api.controllers;
 
 import com.LakePayProj.paymentService.application.services.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;

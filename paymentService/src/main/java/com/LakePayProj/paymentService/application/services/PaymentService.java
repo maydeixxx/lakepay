@@ -1,7 +1,7 @@
 package com.LakePayProj.paymentService.application.services;
-import com.LakePayProj.paymentService.infrastructure.external.clients.AdClient;
 import com.LakePayProj.paymentService.application.interfaces.repos.UserPaymentRepository;
 import com.LakePayProj.paymentService.domain.UserPayment;
+import com.LakePayProj.paymentService.infrastructure.external.clients.AdClient.AdHttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +15,11 @@ public class PaymentService {
     private UserPaymentRepository paymentRepo;
 
     @Autowired
-    private AdClient adClient;
+    private final AdHttpClient adHttpClient;
+
+    public PaymentService(AdHttpClient adHttpClient) {
+        this.adHttpClient = adHttpClient;
+    }
 
     public void topUp(Long userId, BigDecimal amount) {
         UserPayment user = paymentRepo.findById(userId)
@@ -28,7 +32,7 @@ public class PaymentService {
     }
 
     public boolean buy(Long userId, Long adId) {
-        BigDecimal price = adClient.getAdPrice(adId);
+        BigDecimal price = adHttpClient.getAdPrice(adId);
 
         UserPayment user = paymentRepo.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
