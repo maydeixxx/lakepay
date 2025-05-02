@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Data
@@ -16,7 +17,9 @@ public class UserEntity {
     private Long id;
     @Column(unique = true)
     private String userName;
+    private List<String> subscriptions;
     private Long tgId;
+    private Long chatId;
     private String urlPhoto;
     private LocalDate dateOfReg;
     private BigDecimal balance;

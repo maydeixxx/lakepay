@@ -7,9 +7,9 @@ import com.lakepayProj.userService.domain.model.User;
 import com.lakepayProj.userService.domain.valueObject.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -29,6 +29,13 @@ public class UserController {
                 .map(mapper::userToUserDTO)
                 .toList();
         return new ResponseEntity<>(list, HttpStatus.OK);
+    }
+
+    @GetMapping("/categoriesById/{id}")
+        public ResponseEntity<List<String>> findCategoriesByTgId(@PathVariable Long id) {
+        User userByTgId = service.findUserByTgId(id);
+        List<String> subscriptions = userByTgId.getSubscriptions();
+        return new ResponseEntity<>(subscriptions, HttpStatus.OK);
     }
 
     @PostMapping("/save_user")
@@ -68,5 +75,14 @@ public class UserController {
                 .map(mapper::userToUserDTO)
                 .toList();
         return new ResponseEntity<>(usersDTO, HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/category/{category}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<UserDTO>> findUserBySubs(@PathVariable String category) {
+        List<User> userBySubs = service.findUserBySubs(category);
+        List<UserDTO> list = userBySubs.stream()
+                .map(mapper::userToUserDTO)
+                .toList();
+        return new ResponseEntity<>(list, HttpStatus.OK);
     }
 }

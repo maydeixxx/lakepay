@@ -16,4 +16,8 @@ public interface IUserService {
     void deleteUserByID(Long id);
     void saveUser(User user);
     List<User> findUsersByRole(Role role);
+    void subscribe(Long tgId, String category);
+    void unSubscribe(Long tgId, String category);
+    List<User> findUserBySubs(String category);
+    List<String> getCategoriesById(Long tgId);
 }

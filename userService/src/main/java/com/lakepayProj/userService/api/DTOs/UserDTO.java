@@ -5,6 +5,7 @@ import lombok.Value;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * DTO for {@link com.lakepayProj.userService.infrastructure.UserEntity}
@@ -13,7 +14,9 @@ import java.time.LocalDate;
 public class UserDTO {
     Long id;
     String userName;
+    List<String> subscriptions;
     Long tgId;
+    Long chatId;
     String urlPhoto;
     LocalDate dateOfReg;
     BigDecimal balance;

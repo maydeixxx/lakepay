@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AmplicodePersistenceUnitSettings">
+    <persistence-units>
+      <persistence-unit moduleName="adService" name="Default">
+        <packages>
+          <package value="com.LakePayProj.adService" />
+        </packages>
+      </persistence-unit>
+      <persistence-unit moduleName="userService" name="Default">
+        <packages>
+          <package value="com.lakepayProj.userService" />
+        </packages>
+      </persistence-unit>
+    </persistence-units>
+  </component>
+</project>

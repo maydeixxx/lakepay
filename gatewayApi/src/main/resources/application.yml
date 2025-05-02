@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: gatewayApi
+
+  cloud:
+    gateway:
+      routes:
+        - id: userService
+          uri: lb://userService
+          predicates:
+            - Path=/userService/**
+          filters:
+            - StripPrefix=1
+
+        - id: adService
+          uri: lb://adService
+          predicates:
+            - Path=/adService/**
+          filters:
+            - StripPrefix=1
+
+server:
+  port: 8990
+  tomcat:
+    remote-ip-header: X-Forwarded-For
+    protocol-header: X-Forwarded-Proto
+    trusted-proxy: "*"
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-service:8761/eureka/
+

@@ -41,6 +41,16 @@ public class UserService implements IUserService {
                 case "urlPhoto" -> userById.setUrlPhoto((String) value);
                 case "balance" -> userById.setBalance(BigDecimal.valueOf((Double) value));
                 case "role" -> userById.setRole(Role.valueOf(value.toString()));
+                case "adSub" -> {
+                    List<String> subscriptions = userById.getSubscriptions();
+                    subscriptions.addLast(value.toString());
+                    userById.setSubscriptions(subscriptions);
+                }
+                case "delSub" -> {
+                    List<String> subscriptions = userById.getSubscriptions();
+                    subscriptions.removeIf(category -> category.equals(value.toString()));
+                    userById.setSubscriptions(subscriptions);
+                }
             }
         });
         repository.save(userById);
@@ -76,5 +86,51 @@ public class UserService implements IUserService {
         return usersByRole.stream()
                 .map(mapper::userEntityToUser)
                 .toList();
+    }
+
+    @Override
+    public void subscribe(Long tgId, String category) {
+        UserEntity userByTgId = repository.findUserByTgId(tgId);
+        if (userByTgId == null) {
+            throw new IllegalArgumentException("User with tgId [" + tgId + "] not found");
+        }
+
+        List<String> subscriptions = userByTgId.getSubscriptions();
+
+        if (subscriptions.contains(category)) {
+            System.err.println("Пользователь уже подписан на эту категорию!");
+            return;
+        }
+
+        subscriptions.add(category);
+        userByTgId.setSubscriptions(subscriptions);
+        repository.saveAndFlush(userByTgId);
+    }
+
+    @Override
+    public void unSubscribe(Long tgId, String category) {
+        UserEntity userByTgId = repository.findUserByTgId(tgId);
+        if (userByTgId == null) {
+            throw new IllegalArgumentException("User with id = [" + tgId + "] is null");
+        }
+        List<String> subscriptions = userByTgId.getSubscriptions();
+        subscriptions.removeIf(category1 -> category1.equals(category));
+        userByTgId.setSubscriptions(subscriptions);
+        repository.saveAndFlush(userByTgId);
+    }
+
+    @Override
+    public List<User> findUserBySubs(String category) {
+        List<UserEntity> all = repository.findAll();
+        return all.stream()
+                .filter(userEntity -> userEntity.getSubscriptions().stream().anyMatch(category1 -> category1.equals(category)))
+                .map(mapper ::userEntityToUser)
+                .toList();
+    }
+
+    @Override
+    public List<String> getCategoriesById(Long tgId) {
+        UserEntity userById = repository.findUserById(tgId);
+        return mapper.userEntityToUser(userById).getSubscriptions();
     }
 }

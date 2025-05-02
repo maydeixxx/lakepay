@@ -6,13 +6,16 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
 public class User {
     private Long id;
     private String userName;
+    private List<String> subscriptions;
     private Long tgId;
+    private Long chatId;
     private String urlPhoto;
     private LocalDate dateOfReg;
     private BigDecimal balance;

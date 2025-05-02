@@ -12,9 +12,10 @@ public interface IUserMapper {
 
     UserEntity userToUserEntity(User user);
 
-    @Mapping(target = "tgId", ignore = true)
+//    @Mapping(target = "tgId", ignore = true)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "balance", ignore = true)
+//    @Mapping(target = "chatId", ignore = true)
     UserDTO userToUserDTO(User user);
 
     User userDTOToUser(UserDTO userDTO);

@@ -1,0 +1,134 @@
+networks:
+  myNetwork:
+    driver: bridge
+
+services:
+  eureka-service:
+    networks:
+      - myNetwork
+    image: eureka-service:latest
+    build:
+      context: .
+      dockerfile: eureka-service/src/main/resources/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8761:8761"
+
+  ad-service:
+    networks:
+      - myNetwork
+    image: ad-service:latest
+    build:
+      context: .
+      dockerfile: adService/src/main/resources/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8780:8780"
+    depends_on:
+      - gateway-api
+      - eureka-service
+      - adPostgres
+      - kafka
+
+  user-service:
+    networks:
+      - myNetwork
+    image: user-service:latest
+    build:
+      context: .
+      dockerfile: userService/src/main/resources/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    depends_on:
+      - gateway-api
+      - eureka-service
+      - userPostgres
+      - kafka
+
+  gateway-api:
+    networks:
+      - myNetwork
+    image: gateway-api:latest
+    build:
+      context: .
+      dockerfile: gatewayApi/src/main/resources/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8990:8990"
+
+  notification-service:
+    networks:
+      - myNetwork
+    image: notification-service:latest
+    build:
+      context: .
+      dockerfile: notificationService/src/main/resources/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    depends_on:
+      - kafka
+
+  userPostgres:
+    networks:
+      - myNetwork
+    image: postgres:17.4
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    volumes:
+      - userPostgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: users_db
+
+  adPostgres:
+    networks:
+      - myNetwork
+    image: postgres:17.4
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    volumes:
+      - adPostgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: ads_db
+
+  zookeeper:
+    networks:
+      - myNetwork
+    image: zookeeper:3.9.3
+    restart: unless-stopped
+    ports:
+      - "2181:2181"
+
+  kafka:
+    networks:
+      - myNetwork
+    image: confluentinc/cp-kafka:7.9.0
+    restart: unless-stopped
+    ports:
+      - "29092:29092"
+      - "9092:9092"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    depends_on:
+      - zookeeper
+    labels:
+      amplicode.image: confluent/kafka
+
+volumes:
+  userPostgres_data:
+  adPostgres_data:
+  kafka_data:
