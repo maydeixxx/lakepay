@@ -1,13 +1,9 @@
-package com.LakePayProj.paymentService.infrastructure;
+package com.LakePayProj.paymentService.domain;
 
-import jakarta.persistence.*;
 import lombok.Data;
 
-@Entity
 @Data
-public class PaymentEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class PaymentDomain {
     private Long id;
     private Long userId;
     private Long adId;

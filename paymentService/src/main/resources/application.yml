@@ -1,12 +1,12 @@
-
 server:
-  port=8080
+  port: 7890
+
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/users_db
-    username: postgres
-    password: admin
-    driver-class-name: org.postgresql.Driver
+      url: jdbc:postgresql://lakepay:5432
+      username: postgres
+      password: admin
+      driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: create

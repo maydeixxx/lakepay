@@ -1,49 +1,49 @@
 package com.LakePayProj.paymentService.application.services;
-import com.LakePayProj.paymentService.application.interfaces.repos.UserPaymentRepository;
-import com.LakePayProj.paymentService.domain.UserPayment;
-import com.LakePayProj.paymentService.infrastructure.external.clients.AdClient.AdHttpClient;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
+import java.util.Map;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class PaymentService {
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
 
-    @Autowired
-    private UserPaymentRepository paymentRepo;
+    @Value("${crypto-bot.api-url}")
+    private String apiUrl;
+    @Value("${crypto-bot.api-token}")
+    private String apiToken;
 
-    @Autowired
-    private final AdHttpClient adHttpClient;
+    public String createInvoice(Long userId, Long adId, String currency, Double amount) {
+        String url = apiUrl + "createInvoice";
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Crypto-Pay-API-Token", apiToken);
+        headers.set("Content-Type", "application/json");
 
-    public PaymentService(AdHttpClient adHttpClient) {
-        this.adHttpClient = adHttpClient;
-    }
+        Map<String, Object> body = Map.of(
+                "amount", amount,
+                "currency", currency,
+                "description", "Payment for ad #" + adId
+        );
 
-    public void topUp(Long userId, BigDecimal amount) {
-        UserPayment user = paymentRepo.findById(userId)
-                .orElse(new UserPayment(userId, BigDecimal.ZERO, new ArrayList<>()));
-
-        user.setBalance(user.getBalance().add(amount));
-        user.addTransaction("TOP_UP", amount);
-
-        paymentRepo.save(user);
-    }
-
-    public boolean buy(Long userId, Long adId) {
-        BigDecimal price = adHttpClient.getAdPrice(adId);
-
-        UserPayment user = paymentRepo.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        if (user.getBalance().compareTo(price) >= 0) {
-            user.setBalance(user.getBalance().subtract(price));
-            user.addTransaction("PURCHASE", price.negate());
-            paymentRepo.save(user);
-            return true;
+        try {
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+            String response = restTemplate.exchange(url, HttpMethod.POST, request, String.class).getBody();
+            Map<String, Object> responseMap = objectMapper.readValue(response, Map.class);
+            return (String) ((Map<?, ?>) responseMap.get("result")).get("pay_url");
+        } catch (Exception e) {
+            log.error("Ошибка создания счета: {}", e.getMessage(), e);
+            throw new RuntimeException("Не удалось создать счет");
         }
-        return false;
     }
-
 }
