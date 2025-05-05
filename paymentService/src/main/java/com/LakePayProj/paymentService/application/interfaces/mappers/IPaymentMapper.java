@@ -1,7 +1,6 @@
 package com.LakePayProj.paymentService.application.interfaces.mappers;
 
 import com.LakePayProj.paymentService.api.DTOs.TransactionDto;
-import com.LakePayProj.paymentService.domain.model.Transaction;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
