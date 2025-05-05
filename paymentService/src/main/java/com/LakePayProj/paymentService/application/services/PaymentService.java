@@ -1,49 +1,86 @@
 package com.LakePayProj.paymentService.application.services;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
+import com.LakePayProj.paymentService.api.DTOs.PaymentRequestDto;
+import com.LakePayProj.paymentService.api.DTOs.PaymentStatusDto;
+import com.LakePayProj.paymentService.application.interfaces.services.IPaymentService;
+import com.LakePayProj.paymentService.application.interfaces.services.IKafkaProducerService;
+import com.LakePayProj.paymentService.application.interfaces.repos.IUserBalanceRepository;
+import com.LakePayProj.paymentService.application.interfaces.repos.ITransactionRepository;
+import com.LakePayProj.paymentService.domain.model.Transaction;
+import com.LakePayProj.paymentService.domain.model.UserBalance;
+import com.LakePayProj.paymentService.domain.infrastructure.AdServiceClient;
+import com.LakePayProj.paymentService.domain.valueObject.PaymentType;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Map;
+import java.util.UUID;
 
-@Slf4j
 @Service
-@RequiredArgsConstructor
-public class PaymentService {
-    private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper;
+@AllArgsConstructor
+public class PaymentService implements IPaymentService {
+    private final IUserBalanceRepository balanceRepository;
+    private final ITransactionRepository transactionRepository;
+    private final AdServiceClient adServiceClient;
+    private final IKafkaProducerService kafkaProducer;
 
-    @Value("${crypto-bot.api-url}")
-    private String apiUrl;
-    @Value("${crypto-bot.api-token}")
-    private String apiToken;
+    @Transactional
+    @Override
+    public PaymentStatusDto deposit(PaymentRequestDto request) {
+        UserBalance balance = balanceRepository.findById(request.getUserId())
+                .orElse(new UserBalance());
+        balance.setUserId(request.getUserId());
+        balance.setBalance(balance.getBalance() == null ? request.getAmount() : balance.getBalance() + request.getAmount());
+        balanceRepository.save(balance);
 
-    public String createInvoice(Long userId, Long adId, String currency, Double amount) {
-        String url = apiUrl + "createInvoice";
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Crypto-Pay-API-Token", apiToken);
-        headers.set("Content-Type", "application/json");
+        Transaction transaction = new Transaction();
+        transaction.setId(UUID.randomUUID().toString());
+        transaction.setUserId(request.getUserId());
+        transaction.setAmount(request.getAmount());
+        transaction.setType(PaymentType.DEPOSIT);
+        transaction.setStatus("SUCCESS");
+        transactionRepository.save(transaction);
 
-        Map<String, Object> body = Map.of(
-                "amount", amount,
-                "currency", currency,
-                "description", "Payment for ad #" + adId
-        );
+        kafkaProducer.sendPaymentEvent(transaction);
 
-        try {
-            HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
-            String response = restTemplate.exchange(url, HttpMethod.POST, request, String.class).getBody();
-            Map<String, Object> responseMap = objectMapper.readValue(response, Map.class);
-            return (String) ((Map<?, ?>) responseMap.get("result")).get("pay_url");
-        } catch (Exception e) {
-            log.error("Ошибка создания счета: {}", e.getMessage(), e);
-            throw new RuntimeException("Не удалось создать счет");
+        return createStatusDto(transaction);
+    }
+
+    @Transactional
+    @Override
+    public PaymentStatusDto purchaseAd(PaymentRequestDto request) {
+        UserBalance balance = balanceRepository.findById(request.getUserId())
+                .orElseThrow(() -> new RuntimeException("User balance not found"));
+
+        Double adPrice = adServiceClient.getAdPrice(request.getAdId());
+        if (balance.getBalance() < adPrice) {
+            throw new RuntimeException("Insufficient funds");
         }
+
+        balance.setBalance(balance.getBalance() - adPrice);
+        balanceRepository.save(balance);
+
+        Transaction transaction = new Transaction();
+        transaction.setId(UUID.randomUUID().toString());
+        transaction.setUserId(request.getUserId());
+        transaction.setAmount(adPrice);
+        transaction.setType(PaymentType.PURCHASE);
+        transaction.setAdId(request.getAdId());
+        transaction.setStatus("SUCCESS");
+        transactionRepository.save(transaction);
+
+        kafkaProducer.sendPaymentEvent(transaction);
+
+        return createStatusDto(transaction);
+    }
+
+    private PaymentStatusDto createStatusDto(Transaction transaction) {
+        PaymentStatusDto status = new PaymentStatusDto();
+        status.setTransactionId(transaction.getId());
+        status.setStatus(transaction.getStatus());
+        status.setAmount(transaction.getAmount());
+        status.setUserId(transaction.getUserId());
+        status.setAdId(transaction.getAdId());
+        return status;
     }
 }

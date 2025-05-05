@@ -1,12 +1,23 @@
-server:
-  port: 7890
-
 spring:
+  application:
+    name: paymentService
   datasource:
-      url: jdbc:postgresql://lakepay:5432
-      username: postgres
-      password: admin
-      driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://postgres:5432/lakepay_db
+    username: postgres
+    password: password
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
+    show-sql: true
+  kafka:
+    bootstrap-servers: kafka:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka:8761/eureka
+server:
+  port: 8083

@@ -1,8 +1,13 @@
 package com.LakePayProj.paymentService.application.interfaces.services;
 
-import org.springframework.stereotype.Service;
+import com.LakePayProj.paymentService.api.DTOs.PaymentRequestDto;
+import com.LakePayProj.paymentService.api.DTOs.PaymentStatusDto;
+import org.springframework.transaction.annotation.Transactional;
 
-@Service
 public interface IPaymentService {
-    String createInvoice(Long userId, Long adId, String currency, Double amount);
+    @Transactional
+    PaymentStatusDto deposit(PaymentRequestDto request);
+
+    @Transactional
+    PaymentStatusDto purchaseAd(PaymentRequestDto request);
 }
