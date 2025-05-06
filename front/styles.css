@@ -33,8 +33,11 @@ html{
 .header__logo img{
     width: 150px;
 }
-
+.header__catalog{
+    max-height: 48px;
+}
 .header__catalog button{
+    position: relative;
     display: flex;
     justify-content: start;
     width: 170px;
@@ -52,6 +55,44 @@ html{
         margin-right: 13px;
 
     }
+}
+.header__catalog__panel{
+    position: absolute;
+    display: none;
+    padding-top: 12px;
+    background-color: #9BDE00;
+    border-radius: 0 20px 20px 20px;
+}
+.header__catalog__panel-categories ul{
+    padding-left: 15px;
+    padding-right: 15px;
+    display: grid;
+    grid-template-columns: repeat(3, 240px);
+    column-gap: 15px;
+    row-gap: 15px;
+    padding-bottom: 15px;
+}
+.header__catalog__item-title{
+    padding-top: 12px;
+    background-color: #D9D9D9;
+    font-size: 12px;
+    text-align: center;
+    padding-bottom: 4px;
+    border-radius: 0 0 20px 20px;
+}
+.header__catalog__item{
+    max-width: 240px;
+    border-radius: 20px;
+}
+.header__catalog__item-img img{
+    border-radius: 20px 20px 0 0;
+    max-width: 240px;
+}
+.header__catalog:hover > .header__catalog__panel{
+    display: block;
+}
+.header__catalog:hover > button{
+    border-radius: 20px 20px 0 0;
 }
 .header__catalog-text{
     margin-top: 14px;
@@ -443,15 +484,17 @@ li .new__card-descr{
     margin-top: 58px;
     max-width: 640px;
     font-size: 24px;
+    margin-bottom: 30px;
 }
-.content404_btn{
-    margin-top: 30px;
+.content404_btn a{
+    display: block;
     background-color: #ECA100;
     width: 230px;
     height: 80px;
     border-radius: 20px;
     font-family: "Press Start 2P";
-    cursor: pointer;
+    align-content: center;
+    padding-left: 10px;
 }
 /* 404-end */
 
