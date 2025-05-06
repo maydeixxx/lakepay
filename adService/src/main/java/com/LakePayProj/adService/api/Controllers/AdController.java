@@ -36,13 +36,13 @@ public class AdController {
         return new ResponseEntity<>(ads, HttpStatus.OK);
     }
 
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/ad_delete/{id}")
     public ResponseEntity<Void> deleteAd(@PathVariable Long id) {
         service.deleteAdById(id);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @GetMapping("/category/{category}")
+    @GetMapping("/ad_category/{category}")
     public ResponseEntity<List<AdDto>> getAdByCategory(@PathVariable String category) {
         List<AdDto> ads = service.findAdsByCategory(category)
                 .stream()
@@ -51,13 +51,13 @@ public class AdController {
         return new ResponseEntity<>(ads, HttpStatus.OK);
     }
 
-    @GetMapping("/id/{id}")
+    @GetMapping("/ad_id/{id}")
     public ResponseEntity<AdDto> findAdById(@PathVariable Long id) {
         AdDto adDto = mapper.adDomainToDto(service.findAdById(id));
         return new ResponseEntity<>(adDto, HttpStatus.OK);
     }
 
-    @PatchMapping("update/{id}")
+    @PatchMapping("update_ad/{id}")
     public ResponseEntity<Void> updateAd(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
         service.updateAd(id, updates);
         return new ResponseEntity<>(HttpStatus.OK);
