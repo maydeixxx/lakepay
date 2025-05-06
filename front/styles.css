@@ -1,0 +1,234 @@
+/* nulliifier-start */
+button{
+    border: 0;
+    outline: none;
+}
+input{
+    border: 0;
+    outline: none;
+}
+a{
+    text-decoration: none;
+    color: #000;
+}
+/* nulliifier-end */
+html{
+    background: linear-gradient(180deg, #1A1C2A 0%, #2D1E3A 100%);
+    font-family: "Press Start 2P";
+    background-attachment:fixed;
+}
+.container{
+    max-width: 1170px;
+    margin: 0 auto;
+}
+
+/* header-start */
+.header__inner{
+    display: flex;
+}
+.header__logo{
+    margin-right: 60px;
+    margin-top: 15px;
+}
+.header__logo img{
+    width: 150px;
+}
+
+.header__catalog button{
+    display: flex;
+    justify-content: start;
+    width: 170px;
+    height: 48px;
+    margin-top: 36px;
+    background-color: #9BDE00;
+    color: #659000;
+    border-radius: 20px;
+    cursor: pointer;
+    img{
+        margin-left: 7px;
+        height: 23px;
+        width: 16px;
+        margin-top: 12px;
+        margin-right: 13px;
+
+    }
+}
+.header__catalog-text{
+    margin-top: 14px;
+    font-family: "Press Start 2P";
+}
+.header__input{
+    margin-left: 30px;
+    border-radius: 20px;
+    margin-top: 36px;
+    width: 370px;
+    height: 48px;
+    background-color: #D9D9D9;
+    input{
+        padding-left: 20px;
+        border-radius: 20px;
+        background-color: #D9D9D9;
+        width: 370px;
+        height: 48px;
+    }
+    margin-right: 20px;
+}
+.header__btns{
+    display: flex;
+    justify-content: space-between;
+    margin-left: 30px;
+    margin-top: 35px;
+}
+.header__item a{
+    display: inline-block;
+    max-width: 70px;
+    height: 49px;
+    background-color: #F6BB3D;
+    border-radius: 15px;
+    margin-right: 30px;
+    img{
+        width: 37px;
+        height: 37px;
+        padding-left: 16px;
+        padding-right: 16px;
+        padding-top:8px;
+    }
+}
+.header__item:last-child{
+    margin-right: 0;
+}
+.new-message{
+    position: relative;
+}
+.new-message{
+    display: block;
+}
+.new-message::before{
+    content:"!";
+    text-align: center;
+    color:#fff;
+    display: inline-block;
+    background-color: #CB0052;
+    position: absolute;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    right: 18px;
+    top: -10px;
+}
+/* header-end */
+
+/* categories-start */
+.categories{
+    margin-top: 100px;
+}
+.categories__title{
+    text-transform: uppercase;
+    font-size: 40px;
+    color: #ECA100;
+    margin-bottom: 75px;
+}
+.categories__category-blocks{
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    &:last-child{
+        margin-bottom: 0;
+    }
+}
+.categories__category-bloks-item img{
+    width: 270px;
+    height: 141px;
+    border-radius: 20px;
+}
+/* categories-end */
+
+/* new-start */
+.new{
+    margin-top: 200px;
+    margin-bottom: 200px;
+
+}
+.new__title{
+    margin-bottom: 75px;
+    font-size: 40px;
+    color: #ECA100;
+    text-transform: uppercase;
+}
+.new__card{
+    background-color: #D9D9D9;
+    border-radius: 20px;
+    height: 120px;
+    display: flex;
+    img{
+        width: 185px;
+        height: 87px;
+        margin-top: 16px;
+        margin-left: 18px;
+        border-radius: 20px;
+    }
+    margin-bottom: 30px;
+}
+.new__card-text{
+    margin-left: 70px;
+    margin-top: 18px;
+    margin-right: 69px;
+    max-width: 530px;
+}
+.new__card-title{
+    font-size: 24px;
+}
+li .new__card-descr{
+    margin-top: 14px;
+    font-size: 16px;
+}
+.new__card-price button{
+    background-color: #F6BB3D;
+    font-family: "Press Start 2P";
+    width: 163px;
+    height: 60px;
+    border-radius: 20px;
+    margin-top: 30px;
+    margin-right: 38px;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.new__card-btn-favorite button{
+    display: inline-block;
+    width: 60px;
+    height: 60px;
+    cursor: pointer;
+    background-color: #F6BB3D;
+    border-radius: 20px;
+    margin-top: 30px;
+    img{
+        width: 46px;
+        height: 46px;
+        margin-left: 0;
+        margin-top: 8px;
+    }
+}
+.new__more{
+    background-color: #D9D9D9;
+    border-radius: 20px;
+    height: 120px;
+}
+.new__more-text{
+    margin-left: 74px;
+    max-width: 774px;
+}
+.new__more-title{
+    padding-top: 10px;
+    font-size: 24px;
+}
+.new__more-descr{
+    padding-top: 11px;
+    font-size: 16px;
+}
+
+/* new-end */
+
+.footer{
+
+}
