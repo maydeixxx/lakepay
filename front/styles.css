@@ -302,7 +302,7 @@ li .new__card-descr{
 
 /* findedAd__filter-end */
 
-/* findedAd__ads */
+/* findedAd__ads-start*/
 .findedAd__ads{
     margin-left: 30px;
 }
@@ -381,3 +381,45 @@ li .new__card-descr{
     padding-right: 10px;
     cursor: pointer;
 }
+/* findedAd__ads-end*/
+
+/* userInfo-start*/
+.userInfo{
+    margin-top: 135px;
+}
+.userInfo__inner{
+    display: flex;
+}
+.userInfo__text{
+    color: #ECA100;
+    font-size: 40px;
+    span{
+        font-size: 24px;
+    }
+}
+.userInfo_dateOfReg{
+    font-size: 16px;
+}
+.userInfo__balance-text{
+    margin-top: 75px;
+    color: #9BDE00;
+}
+.userInfo__balance-btns-item{
+    margin-top: 20px;
+    background-color: #9BDE00;
+    width: 170px;
+    height: 62px;
+    border-radius: 20px;
+    font-family: "Press Start 2P";
+    cursor: pointer;
+}
+.userInfo__btn-exit{
+    margin-top: 40px;
+    background-color: #CB0052;
+    width: 170px;
+    height: 62px;
+    border-radius: 20px;
+    font-family: "Press Start 2P";
+    cursor: pointer;
+}
+/* userInfo-end */
