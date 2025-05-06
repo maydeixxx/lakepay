@@ -444,4 +444,13 @@ li .new__card-descr{
     max-width: 640px;
     font-size: 24px;
 }
+.content404_btn{
+    margin-top: 30px;
+    background-color: #ECA100;
+    width: 230px;
+    height: 80px;
+    border-radius: 20px;
+    font-family: "Press Start 2P";
+    cursor: pointer;
+}
 /* 404-end */
