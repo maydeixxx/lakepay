@@ -454,3 +454,16 @@ li .new__card-descr{
     cursor: pointer;
 }
 /* 404-end */
+
+/* favorites-start */
+
+.favorites{
+    margin-top: 130px;
+    font-size: 40px;
+}
+.favorites__title{
+    color: #ECA100;
+    margin-bottom: 87px;
+}
+
+/* favorites-end */
