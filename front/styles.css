@@ -233,3 +233,151 @@ li .new__card-descr{
 
 }
 
+/* findedAd__filter-start */
+.findedAd{
+    margin-top: 40px;
+}
+.findedAd__inner{
+    display: flex;
+}
+.findedAd__filter-text{
+    margin-left: 18px;
+}
+.findedAd__filter{
+    background-color: #D9D9D9;
+    border-radius: 20px;
+    max-width: 270px;
+    padding-right: 14px;
+    input{
+        padding-left: 21px;
+        max-width: 156px;
+        height: 45px;
+        border-radius: 20px;
+        background-color: #F6BB3D;
+    }
+}
+.findedAd__filter-price{
+    padding-top: 10px;
+    padding-bottom: 38px;
+}
+.findedAd__filter-price-text{
+    padding-top: 12px;
+}
+.findedAd__filter-price-item{
+    margin-top: 14px;
+    display: flex;
+}
+.findedAd__filter-price-input{
+    background-color: #F6BB3D;
+    border-radius: 20px;
+}
+.filter__category__menu{
+    display: flex;
+    border-radius: 20px;
+    padding-bottom: 32px;
+    padding-top: 20px;
+}
+.filter__category__menu button{
+    background-color: #F6BB3D;
+    border-radius: 20px;
+    color: #996900;
+    font-family: "Press Start 2P";
+    display: flex;
+    justify-content: space-between;
+    width: 230px;
+    height: 52px;
+    align-items: center;
+    cursor: pointer;
+}
+.filter__category__menu-text{
+    padding-left: 23px;
+}
+.filter__category__menu-img{
+    margin-right: 10px;
+    img{
+        height: 24px;
+        width: 24px;
+    }
+}
+
+/* findedAd__filter-end */
+
+/* findedAd__ads */
+.findedAd__ads{
+    margin-left: 30px;
+}
+.findedAd__ads__item{
+    display: flex;
+    background-color: #D9D9D9;
+    border-radius: 20px;
+    height: 120px;
+    align-items: center;
+}
+.findedAd__ads__item img{
+    width: 137px;
+    height: 87px;
+    border-radius: 20px;
+    margin-left: 13px;
+}
+.findedAd__ads__item-text{
+    padding-left: 50px;
+    display: flex;
+    ul{
+        padding-right: 15px;
+    }
+}
+.findedAd__ads__item-title{
+    font-size: 24px;
+}
+.findedAd__ads__item-descr{
+    font-size: 16px;
+    padding-top: 26px;
+}
+.findedAd__ads__btn-price{
+    align-content: center;
+}
+.findedAd__ads__btn-price button{
+    width: 167px;
+    height: 60px;
+    border-radius: 20px;
+    background-color: #F6BB3D;
+    cursor: pointer;
+    font-family: "Press Start 2P";
+    border-top: 30px;
+}
+.findedAd__ads__btn-favorite{
+    align-content: center;
+    padding-left: 30px;
+    padding-right: 30px;
+}
+.findedAd__ads__btn-favorite button{
+    cursor: pointer;
+    width: 60px;
+    height: 60px;
+    border-radius: 20px;
+    background-color: #F6BB3D;
+    img{
+        margin-left: 0;
+        width: 43px;
+        height: 43px;
+    }
+}
+.findedAd__ads-title{
+    max-width: 615px;
+    color: #F6BB3D;
+    margin-bottom: 42px;
+    font-size: 32px;
+}
+.findedAd__ads-sort{
+    background-color: #D9D9D9;
+    display: flex;
+    max-width: 270px;
+    height: 40px;
+    border-radius: 20px;
+    align-items: center;
+    margin-bottom: 42px;
+    justify-content: space-between;
+    padding-left: 10px;
+    padding-right: 10px;
+    cursor: pointer;
+}
