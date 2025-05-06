@@ -389,6 +389,7 @@ li .new__card-descr{
 }
 .userInfo__inner{
     display: flex;
+    justify-content: space-between;
 }
 .userInfo__text{
     color: #ECA100;
@@ -422,4 +423,25 @@ li .new__card-descr{
     font-family: "Press Start 2P";
     cursor: pointer;
 }
+.userInfo__img{
+    background-color: #f0f0f0;
+    width: 270px;
+    height: 270px;
+    border-radius: 20px;
+}
 /* userInfo-end */
+
+/* 404-start */
+.content404{
+    margin-top: 130px;
+    color: #ECA100;
+}
+.content404__title{
+    font-size: 40px;
+}
+.content404__descr{
+    margin-top: 58px;
+    max-width: 640px;
+    font-size: 24px;
+}
+/* 404-end */
