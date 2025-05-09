@@ -1,6 +1,7 @@
 server:
   port: 8081
 
+
 spring:
   datasource:
     url: jdbc:postgresql://postgres-db:5432/lakepay_db
@@ -27,6 +28,10 @@ eureka:
   client:
     service-url:
       defaultZone: http://eureka-service:8761/eureka/
+
+crypto-bot:
+  api-url: https://testnet-pay.crypt.bot/api/
+  api-token: 377626:AAo0yQy9CN9vOBx6u3phGvrwZlDegfSqBUi
 
 token:
   signing:
