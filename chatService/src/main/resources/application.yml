@@ -3,6 +3,7 @@ server:
 
 spring:
   datasource:
+    # Change db credentials before merging to dev
     url: jdbc:postgresql://postgres-db:5432/chat_db
     username: postgres
     password: secret
