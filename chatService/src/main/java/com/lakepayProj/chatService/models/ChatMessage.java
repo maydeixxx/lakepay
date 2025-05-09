@@ -18,11 +18,8 @@ public class ChatMessage {
     private String senderName;
     private String recipientName;
     private String content;
-    private String chatId;
     private Date date;
     @Enumerated(EnumType.STRING)
     private MessageStatus status;
-    @ManyToOne
-    @JoinColumn(name = "chatId", nullable = false)
-    private ChatRoom chat;
+    private String chatId;
 }

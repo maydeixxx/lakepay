@@ -30,6 +30,7 @@ public class ChatController {
     @MessageMapping("/chat")
     public void processMessage(@Payload ChatMessageDTO chatMessage) {
         var chatId = chatRoomService.getChatId(chatMessage.getSenderName(), chatMessage.getRecipientName(), true);
+
         ChatMessage message = ChatMessage
                 .builder()
                 .chatId(chatId.get())
