@@ -2,6 +2,6 @@ FROM openjdk:21
 
 WORKDIR /app
 
-COPY
+COPY paymentService/target/PaymentService-0.0.1-SNAPSHOT.jar app.jar
 
-ENTRYPOINT ["top", "-b"]
+ENTRYPOINT ["java", "-jar", "app.jar"]

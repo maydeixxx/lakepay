@@ -14,7 +14,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class TelegramProducer {
     private final KafkaTemplate<String, String> template;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     public void sendTgAndChatId(Long tgId, Long chatId) {
         template.send("userTgChatId", String.valueOf(tgId), String.valueOf(chatId));
@@ -32,20 +32,19 @@ public class TelegramProducer {
         template.send("availableAds", String.valueOf(tgId));
     }
 
-    public void sendPaymentRequest(Long userId, Long adId, String currency, Double amount) {
+    public void sendPaymentRequest(Long userId, Long adId, String asset, Double amount) {
         try {
-            // Формируем JSON-объект с данными о платеже
             String message = objectMapper.writeValueAsString(Map.of(
                     "userId", userId,
                     "adId", adId,
-                    "currency", currency,
+                    "asset", asset,
                     "amount", amount
             ));
             template.send("payment_request", String.valueOf(userId), message);
-            log.info("Отправлен запрос на платёж: userId={}, adId={}, currency={}, amount={}",
-                    userId, adId, currency, amount);
+            log.info("Отправлен запрос на платёж: userId={}, adId={}, asset={}, amount={}",
+                    userId, adId, asset, amount);
         } catch (JsonProcessingException e) {
-            log.error("Ошибка при сериализации данных платежа: {}", e.getMessage(), e);
+            log.error("Ошибка сериализации данных платежа: {}", e.getMessage(), e);
             throw new RuntimeException("Не удалось отправить запрос на платёж", e);
         }
     }

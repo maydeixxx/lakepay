@@ -1,7 +1,6 @@
 server:
   port: 8081
 
-
 spring:
   datasource:
     url: jdbc:postgresql://lakePayPostgres:5432/lakepay_db
@@ -20,15 +19,6 @@ spring:
     consumer:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-crypto-bot:
-  api-url: https://testnet-pay.crypt.bot/api/
-  api-token: 377626:AAo0yQy9CN9vOBx6u3phGvrwZlDegfSqBUi
-
-  kafka:
-    bootstrap-servers: kafka:29092
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
 
   application:
     name: userService
@@ -38,3 +28,6 @@ eureka:
     service-url:
       defaultZone: http://eureka-service:8761/eureka/
 
+crypto-bot:
+  api-url: https://testnet-pay.crypt.bot/api/
+  api-token: 377626:AAo0yQy9CN9vOBx6u3phGvrwZlDegfSqBUi

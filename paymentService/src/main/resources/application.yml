@@ -1,26 +1,35 @@
 spring:
   application:
     name: paymentService
+
   datasource:
-    url: jdbc:postgresql://postgres:5432/lakepay_db
-    username: postgres
-    password: password
+    url: jdbc:postgresql://lakePayPostgres:5432/lakepay_db
     driver-class-name: org.postgresql.Driver
+    username: postgres
+    password: admin
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: create
+
   kafka:
-    bootstrap-servers: kafka:9092
+    bootstrap-servers: kafka:29092
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
     consumer:
+      group-id: payment-group
+      auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
 eureka:
   client:
     service-url:
-      defaultZone: http://eureka:8761/eureka
+      defaultZone: http://eureka-service:8761/eureka/
+
+crypto-bot:
+  api: https://testnet-pay.crypt.bot/api/
+  token: 36875:AAS1Wn7fEsFVdceQiM0buxOkHHCra0cOrnE
+
 server:
   port: 8083

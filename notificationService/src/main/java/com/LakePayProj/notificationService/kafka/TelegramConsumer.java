@@ -1,6 +1,7 @@
 package com.LakePayProj.notificationService.kafka;
 
 import com.LakePayProj.notificationService.tgBot.TelegramService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -21,6 +22,7 @@ import java.util.Map;
 public class TelegramConsumer {
     private final TelegramService service;
     private final WebClient webClient;
+    private final ObjectMapper objectMapper;
     private Long hashTgId;
 
     @KafkaListener(topics = "usersLog", groupId = "user-notifications")
@@ -32,16 +34,13 @@ public class TelegramConsumer {
     }
 
     @KafkaListener(topics = "payment_created", groupId = "notification-group")
-    public void handlePaymentCreated(ConsumerRecord<String, Map<String, Object>> record) {
+    public void handlePaymentCreated(ConsumerRecord<String, String> record) {
         try {
-            Map<String, Object> message = record.value();
-            Long userId = Long.valueOf(message.get("userId").toString());
-            Long adId = Long.valueOf(message.get("adId").toString());
-            String payUrl = (String) message.get("payUrl");
-
-            String notification = String.format("Оплатите объявление #%d по ссылке:\n%s", adId, payUrl);
-            service.sendMessage(String.valueOf(userId), notification);
-            log.info("Отправлена ссылка на оплату для userId={} adId={}: {}", userId, adId, payUrl);
+            Map<String, Object> data = objectMapper.readValue(record.value(), Map.class);
+            Long userId = Long.valueOf(data.get("userId").toString());
+            String payUrl = (String) data.get("payUrl");
+            service.sendPaymentLink(userId, payUrl);
+            log.info("Отправлена ссылка на оплату: userId={}, payUrl={}", userId, payUrl);
         } catch (Exception e) {
             log.error("Ошибка обработки payment_created: {}", e.getMessage(), e);
         }
@@ -64,7 +63,7 @@ public class TelegramConsumer {
     public List<String> getSubScribedUsers(String category) {
         try {
             return webClient.get()
-                    .uri("https://lakepay.ru/userService/user_category/{category}", category) // Обновлён URL
+                    .uri("https://lakepay.ru/user_category/{category}", category)
                     .accept(MediaType.APPLICATION_JSON)
                     .retrieve()
                     .onStatus(status -> status.isError(), response -> {
@@ -84,7 +83,7 @@ public class TelegramConsumer {
     public List<String> getCategoriesByTgId(Long tgId) {
         try {
             return webClient.get()
-                    .uri("https://lakepay.ru/userService/categoriesById/{tgId}", tgId) // Обновлён URL
+                    .uri("https://lakepay.ru/categoriesById/{tgId}", tgId)
                     .retrieve()
                     .bodyToMono(new ParameterizedTypeReference<List<String>>() {})
                     .block();
@@ -99,7 +98,7 @@ public class TelegramConsumer {
         StringBuilder adBuilder = new StringBuilder();
         for (String cat : categoriesByTgId) {
             List<Map<String, Object>> ads = webClient.get()
-                    .uri("https://lakepay.ru/adService/ad_category/{category}", cat) // Обновлён URL
+                    .uri("https://lakepay.ru/ad_category/{category}", cat)
                     .retrieve()
                     .bodyToMono(new ParameterizedTypeReference<List<Map<String, Object>>>() {})
                     .block();
@@ -133,7 +132,7 @@ public class TelegramConsumer {
 
     private String formatAdForTelegram(Map<String, Object> ad) {
         String price = ad.containsKey("price") && ad.get("price") != null ?
-                ad.get("price") + "₽" : "уточните у продавца";
+                ad.get("price") + "USDT" : "уточните у продавца";
         boolean isSold = ad.containsKey("sold") && Boolean.TRUE.equals(ad.get("sold"));
         String status = isSold ? "🔴 Продано" : "🟢 В продаже";
 

@@ -16,6 +16,7 @@
 	<description>lakepay</description>
 
 	<modules>
+		<module>paymentService</module>
 		<module>userService</module>
 		<module>eureka-service</module>
 		<module>notificationService</module>

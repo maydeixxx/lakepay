@@ -1,11 +1,15 @@
 package com.LakePayProj.notificationService.tgBot;
 
 import com.LakePayProj.notificationService.kafka.TelegramProducer;
+import com.LakePayProj.notificationService.configs.WebClientConfig;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -17,6 +21,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -26,13 +31,19 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class TelegramService extends TelegramLongPollingBot {
     private final TelegramProducer producer;
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
     private final List<String> categories = List.of("PUBG", "CS2", "FORTNITE", "DEADLOCK", "DOTA2");
-    private static final List<String> SUPPORTED_CURRENCIES = List.of("BTC", "USDT", "ETH", "TON");
+    private static final List<String> SUPPORTED_CURRENCIES = List.of("USDT");
+    private final WebClientConfig webClientConfig;
+    private String chatIdHash;
 
     @Override
     public String getBotUsername() {
         return "@lakePayBot";
     }
+
+    private final String lakePayUrl = "https://lakepay.ru";
 
     @Override
     public String getBotToken() {
@@ -82,14 +93,14 @@ public class TelegramService extends TelegramLongPollingBot {
         Long chatId = update.getMessage().getChatId();
         Long tgId = update.getMessage().getFrom().getId();
         String text = update.getMessage().getText().trim();
+        chatIdHash = String.valueOf(chatId);
 
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(chatId);
 
         if (text.startsWith("/pay")) {
-            handlePayCommand(text, tgId, chatId, sendMessage);
+            handlePayCommand(text, tgId, chatId);
         } else {
-            // Остальные команды
             switch (text) {
                 case "/start" -> sendMessage.setText("Привет! Я LakePayBot, выбери команду для взаимодействия.");
                 case "/reg" -> sendMessage.setText("Вот твоя ссылка на регистрацию:\nlakepay.ru/auth/telegram");
@@ -116,27 +127,59 @@ public class TelegramService extends TelegramLongPollingBot {
         }
     }
 
-    private void handlePayCommand(String text, Long tgId, Long chatId, SendMessage sendMessage) {
-        String[] parts = text.split("\\s+");
-        if (parts.length != 3) {
-            sendMessage.setText("Неверный формат. Используйте: /pay <adId> <currency>\nПример: /pay 123 BTC");
-            return;
-        }
-
+    private void handlePayCommand(String messageText, Long tgId, Long chatId) {
         try {
-            Long adId = Long.parseLong(parts[1]);
-            String currency = parts[2].toUpperCase();
-
-            if (!SUPPORTED_CURRENCIES.contains(currency)) {
-                sendMessage.setText("Неподдерживаемая валюта. Доступные валюты: " + String.join(", ", SUPPORTED_CURRENCIES));
+            String[] parts = messageText.split(" ");
+            if (parts.length != 3) {
+                sendMessage(chatIdHash, "Формат: /pay <adId> <asset>");
                 return;
             }
 
-            // Отправляем запрос на создание платежа в paymentService через Kafka
-            producer.sendPaymentRequest(tgId, adId, currency, 0.0001); // Фиксированная сумма для примера
-            sendMessage.setText("Запрос на оплату отправлен. Ожидайте ссылку для оплаты.");
-        } catch (NumberFormatException e) {
-            sendMessage.setText("Ошибка: adId должен быть числом. Пример: /pay 123 BTC");
+            Long adId = Long.parseLong(parts[1]);
+            String asset = parts[2].toUpperCase();
+            String adUrl = lakePayUrl + "/ad_id/" + adId;
+            String adResponse = restTemplate.getForObject(adUrl, String.class);
+            Map<String, Object> adData = objectMapper.readValue(adResponse, Map.class);
+            BigDecimal price = new BigDecimal(adData.get("price").toString());
+
+            producer.sendTgAndChatId(tgId, chatId);
+
+            String response = restTemplate.getForObject(lakePayUrl + "/user_tg/" + tgId, String.class);
+            Map<String, Object> userData = objectMapper.readValue(response, Map.class);
+            Long userId = Long.valueOf(userData.get("id").toString());
+
+            producer.sendPaymentRequest(userId, adId, asset, price.doubleValue());
+            sendMessage(chatIdHash, "Запрос на оплату отправлен. Ожидайте ссылку.");
+        } catch (Exception e) {
+            log.error("Ошибка обработки /pay: {}", e.getMessage(), e);
+            sendMessage(chatIdHash, "Ошибка при обработке оплаты. Проверьте параметры.");
+        }
+    }
+
+    public void sendPaymentLink(Long userId, String payUrl) {
+        try {
+            String response = restTemplate.getForObject(lakePayUrl + "/user_id/" + userId, String.class);
+            Map<String, Object> userData = objectMapper.readValue(response, Map.class);
+            Long chatId = Long.valueOf(userData.get("chatId").toString());
+
+            sendMessage(chatIdHash, "Ссылка на оплату: " + payUrl);
+            log.info("Отправлена ссылка на оплату: userId={}, chatId={}, payUrl={}", userId, chatId, payUrl);
+        } catch (Exception e) {
+            log.error("Ошибка отправки ссылки на оплату: userId={}, error={}", userId, e.getMessage(), e);
+        }
+    }
+
+    private Map<String, Object> getAdById(Long adId) {
+        WebClient webClient = webClientConfig.webClient();
+        try {
+            return webClient.get()
+                    .uri("https://lakepay.ru/ad_id/{adId}", adId)
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+                    .block();
+        } catch (Exception e) {
+            log.error("Ошибка при получении объявления adId={}: {}", adId, e.getMessage());
+            return null;
         }
     }
 

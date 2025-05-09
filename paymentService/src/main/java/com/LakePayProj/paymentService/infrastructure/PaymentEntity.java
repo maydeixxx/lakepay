@@ -1,4 +1,4 @@
-package com.LakePayProj.paymentService.domain.model;
+package com.LakePayProj.paymentService.infrastructure;
 
 import jakarta.persistence.*;
 import lombok.Data;

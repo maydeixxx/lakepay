@@ -3,15 +3,11 @@ spring:
     name: gatewayApi
   cloud:
     gateway:
-      discovery:
-        locator:
-          enabled: false
-          lower-case-service-id: true
       routes:
         - id: userService
           uri: lb://userService
           predicates:
-            - Path=/auth/telegram,/auth/telegram/token,/all_users,/user_id/**,/user_role/**,/user_category/**,/save_user,/update_user/**,/delete_user/**,/categoriesById/**
+            - Path=/auth/telegram,/auth/telegram/token,/all_users,/user_id/**,/user_role/**,/user_category/**,/save_user,/update_user/**,/delete_user/**,/categoriesById/**, /user_tg/**
         - id: adService
           uri: lb://adService
           predicates:
@@ -31,6 +27,3 @@ eureka:
   client:
     service-url:
       defaultZone: http://eureka-service:8761/eureka/
-logging:
-  level:
-    org.springframework.cloud.gateway: DEBUG
