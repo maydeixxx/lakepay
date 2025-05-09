@@ -3,9 +3,9 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/chat_db
+    url: jdbc:postgresql://postgres-db:5432/chat_db
     username: postgres
-    password: admin
+    password: secret
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
