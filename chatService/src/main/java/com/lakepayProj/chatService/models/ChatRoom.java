@@ -14,7 +14,6 @@ public class ChatRoom {
     @Id
     @GeneratedValue
     private Long id;
-    @Column(nullable = false, unique = true)
     private String chatId;
     private String senderName;
     private String recipientName;
