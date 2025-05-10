@@ -5,6 +5,7 @@ import com.lakepayProj.chatService.repository.IChatRoomRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -17,6 +18,11 @@ public class ChatRoomService {
                 .findBySenderNameAndRecipientName(senderName, recipientName)
                 .map(ChatRoom::getChatId)
                 .or(() -> {
+                    // Prevent user from opening a chat with themselves
+                    if (recipientName.compareTo(senderName) == 0) {
+                        return Optional.empty();
+                    }
+
                     if (!createIfNotExist) {
                         return Optional.empty();
                     }
@@ -25,6 +31,10 @@ public class ChatRoomService {
 
                     return Optional.of(chatId);
                 });
+    }
+
+    public List<String> getChatList(String username) {
+        return repository.findByRecipientName(username).stream().map(ChatRoom::getRecipientName).toList();
     }
 
     public String createChatId(String senderName, String recipientName) {
