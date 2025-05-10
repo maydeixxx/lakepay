@@ -14,6 +14,6 @@ public class WsHandshakeHandler extends DefaultHandshakeHandler {
         String username = (String) attributes.get("username");
 
         // Create and return a custom Principal
-        return new UserPrincipal(username);
+        return new WsUserPrincipal(username);
     }
 }

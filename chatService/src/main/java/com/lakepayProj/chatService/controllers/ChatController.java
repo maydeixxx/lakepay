@@ -51,6 +51,13 @@ public class ChatController {
         );
     }
 
+    // TODO: Authenticate user
+    @GetMapping("/chat/list/{username}")
+    public ResponseEntity<List<String>> getAvailableChats(@PathVariable String username) {
+        List<String> data = chatRoomService.getChatList(username);
+        return new ResponseEntity<>(data, HttpStatus.OK);
+    }
+
     @GetMapping("/messages/{senderName}/{recipientName}")
     public ResponseEntity<List<ChatMessageDTO>> getChatMessages(@PathVariable String senderName, @PathVariable String recipientName) {
         List<ChatMessage> messages = chatMessageService.findChatMessages(senderName, recipientName);
