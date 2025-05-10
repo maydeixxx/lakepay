@@ -25,6 +25,21 @@
 </div>
 
 <div id="chat-page" class="hidden">
+    <aside class="chat-list">
+        <div class="chat-list-header">
+            <h2>Chats:</h2>
+        </div>
+        <ul id="chat-list-container">
+        </ul>
+        <form id="recipientForm" name="recipientForm">
+            <div class="form-group">
+                <input type="text" id="recipient" placeholder="Message to..." autocomplete="off" class="form-control" />
+            </div>
+            <div class="form-group">
+                <button type="submit" class="accent new-chat">New Chat</button>
+            </div>
+        </form>
+    </aside>
     <div class="chat-container">
         <div class="chat-header">
             <h2>Spring WebSocket Chat Demo</h2>
@@ -38,7 +53,6 @@
         <form id="messageForm" name="messageForm">
             <div class="form-group">
                 <div class="input-group clearfix">
-                    <input type="text" id="recipient" placeholder="Enter recipient username..." autocomplete="off" class="form-control"/>
                     <input type="text" id="message" placeholder="Type a message..." autocomplete="off" class="form-control"/>
                     <button type="submit" class="primary">Send</button>
                 </div>

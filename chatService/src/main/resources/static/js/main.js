@@ -7,10 +7,14 @@ var messageForm = document.querySelector('#messageForm');
 var messageInput = document.querySelector('#message');
 var recipientInput = document.querySelector('#recipient');
 var messageArea = document.querySelector('#messageArea');
+var chatsArea = document.querySelector('#chat-list-container');
 var connectingElement = document.querySelector('.connecting');
+var recipientForm = document.querySelector("#recipientForm");
 
 var stompClient = null;
 var username = null;
+var recipient = null;
+var chats = [];
 
 var colors = [
     '#2196F3', '#32c787', '#00BCD4', '#ff5652',
@@ -24,17 +28,46 @@ function connect(event) {
         usernamePage.classList.add('hidden');
         chatPage.classList.remove('hidden');
 
-        var socket = new SockJS('http://localhost:8080/ws?token=' + username);
-        stompClient = Stomp.over(socket, null, { authentication: true });
+        var socket = new SockJS('/ws?token=' + username);
+        stompClient = Stomp.over(socket);
 
         stompClient.connect({}, onConnected, onError);
     }
     event.preventDefault();
 }
 
+function addChat(username) {
+    var userChat = document.createElement('li');
+
+    userChat.classList.add('user-chat');
+
+    var avatarElement = document.createElement('i');
+    var avatarText = document.createTextNode(username[0]);
+    avatarElement.appendChild(avatarText);
+    avatarElement.style['background-color'] = getAvatarColor(username);
+
+    userChat.appendChild(avatarElement);
+
+    var usernameElement = document.createElement('span');
+    var usernameText = document.createTextNode(username);
+    usernameElement.appendChild(usernameText);
+    userChat.appendChild(usernameElement);
+
+    chatsArea.appendChild(userChat);
+}
 
 function onConnected() {
-    // Subscribe to the Public Topic
+    fetch(`/chat/list/${username}`)
+          .then(response => response.json())
+          .then(data => {
+            chats = data;
+            chats.forEach(c => addChat(c));
+            console.log("Chat messages:", data);
+          })
+          .catch(error => {
+            console.error("Error fetching messages:", error);
+          });
+
     stompClient.subscribe('/user/queue/messages', onMessageReceived);
 
     connectingElement.classList.add('hidden');
@@ -52,7 +85,7 @@ function sendMessage(event) {
     if(messageContent && stompClient) {
         var chatMessage = {
             'senderName': username,
-            'recipientName': recipientInput.value,
+            'recipientName': recipient,
             'content': messageInput.value,
             'date': new Date().toISOString()
         };
@@ -62,9 +95,20 @@ function sendMessage(event) {
     event.preventDefault();
 }
 
-
 function onMessageReceived(payload) {
-    var message = JSON.parse(payload.body);
+var message = JSON.parse(payload.body);
+}
+
+
+
+function processMessage(message) {
+
+
+
+    if (!chats.includes(message.senderName)) {
+        chats.push(message.senderName);
+        addChat(message.senderName);
+    }
 
     var messageElement = document.createElement('li');
 
@@ -102,5 +146,12 @@ function getAvatarColor(messageSender) {
     return colors[index];
 }
 
+
+
 usernameForm.addEventListener('submit', connect, true)
 messageForm.addEventListener('submit', sendMessage, true)
+recipientForm.addEventListener('submit', (event) => {
+    recipient = recipientInput.value.trim();
+    addChat(recipient);
+    event.preventDefault();
+}, true)
