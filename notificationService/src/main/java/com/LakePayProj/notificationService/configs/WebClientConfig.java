@@ -1,4 +1,4 @@
-package com.LakePayProj.notificationService.webClient;
+package com.LakePayProj.notificationService.configs;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

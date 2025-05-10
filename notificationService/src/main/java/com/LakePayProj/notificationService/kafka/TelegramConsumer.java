@@ -1,6 +1,7 @@
 package com.LakePayProj.notificationService.kafka;
 
 import com.LakePayProj.notificationService.tgBot.TelegramService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -9,11 +10,11 @@ import org.springframework.http.MediaType;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Map;
-
 
 @Slf4j
 @Service
@@ -21,14 +22,42 @@ import java.util.Map;
 public class TelegramConsumer {
     private final TelegramService service;
     private final WebClient webClient;
+    private final ObjectMapper objectMapper;
     private Long hashTgId;
 
     @KafkaListener(topics = "usersLog", groupId = "user-notifications")
     public void sendNewUser(ConsumerRecord<String, String> record) {
         String chatId = record.key();
         String message = record.value();
-
         service.sendMessage(chatId, message);
+        log.debug("Отправлено сообщение для chatId={}: {}", chatId, message);
+    }
+
+    @KafkaListener(topics = "payment_created", groupId = "notification-group")
+    public void handlePaymentCreated(ConsumerRecord<String, String> record) {
+        try {
+            Map<String, Object> data = objectMapper.readValue(record.value(), Map.class);
+            Long userId = Long.valueOf(data.get("userId").toString());
+            String payUrl = (String) data.get("payUrl");
+            service.sendPaymentLink(userId, payUrl);
+            log.info("Отправлена ссылка на оплату: userId={}, payUrl={}", userId, payUrl);
+        } catch (Exception e) {
+            log.error("Ошибка обработки payment_created: {}", e.getMessage(), e);
+        }
+    }
+
+    @KafkaListener(topics = "availableAds", groupId = "user-notifications")
+    public void saveTgId(ConsumerRecord<String, String> record) {
+        hashTgId = Long.valueOf(record.value());
+        getAdsByCategories();
+        log.debug("Получен tgId для availableAds: {}", hashTgId);
+    }
+
+    @KafkaListener(topics = "ads", groupId = "ads-sub")
+    public void sendNewAds(ConsumerRecord<String, String> record) {
+        List<String> subScribedUsers = getSubScribedUsers(record.key());
+        subScribedUsers.forEach(user -> service.sendMessage(user, record.value()));
+        log.info("Отправлены уведомления о новых объявлениях для категории {}: {} пользователей", record.key(), subScribedUsers.size());
     }
 
     public List<String> getSubScribedUsers(String category) {
@@ -52,40 +81,27 @@ public class TelegramConsumer {
     }
 
     public List<String> getCategoriesByTgId(Long tgId) {
-        return webClient.get()
-                .uri("https://lakepay.ru/categoriesById/{tgId}", tgId)
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<List<String>>() {
-                })
-                .block();
-    }
-
-    @KafkaListener(topics = "myAds", groupId = "user-notifications")
-    public void subAds(ConsumerRecord<String, String> record) {
-        String tgId = record.value();
-        List<String> categoriesByTgId = getCategoriesByTgId(Long.valueOf(tgId));
-        StringBuilder message = new StringBuilder();
-        message.append("*Ваши подписки*\n");
-        categoriesByTgId.forEach(ad -> message.append(ad).append("\n"));
-        service.sendMessage(tgId, message.toString().trim());
-    }
-
-    @KafkaListener(topics = "availableAds", groupId = "user-notifications")
-    public void saveTgId(ConsumerRecord<String, String> record) {
-        hashTgId = Long.valueOf(record.value());
-        getAdsByCategories();
+        try {
+            return webClient.get()
+                    .uri("https://lakepay.ru/categoriesById/{tgId}", tgId)
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<List<String>>() {})
+                    .block();
+        } catch (Exception e) {
+            log.error("Не удалось получить категории для tgId {}: {}", tgId, e.getMessage());
+            return List.of();
+        }
     }
 
     public void getAdsByCategories() {
         List<String> categoriesByTgId = getCategoriesByTgId(hashTgId);
         StringBuilder adBuilder = new StringBuilder();
         for (String cat : categoriesByTgId) {
-            List<Map<String, Object>> ads = (webClient.get()
+            List<Map<String, Object>> ads = webClient.get()
                     .uri("https://lakepay.ru/ad_category/{category}", cat)
                     .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<List<Map<String, Object>>>() {
-                    })
-                    .block());
+                    .bodyToMono(new ParameterizedTypeReference<List<Map<String, Object>>>() {})
+                    .block();
 
             if (ads == null || ads.isEmpty()) {
                 continue;
@@ -108,8 +124,7 @@ public class TelegramConsumer {
         }
         String finalMessage = adBuilder.toString().trim();
         if (finalMessage.isEmpty()) {
-            service.sendMessage(String.valueOf(hashTgId), "В ваших подписках пока что нет " +
-                    "досупных объявлений");
+            service.sendMessage(String.valueOf(hashTgId), "В ваших подписках пока что нет доступных объявлений");
         } else {
             service.sendMessage(String.valueOf(hashTgId), finalMessage);
         }
@@ -117,7 +132,7 @@ public class TelegramConsumer {
 
     private String formatAdForTelegram(Map<String, Object> ad) {
         String price = ad.containsKey("price") && ad.get("price") != null ?
-                ad.get("price") + "₽" : "уточните у продавца";
+                ad.get("price") + "USDT" : "уточните у продавца";
         boolean isSold = ad.containsKey("sold") && Boolean.TRUE.equals(ad.get("sold"));
         String status = isSold ? "🔴 Продано" : "🟢 В продаже";
 
@@ -141,11 +156,5 @@ public class TelegramConsumer {
                 ad.getOrDefault("category", "не указана"),
                 status
         );
-    }
-
-    @KafkaListener(topics = "ads", groupId = "ads-sub")
-    public void sendNewAds(ConsumerRecord<String, String> record) {
-        List<String> subScribedUsers = getSubScribedUsers(record.key());
-        subScribedUsers.forEach(user -> service.sendMessage(user, record.value()));
     }
 }

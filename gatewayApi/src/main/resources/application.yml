@@ -1,23 +1,21 @@
 spring:
   application:
     name: gatewayApi
-
   cloud:
     gateway:
       routes:
         - id: userService
           uri: lb://userService
           predicates:
-            - Path=/auth/telegram,/auth/telegram/token,/all_users,/user_id/**,/user_role/**,/user_category/**,/save_user,/update_user/**,/delete_user/**,/categoriesById/**
-
+            - Path=/auth/telegram,/auth/telegram/token,/all_users,/user_id/**,/user_role/**,/user_category/**,/save_user,/update_user/**,/delete_user/**,/categoriesById/**, /user_tg/**
         - id: adService
           uri: lb://adService
           predicates:
             - Path=/all_ads,/save_ad,/ad_delete/**,/ad_category/**,/ad_id/**,/update_ad/**
-
-      discovery:
-        locator:
-          lower-case-service-id: true
+        - id: paymentService
+          uri: lb://paymentService
+          predicates:
+            - Path=/pay/**
 
 server:
   port: 8990
@@ -25,9 +23,7 @@ server:
     remote-ip-header: X-Forwarded-For
     protocol-header: X-Forwarded-Proto
     trusted-proxy: "*"
-
 eureka:
   client:
     service-url:
       defaultZone: http://eureka-service:8761/eureka/
-

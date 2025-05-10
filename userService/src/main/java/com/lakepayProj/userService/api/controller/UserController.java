@@ -106,6 +106,13 @@ public class UserController {
         return new ResponseEntity<>(list, HttpStatus.OK);
     }
 
+    @GetMapping("/user_tg/{id}")
+    public ResponseEntity<UserDTO> findUserByTgID(@PathVariable Long id) {
+        User userByTgId = service.findUserByTgId(id);
+        UserDTO userDTO = mapper.userToUserDTO(userByTgId);
+        return new ResponseEntity<>(userDTO, HttpStatus.OK);
+    }
+
     @GetMapping("auth/telegram")
     public ResponseEntity<Resource> getAuthScript() {
         Resource resource = new ClassPathResource("static/tgAuth.html");

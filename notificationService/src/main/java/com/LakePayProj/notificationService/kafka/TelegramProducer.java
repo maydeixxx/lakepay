@@ -1,13 +1,20 @@
 package com.LakePayProj.notificationService.kafka;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TelegramProducer {
     private final KafkaTemplate<String, String> template;
+    private final ObjectMapper objectMapper;
 
     public void sendTgAndChatId(Long tgId, Long chatId) {
         template.send("userTgChatId", String.valueOf(tgId), String.valueOf(chatId));
@@ -25,7 +32,20 @@ public class TelegramProducer {
         template.send("availableAds", String.valueOf(tgId));
     }
 
-    public void myAds(Long tgId) {
-        template.send("myAds", String.valueOf(tgId));
+    public void sendPaymentRequest(Long userId, Long adId, String asset, Double amount) {
+        try {
+            String message = objectMapper.writeValueAsString(Map.of(
+                    "userId", userId,
+                    "adId", adId,
+                    "asset", asset,
+                    "amount", amount
+            ));
+            template.send("payment_request", String.valueOf(userId), message);
+            log.info("Отправлен запрос на платёж: userId={}, adId={}, asset={}, amount={}",
+                    userId, adId, asset, amount);
+        } catch (JsonProcessingException e) {
+            log.error("Ошибка сериализации данных платежа: {}", e.getMessage(), e);
+            throw new RuntimeException("Не удалось отправить запрос на платёж", e);
+        }
     }
 }
