@@ -510,3 +510,58 @@ li .new__card-descr{
 }
 
 /* favorites-end */
+
+
+/* chats-start */
+.chats__inner {
+    display: flex;
+    width: calc(100% - 32px);
+    margin: 0 auto;
+    gap: 32px;
+}
+
+.chats__avatar {
+    background: #F6BB3D;
+    aspect-ratio: 1/1;
+    padding: 8px;
+    border-radius: 1000px;
+}
+
+.chats__sidebar {
+    max-width: 300px;
+    background-color: #D9D9D9;
+    border-radius: 20px;
+    padding: 8px;
+}
+
+.chat-list {
+    display: flex;
+    gap: 32px;
+    flex-direction: column;
+}
+
+.chat-list__username {
+    padding-top: 16px;
+}
+
+.chat-list__item {
+    display: flex;
+    align-items: start;
+    gap: 8px;
+    width: 300px;
+}
+
+.chat-list__info {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.chat-list__preview {
+    max-width: 200px;
+    font-size: 10px;
+    text-overflow: ellipsis;
+    overflow: hidden; 
+    white-space: nowrap;
+}
+/* chats-end */
