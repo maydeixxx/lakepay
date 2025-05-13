@@ -124,7 +124,7 @@
                     <div class="chats__meta">
                         <img src="images/user.svg" alt="" class="message__avatar">
                         <div class="meta__inner">
-                            <span class="">Username</span>
+                            <span>Username</span>
                             <p class="meta__date">Last online 4 hours ago.</p>
                         </div>
                     </div>
@@ -160,6 +160,37 @@
             </div>
         </div>
     </footer>
+
+    <script type="importmap">
+        {
+            "imports": {
+            "@stomp/stompjs": "https://ga.jspm.io/npm:@stomp/stompjs@7.0.0/esm6/index.js"
+            }
+        }
+    </script>
+
+    <!-- ES Module Shims: Import maps polyfill for modules browsers without import maps support (all except Chrome 89+) -->
+    <script
+        async
+        src="https://ga.jspm.io/npm:es-module-shims@1.5.1/dist/es-module-shims.js"
+        crossorigin="anonymous"
+    ></script>
+
+    <script type="module">
+        import { Client } from '@stomp/stompjs';
+
+        const client = new Client({
+            brokerURL: 'ws://localhost:15674/ws',
+            onConnect: () => {
+            client.subscribe('/topic/test01', message =>
+                console.log(`Received: ${message.body}`)
+            );
+            client.publish({ destination: '/topic/test01', body: 'First Message' });
+            },
+        });
+
+        client.activate();
+    </script>
 </body>
 
 </html>
