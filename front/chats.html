@@ -94,44 +94,61 @@
     <section class="chats">
         <div class="container">
             <div class="chats__inner">
-                <aside class="chats__sidebar">
-                    <ul class="chat-list">
-                        <li class="chat-list__item">
-                            <img src="images/user.svg" alt="" class="chats__avatar">
-                            <div class="chat-list__info">
-                                <span class="chat-list__username">Username</span>
-                                <p class="chat-list__preview">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Dolores, perferendis. Accusamus quaerat ab tempore voluptatum eum! Quia quisquam placeat, nam dicta quis error inventore cupiditate dolor ab distinctio unde est.</p>
+                <aside class="chats__section chats__sidebar">
+                    <h3 class="chats__heading">Чаты:</h3>
+                    <ul class="chats__list">
+                        <li class="message message_preview message_new">
+                            <img src="images/user.svg" alt="" class="message__avatar">
+                            <div class="message__body">
+                                <span class="message__author">Username</span>
+                                <p class="message__content">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Dolores, perferendis. Accusamus quaerat ab tempore voluptatum eum! Quia quisquam placeat, nam dicta quis error inventore cupiditate dolor ab distinctio unde est.</p>
                             </div>
                         </li>
-                        <li class="chat-list__item">
-                            <img src="images/user.svg" alt="" class="chats__avatar">
-                            <div class="chat-list__info">
-                                <span class="chat-list__username">Username</span>
-                                <p class="chat-list__preview">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Dolores, perferendis. Accusamus quaerat ab tempore voluptatum eum! Quia quisquam placeat, nam dicta quis error inventore cupiditate dolor ab distinctio unde est.</p>
+                        <li class="message message_preview">
+                            <img src="images/user.svg" alt="" class="message__avatar">
+                            <div class="message__body">
+                                <span class="message__author">Username</span>
+                                <p class="message__content">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Dolores, perferendis. Accusamus quaerat ab tempore voluptatum eum! Quia quisquam placeat, nam dicta quis error inventore cupiditate dolor ab distinctio unde est.</p>
                             </div>
                         </li>
-                        <li class="chat-list__item">
-                            <img src="images/user.svg" alt="" class="chats__avatar">
-                            <div class="chat-list__info">
-                                <span class="chat-list__username">Username</span>
-                                <p class="chat-list__preview">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Dolores, perferendis. Accusamus quaerat ab tempore voluptatum eum! Quia quisquam placeat, nam dicta quis error inventore cupiditate dolor ab distinctio unde est.</p>
+                        <li class="message message_preview">
+                            <img src="images/user.svg" alt="" class="message__avatar">
+                            <div class="message__body">
+                                <span class="message__author">Username</span>
+                                <p class="message__content">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Dolores, perferendis. Accusamus quaerat ab tempore voluptatum eum! Quia quisquam placeat, nam dicta quis error inventore cupiditate dolor ab distinctio unde est.</p>
                             </div>
                         </li>
                     </ul>
                 </aside>
-                <main>
-                    <ul class="chat-area">
-                        <li class="chat-message">
-                            <img src="images/user.svg" alt="" class="chats__avatar">
-                            <span class="chat-message__author">Username</span>
-                            <p class="chat-message__content">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Dolores, perferendis. Accusamus quaerat ab tempore voluptatum eum! Quia quisquam placeat, nam dicta quis error inventore cupiditate dolor ab distinctio unde est.</p>
+                <main class="chats__section">
+                    <div class="chats__meta">
+                        <img src="images/user.svg" alt="" class="message__avatar">
+                        <div class="meta__inner">
+                            <span class="">Username</span>
+                            <p class="meta__date">Last online 4 hours ago.</p>
+                        </div>
+                    </div>
+                    <ul class="chats__history">
+                        <li class="message">
+                            <img src="images/user.svg" alt="" class="message__avatar">
+                            <div class="message__body">
+                                <span class="message__author">Username</span>
+                                <p class="message__content">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Dolores, perferendis. Accusamus quaerat ab tempore voluptatum eum! Quia quisquam placeat, nam dicta quis error inventore cupiditate dolor ab distinctio unde est.</p>
+                            </div>
                         </li>
-                        <li class="chat-message chat-message_right">
-                            <img src="images/user.svg" alt="" class="chats__avatar">
-                            <span class="chat-message__author">Username</span>
-                            <p class="chat-message__content">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Dolores, perferendis. Accusamus quaerat ab tempore voluptatum eum! Quia quisquam placeat, nam dicta quis error inventore cupiditate dolor ab distinctio unde est.</p>
+                        <li class="message message_right">
+                            <img src="images/user.svg" alt="" class="message__avatar">
+                            <div class="message__body">
+                                <span class="message__author">Username</span>
+                                <p class="message__content">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Dolores, perferendis. Accusamus quaerat ab tempore voluptatum eum! Quia quisquam placeat, nam dicta quis error inventore cupiditate dolor ab distinctio unde est.</p>
+                            </div>
                         </li>
                     </ul>
+                    <form class="chat-form">
+                        <input placeholder="Новое сообщение..." type="text" maxlength="2048" class="chat-form__message">
+                        <button class="chat-form__submit">Отправить
+                        </button>
+                    </form>
                 </main>
             </div>
         </div>
