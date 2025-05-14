@@ -63,6 +63,7 @@ body {
     }
 }
 .header__catalog__panel{
+    z-index: 1;
     position: absolute;
     display: none;
     padding-top: 12px;
@@ -679,3 +680,81 @@ li .new__card-descr{
     font-family: inherit;
 }
 /* chats-end */
+
+/* ad-page-start */
+
+.ad{
+    margin-top: 140px;
+    color: #ECA100;
+}
+.ad__title{
+    color: #ECA100;
+    font-size: 40px;
+    margin-bottom: 42px;
+}
+.ad__main{
+    display: flex;
+    img{
+        border-radius: 20px;
+        max-width: 770px;
+        max-height: 417px;
+    }
+}
+.ad__main__descr{
+    margin-left: 30px;
+}
+.ad__main__descr-price{
+    font-size: 32px;
+    margin-bottom: 40px;
+}
+.ad__main__descr-btns{
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 54px;
+    button{
+        background-color: #F6BB3D;
+        padding: 16px 21px;
+        border-radius: 20px;
+        font-family: "Press Start 2P";
+        cursor: pointer;
+        height: 70px;
+        color: #996900;
+        img{
+            width: 45px;
+            height: 41px;
+            border-radius: 0;
+        }
+    }
+}
+.ad__main__descr-seller{
+    display: flex;
+    align-items: center;
+    img{
+        border-radius: 0;
+        margin-right: 20px;
+    }
+}
+.ad__main__descr-btn{
+    margin-top: 35px;
+    background-color: #F6BB3D;
+    width: 370px;
+    height: 48px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-family: "Press Start 2P";
+    color: #996900;
+}
+
+.ad__descr{
+    margin-top: 52px;
+}
+.ad__descr-title{
+    font-size: 32px;
+    margin-bottom: 27px;
+}
+.ad__descr-descr{
+    font-size: 20px;
+    line-height: 35px;
+}
+/* ad-page-end */
