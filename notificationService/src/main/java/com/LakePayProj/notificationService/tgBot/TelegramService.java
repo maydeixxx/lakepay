@@ -62,7 +62,9 @@ public class TelegramService extends TelegramLongPollingBot {
                     new BotCommand("/subscribe", "Подписка на категорию (выбор по кнопке)"),
                     new BotCommand("/unsubscribe", "Отписка от категории (выбор по кнопке)"),
                     new BotCommand("/available_ads", "Доступные объявления"),
-                    new BotCommand("/pay", "Оплатить объявление (формат: /pay <adId> <currency>)")
+                    new BotCommand("/pay", "Оплатить объявление (формат: /pay <adId> <currency>)"),
+                    new BotCommand("/deposit", "пополнить баланс (формат: /deposit <amount> <currency>)"),
+                    new BotCommand("/withdraw", "вывод средств (формат: /withdraw <amount> <currency>)")
             );
             SetMyCommands setMyCommands = new SetMyCommands();
             setMyCommands.setCommands(commandList);
@@ -100,6 +102,9 @@ public class TelegramService extends TelegramLongPollingBot {
 
         if (text.startsWith("/pay")) {
             handlePayCommand(text, tgId, chatId);
+
+        } else if (text.startsWith("/deposit")) {
+            handleDepositRequest(text, tgId, chatId);
         } else {
             switch (text) {
                 case "/start" -> sendMessage.setText("Привет! Я LakePayBot, выбери команду для взаимодействия.");
@@ -132,7 +137,6 @@ public class TelegramService extends TelegramLongPollingBot {
             String[] parts = messageText.split(" ");
             if (parts.length != 3) {
                 sendMessage(chatIdHash, "Формат: /pay <adId> <asset>");
-                return;
             }
 
             Long adId = Long.parseLong(parts[1]);
@@ -153,6 +157,50 @@ public class TelegramService extends TelegramLongPollingBot {
         } catch (Exception e) {
             log.error("Ошибка обработки /pay: {}", e.getMessage(), e);
             sendMessage(chatIdHash, "Ошибка при обработке оплаты. Проверьте параметры.");
+        }
+    }
+
+    public void handleDepositRequest(String message, Long tgId, Long chatId) {
+        try {
+            String[] parts = message.split(" ");
+            if (parts.length != 3) {
+                sendMessage(String.valueOf(chatId), "формат: /deposit <amount> <currency>)");
+            }
+
+            Double amount = Double.parseDouble(parts[1]);
+            String currency = parts[2].toUpperCase();
+
+            producer.sendTgAndChatId(tgId, chatId);
+
+            String response = restTemplate.getForObject(lakePayUrl + "/user_tg/" + tgId, String.class);
+            Map<String, Object> userData = objectMapper.readValue(response, Map.class);
+            Long userId = Long.valueOf(userData.get("id").toString());
+
+            producer.sendDepositRequest(userId, amount, currency);
+            sendMessage(String.valueOf(chatId), "запрос на пополнение отправлен, ожидайте ссылку");
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+    }
+
+    public void handleWithdrawRequest(String message, Long tgId, Long chatId) {
+        try {
+            String[] parts = message.split(" ");
+
+            if (parts.length != 3) {
+                sendMessage(String.valueOf(chatId), "Формат: /withdraw <amount> <currency>");
+            }
+
+            Double amount = Double.parseDouble(parts[1]);
+            String currency = parts[2];
+
+            String response = restTemplate.getForObject(lakePayUrl + "/user_tg/" + tgId, String.class);
+            Map<String, Object> userData = objectMapper.readValue(response, Map.class);
+            Long userId = Long.valueOf(userData.get("id").toString());
+
+            producer.sendWithdrawRequest(userId, amount, currency);
+        } catch (Exception e) {
+            log.error(e.getMessage());
         }
     }
 

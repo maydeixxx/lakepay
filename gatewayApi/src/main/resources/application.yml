@@ -15,7 +15,7 @@ spring:
         - id: paymentService
           uri: lb://paymentService
           predicates:
-            - Path=/pay/**
+            - Path=/webhook/**
 
 server:
   port: 8990

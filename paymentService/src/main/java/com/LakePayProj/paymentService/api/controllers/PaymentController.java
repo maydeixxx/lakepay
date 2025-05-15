@@ -1,135 +1,95 @@
 package com.LakePayProj.paymentService.api.controllers;
 
-import com.LakePayProj.paymentService.infrastructure.PaymentEntity;
-import com.LakePayProj.paymentService.application.interfaces.repos.PaymentRepository;
-import com.LakePayProj.paymentService.application.services.PaymentService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.http.*;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
-import java.time.LocalDateTime;
 import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping("/")
+@RequestMapping("/webhook")
 @RequiredArgsConstructor
 public class PaymentController {
-    private final PaymentService paymentService;
-    private final PaymentRepository paymentRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
+    private final RestTemplate restTemplate;
+    private final String lakePayUrl = "https://lakepay.ru";
 
-    @PostMapping("/create_payment")
-    public ResponseEntity<String> createPayment(@RequestBody Map<String, Object> request) {
-        if (!request.containsKey("userId") || !request.containsKey("adId") ||
-                !request.containsKey("asset") || !request.containsKey("amount")) {
-            log.error("Отсутствуют обязательные параметры: {}", request);
-            return ResponseEntity.badRequest().body("Отсутствуют userId, adId, asset или amount");
-        }
-
+    @PostMapping()
+    public ResponseEntity<?> handleWebhook(@RequestBody Map<String, Object> payload) {
+        log.debug("Получен webhook: payload={}", payload); // Добавлено
         try {
-            Long userId = Long.valueOf(request.get("userId").toString());
-            Long adId = Long.valueOf(request.get("adId").toString());
-            String asset = (String) request.get("asset");
-            Double amount = Double.valueOf(request.get("amount").toString());
-
-            Map<String, String> result = paymentService.createInvoice(userId, adId, asset, amount);
-            String payUrl = result.get("payUrl");
-            String invoiceId = result.get("invoiceId");
-
-            PaymentEntity payment = new PaymentEntity();
-            payment.setUserId(userId);
-            payment.setAdId(adId);
-            payment.setCurrency(asset);
-            payment.setAmount(amount);
-            payment.setStatus("PENDING");
-            payment.setCreatedAt(LocalDateTime.now().toString());
-            payment.setInvoiceId(invoiceId);
-            paymentRepository.save(payment);
-
-            String message = objectMapper.writeValueAsString(Map.of(
-                    "userId", userId,
-                    "adId", adId,
-                    "payUrl", payUrl
-            ));
-            kafkaTemplate.send("payment_created", message);
-
-            return ResponseEntity.ok(payUrl);
-        } catch (IllegalArgumentException e) {
-            log.error("Ошибка валидации: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            log.error("Ошибка создания платежа: {}", e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Не удалось создать платёж");
-        }
-    }
-
-    @KafkaListener(topics = "payment_request", groupId = "payment-group")
-    public void handlePaymentRequest(ConsumerRecord<String, String> record) {
-        try {
-            String jsonString = record.value();
-            Map<String, Object> request = objectMapper.readValue(jsonString, Map.class);
-            if (request.containsKey("currency")) {
-                request.put("asset", request.get("currency"));
-                request.remove("currency");
+            String type = (String) payload.get("update_type");
+            log.debug("Webhook update_type: {}", type); // Добавлено
+            if (!"invoice_paid".equals(type)) {
+                log.debug("Игнорируем webhook с update_type: {}", type);
+                return ResponseEntity.ok().build();
             }
-            createPayment(request);
-        } catch (Exception e) {
-            log.error("Ошибка обработки payment_request: {}", e.getMessage(), e);
-        }
-    }
 
-    @PostMapping("/webhook")
-    public ResponseEntity<Void> handleWebhook(@RequestBody Map<String, Object> webhookData,
-                                              @RequestHeader("Crypto-Pay-Signature") String signature) {
-        log.info("Получен webhook: {}", webhookData);
+            Map<String, Object> invoice = (Map) payload.get("payload");
+            String description = (String) invoice.get("description");
+            Double amount = Double.valueOf(invoice.get("amount").toString());
+            String currency = (String) invoice.get("asset");
+            log.debug("Webhook invoice: description={}, amount={}, currency={}", description, amount, currency); // Добавлено
 
-        String invoiceId = (String) webhookData.get("invoice_id");
-        String status = (String) webhookData.get("status");
-        String payload = (String) webhookData.get("payload");
-
-        if (invoiceId == null || status == null || payload == null) {
-            log.error("Недопустимый webhook: invoice_id, status или payload отсутствуют");
-            return ResponseEntity.badRequest().build();
-        }
-
-        PaymentEntity payment = paymentRepository.findByInvoiceId(invoiceId);
-        if (payment == null) {
-            log.warn("Платёж с invoice_id={} не найден", invoiceId);
-            return ResponseEntity.ok().build();
-        }
-
-        String expectedPayload = payment.getUserId() + ":" + payment.getAdId();
-        if (!expectedPayload.equals(payload)) {
-            log.error("Несоответствие payload: ожидалось {}, получено {}", expectedPayload, payload);
-            return ResponseEntity.badRequest().build();
-        }
-
-        if ("paid".equals(status)) {
-            payment.setStatus("COMPLETED");
-            paymentRepository.save(payment);
-
-            try {
-                String message = objectMapper.writeValueAsString(Map.of(
-                        "userId", payment.getUserId(),
-                        "adId", payment.getAdId(),
-                        "amount", payment.getAmount(),
-                        "asset", payment.getCurrency()
-                ));
+            if (description.startsWith("Payment for ad")) {
+                Long adId = Long.parseLong(description.replace("Payment for ad ", ""));
+                String message = objectMapper.writeValueAsString(Map.of("adId", adId));
                 kafkaTemplate.send("payment_confirmed", message);
-                log.info("Платёж {} завершён", invoiceId);
-            } catch (Exception e) {
-                log.error("Ошибка отправки payment_confirmed: {}", e.getMessage(), e);
+                log.info("Оплата подтверждена: adId={}", adId);
+            } else if (description.startsWith("Deposit for user")) {
+                Long userId = Long.parseLong(description.replace("Deposit for user ", ""));
+                String response = restTemplate.getForObject(lakePayUrl + "/user_id/" + userId, String.class);
+                Map<String, Object> data = objectMapper.readValue(response, Map.class);
+                Long chatId = Long.valueOf(data.get("chatId").toString());
+                log.info("chatId = {}", chatId);
+                updateUserBalance(userId, amount, "deposit");
+                String newResponse = restTemplate.getForObject(lakePayUrl + "/user_id/" + userId, String.class);
+                Map<String, Object> userData = objectMapper.readValue(newResponse, Map.class);
+                Double balance = Double.valueOf(userData.get("balance").toString());
+                String message = objectMapper.writeValueAsString(Map.of(
+                        "userId", userId,
+                        "chatId", chatId,
+                        "amount", amount,
+                        "currency", currency,
+                        "balance", balance
+                ));
+                kafkaTemplate.send("deposit_confirmed", message);
+                log.info("Пополнение подтверждено: userId={}, amount={}, currency={}", userId, amount, currency);
             }
-        }
 
-        return ResponseEntity.ok().build();
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            log.error("Ошибка обработки webhook: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    private void updateUserBalance(Long userId, Double amount, String operation) {
+
+
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            String response = restTemplate.getForObject(lakePayUrl + "/user_id/" + userId, String.class);
+            Map<String, Object> data = objectMapper.readValue(response, Map.class);
+            Double balance = Double.valueOf(data.get("balance").toString());
+            Double newBalance = balance + amount;
+            Map<String, Object> request = Map.of("balance", newBalance);
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
+            restTemplate.exchange(
+                    lakePayUrl + "/update_user/" + userId,
+                    HttpMethod.PATCH,
+                    entity,
+                    String.class
+            );
+            log.info("Баланс обновлён: userId={}, operation={}, amount={}", userId, operation, amount);
+        } catch (Exception e) {
+            log.error("Ошибка обновления баланса: userId={}, operation={}, error={}", userId, operation, e.getMessage(), e);
+        }
     }
 }

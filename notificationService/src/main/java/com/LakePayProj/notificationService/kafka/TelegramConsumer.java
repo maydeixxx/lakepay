@@ -46,6 +46,27 @@ public class TelegramConsumer {
         }
     }
 
+    @KafkaListener(topics = "deposit_confirmed", groupId = "MONEY")
+    public void handleSuccessfulDeposit(ConsumerRecord<String, String> record) {
+        try {
+            Map<String, Object> data = objectMapper.readValue(record.value(), Map.class);
+            data.forEach((key, value) -> log.info("Key: {}, Value: {}", key, value));
+            StringBuilder message = new StringBuilder();
+            String chatId = data.get("chatId").toString();
+            log.info("chatId = {}", chatId);
+            String amount = data.get("amount").toString();
+            String asset = data.get("currency").toString();
+            String balance = data.get("balance").toString();
+            message.append("🤑Successful deposit🤑\n");
+            message.append("Amount: ").append(amount).append("\n");
+            message.append("Asset: ").append(asset).append("\n");
+            message.append("Your current balance: ").append(balance).append("💵");
+            service.sendMessage(chatId, message.toString().trim());
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+    }
+
     @KafkaListener(topics = "availableAds", groupId = "user-notifications")
     public void saveTgId(ConsumerRecord<String, String> record) {
         hashTgId = Long.valueOf(record.value());

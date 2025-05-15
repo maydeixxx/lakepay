@@ -2,7 +2,9 @@ package com.LakePayProj.paymentService.application.interfaces.services;
 
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
 @Service
 public interface IPaymentService {
-    String createInvoice(Long userId, Long adId, String currency, Double amount);
+    String createInvoice(Double amount, String currency, String description);
 }

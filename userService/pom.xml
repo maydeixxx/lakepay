@@ -6,13 +6,13 @@
 		<groupId>com.LakePayProj</groupId>
 		<artifactId>LakePay</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-	<groupId>com.lakepayProj</groupId>
 	<artifactId>userService</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>userService</name>
-	<description>Demo project for Spring Boot</description>
+	<description>userService for lakepay</description>
 	<url/>
 	<licenses>
 		<license/>

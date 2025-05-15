@@ -48,4 +48,32 @@ public class TelegramProducer {
             throw new RuntimeException("Не удалось отправить запрос на платёж", e);
         }
     }
+
+    public void sendDepositRequest(Long userId, Double amount, String currency) {
+        try {
+            String message = objectMapper.writeValueAsString(Map.of(
+                    "userId", userId,
+                    "amount", amount,
+                    "currency", currency
+            ));
+            template.send("deposit_request", message);
+            log.info("Отправлен запрос на пополнение счёта: userid = {}, amount = {}, currency = {}", userId, amount, currency);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+    }
+
+    public void sendWithdrawRequest(Long userId, Double amount, String currency) {
+        try {
+            String message = objectMapper.writeValueAsString(Map.of(
+                    "userId", userId,
+                    "amount", amount,
+                    "currency", currency
+            ));
+            template.send("withdraw_request", message);
+            log.info("Отправлен запрос на вывод средств: userid = {}, amount = {}, currency = {}", userId, amount, currency);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+    }
 }
