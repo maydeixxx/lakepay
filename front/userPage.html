@@ -142,7 +142,10 @@
     <section class="addAd">
         <div class="container">
             <div class="addAd__inner">
-                <div class="addAd__inner-Title">Создать объявление</div>
+                <div class="addAd__inner-Title">
+                    Создать объявление
+                    <button><img src="images/cross.svg" alt=""></button>
+                </div>
                 <div class="addAd__inputTitle">
                     <div class="addAd__inputTitle-title">
                         Введите название
@@ -171,7 +174,24 @@
             </div>
         </div>
     </section>
-    <script src = "script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const createAdButton = document.querySelector(".myAdd_inner__title_btn button");
+            const AdPopUp = document.querySelector(".addAd");
+            const closeAdPopUpBtn = document.querySelector(".addAd__inner-Title button")
+
+            createAdButton.addEventListener("click", () => {
+                // Переключение видимости попапа
+                if (AdPopUp.style.display !== "block") {
+                    AdPopUp.style.display = "block";
+                    // AdPopUp.style.position = "fixed";
+                } 
+            });
+            closeAdPopUpBtn.addEventListener("click", () =>{
+                AdPopUp.style.display = "none";
+            });
+        });
+    </script>
 </body>
 
 </html>

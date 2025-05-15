@@ -491,6 +491,7 @@ li .new__card-descr{
     margin: auto 0;
 }
 .myAdd_inner__title_btn button{
+    cursor: pointer;
     width: 170px;
     height: 62px;
     border-radius: 20px;
@@ -511,9 +512,20 @@ li .new__card-descr{
     color: #ECA100;
 }
 .addAd__inner-Title{
+    display: flex;
+    justify-content: space-between;
     padding-left: 45px;
     padding-top: 40px;
     font-size: 40px;
+    button{
+        background-color: #f0f0f0;
+        cursor: pointer;
+        margin-right: 45px;
+        img{
+            height: 45px;
+            width: 45px;
+        }
+    }
 }
 .addAd__inputTitle-title{
     padding-left: 40px;
@@ -542,6 +554,7 @@ li .new__card-descr{
         background-color: #F6BB3D;
         color: #996900;
         font-family: "Press Start 2P";
+        cursor: pointer;
         img{
             padding-right: 10px;
         }
@@ -573,6 +586,7 @@ li .new__card-descr{
     }
 }
 .addAd__publish{
+    cursor: pointer;
     width: 250px;
     height: 62px;
     border-radius: 20px;
