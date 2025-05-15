@@ -5,8 +5,14 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/users_db
     username: postgres
-    password: admin
+    password: secret
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: create
+
+token:
+  signing:
+    key: * # JWT signing key
+  telegram:
+    bot: * # Authentication Telegram bot token
