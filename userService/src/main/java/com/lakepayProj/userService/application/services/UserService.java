@@ -8,6 +8,9 @@ import com.lakepayProj.userService.domain.valueObject.Role;
 import com.lakepayProj.userService.infrastructure.UserEntity;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -37,7 +40,7 @@ public class UserService implements IUserService {
         }
         updates.forEach((key, value) -> {
             switch (key) {
-                case "userName" -> userById.setUserName((String) value);
+                case "userName" -> userById.setUsername((String) value);
                 case "urlPhoto" -> userById.setUrlPhoto((String) value);
                 case "balance" -> userById.setBalance(BigDecimal.valueOf((Double) value));
                 case "role" -> userById.setRole(Role.valueOf(value.toString()));
@@ -101,5 +104,21 @@ public class UserService implements IUserService {
     public Long getChatIdByTgId(Long tgId) {
         UserEntity userByTgId = repository.findUserByTgId(tgId);
         return userByTgId.getChatId();
+    }
+
+    public User getByUsername(String username) {
+        UserEntity userEntity = repository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        return mapper.userEntityToUser(userEntity);
+    }
+
+    public UserDetailsService userDetailsService() {
+        return this::getByUsername;
+    }
+
+    public User getCurrentUser() {
+        // Получение имени пользователя из контекста Spring Security
+        var username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return getByUsername(username);
     }
 }

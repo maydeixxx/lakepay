@@ -10,13 +10,16 @@ import java.util.List;
 
 @Entity
 @Data
+@Builder
 @Table(name = "users")
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.TABLE)
     private Long id;
     @Column(unique = true)
-    private String userName;
+    private String username;
     private List<String> subscriptions;
     private Long tgId;
     private Long chatId;

@@ -13,7 +13,7 @@ import java.util.List;
 @Value
 public class UserDTO {
     Long id;
-    String userName;
+    String username;
     List<String> subscriptions;
     Long tgId;
     Long chatId;

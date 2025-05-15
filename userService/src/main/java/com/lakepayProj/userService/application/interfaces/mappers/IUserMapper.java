@@ -8,6 +8,7 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface IUserMapper {
+    @Mapping(target = "authorities", ignore = true)
     User userEntityToUser(UserEntity userEntity);
 
     UserEntity userToUserEntity(User user);
@@ -18,5 +19,6 @@ public interface IUserMapper {
     @Mapping(target = "chatId", ignore = true)
     UserDTO userToUserDTO(User user);
 
+    @Mapping(target = "authorities", ignore = true)
     User userDTOToUser(UserDTO userDTO);
 }
