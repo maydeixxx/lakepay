@@ -477,6 +477,117 @@ li .new__card-descr{
     height: 270px;
     border-radius: 20px;
 }
+
+.myAdds{
+    margin-top: 40px;
+}
+.myAdd__inner__title{
+    display: flex;
+    justify-content: space-between;
+}
+.myAdd__inner__title-text{
+    font-size: 24px;
+    color: #ECA100;
+    margin: auto 0;
+}
+.myAdd_inner__title_btn button{
+    width: 170px;
+    height: 62px;
+    border-radius: 20px;
+    background-color: #F6BB3D;
+    color: #996900;
+    font-family: "Press Start 2P";
+}
+.addAd{
+    display: none;
+    position: fixed;
+    top: 3%;
+    left: 1%;
+    width: 100%;
+}
+.addAd__inner{
+    background-color: #f0f0f0;
+    border-radius: 20px;
+    color: #ECA100;
+}
+.addAd__inner-Title{
+    padding-left: 45px;
+    padding-top: 40px;
+    font-size: 40px;
+}
+.addAd__inputTitle-title{
+    padding-left: 40px;
+    padding-top: 20px;
+}
+.addAd__inputTitle input{
+    margin-top: 15px;
+    margin-left: 40px;
+    padding-left: 20px;
+    border-radius: 20px;
+    background-color: #D9D9D9;
+    width: 750px;
+    height: 48px;
+}
+.addAd__input__category{
+    padding-left: 45px;
+    padding-top: 40px;
+    button{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 15px;
+        width: 435px;
+        height: 62px;
+        border-radius: 20px;
+        background-color: #F6BB3D;
+        color: #996900;
+        font-family: "Press Start 2P";
+        img{
+            padding-right: 10px;
+        }
+    }
+}
+.addAd__input__descr-title{
+    padding-left: 45px;
+    padding-top: 40px;
+}
+.addAd__input__descr textarea{
+    margin-left: 45px;
+    margin-top: 25px;
+    background-color: #D9D9D9;
+    border: none;
+    border-radius: 20px;
+    width: 90%;
+    height: 200px;
+}
+.addAd__input__data{
+    margin-top: 40px;
+    margin-left: 45px;
+    input{
+        margin-top: 15px;
+        padding-left: 20px;
+        border-radius: 20px;
+        background-color: #D9D9D9;
+        width: 750px;
+        height: 48px;
+    }
+}
+.addAd__publish{
+    width: 250px;
+    height: 62px;
+    border-radius: 20px;
+    background-color: #F6BB3D;
+    color: #996900;
+    font-family: "Press Start 2P";
+    margin-top: 40px;
+    margin-left: 45px;
+    margin-bottom: 20px;
+    margin-left: 73%;
+}
+.addAd__publish-text{
+    display: flex;
+    align-items: center;
+}
 /* userInfo-end */
 
 /* 404-start */

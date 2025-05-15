@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title></title>
+    <title>LakePay - Профиль</title>
     <link rel="stylesheet" href="css-nullifier.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -92,38 +92,86 @@
         </div>
     </header>
 
-<section class="userInfo">
-    <div class="container">
-        <div class="userInfo__inner">
-            <div class="userInfo__text">
-                <div class="userInfo__id">
-                    Аккаунт пользователя <br></button><span>@telegram</span>
-                </div>
-                <div class="userInfo_dateOfReg">
-                    Дата регистрации: 29.08.2025
-                </div>
-                <div class="userInfo__balance">
-                    <div class="userInfo__balance-text">
-                        Баланс: 100$
+    <section class="userInfo">
+        <div class="container">
+            <div class="userInfo__inner">
+                <div class="userInfo__text">
+                    <div class="userInfo__id">
+                        Аккаунт пользователя <br></button><span>@telegram</span>
                     </div>
-                    <div class="userInfo__balance-btns">
-                        <button class="userInfo__balance-btns-item">
-                            Вывести
-                        </button>
-                        <button class="userInfo__balance-btns-item">
-                            Пополнить
-                        </button>
+                    <div class="userInfo_dateOfReg">
+                        Дата регистрации: 29.08.2025
                     </div>
+                    <div class="userInfo__balance">
+                        <div class="userInfo__balance-text">
+                            Баланс: 100$
+                        </div>
+                        <div class="userInfo__balance-btns">
+                            <button class="userInfo__balance-btns-item">
+                                Вывести
+                            </button>
+                            <button class="userInfo__balance-btns-item">
+                                Пополнить
+                            </button>
+                        </div>
+                    </div>
+                    <button class="userInfo__btn-exit">
+                        Выйти
+                    </button>
                 </div>
-                <button class="userInfo__btn-exit">
-                    Выйти
-                </button>
-            </div>
-            <div class="userInfo__img">
-                <img src="" alt="">
+                <div class="userInfo__img">
+                    <img src="" alt="">
+                </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
+    <section class="myAdds">
+        <div class="container">
+            <div class="myAdd__inner">
+                <div class="myAdd__inner__title">
+                    <div class="myAdd__inner__title-text">
+                        Мои объявления
+                    </div>
+                    <div class="myAdd_inner__title_btn">
+                        <button>Добавить объявление</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="addAd">
+        <div class="container">
+            <div class="addAd__inner">
+                <div class="addAd__inner-Title">Создать объявление</div>
+                <div class="addAd__inputTitle">
+                    <div class="addAd__inputTitle-title">
+                        Введите название
+                    </div>
+                    <input type="text" placeholder="Введите название">
+                </div>
+                <div class="addAd__input__category">
+                    <div class="addAd__input__category-title">Выберите категорию:</div>
+                    <button>--- Выберите категорию --- <img src="images/arrow.svg" alt=""></button>
+                </div>
+                <div class="addAd__input__descr">
+                    <div class="addAd__input__descr-title">
+                        Введите описание:
+                    </div>
+                    <textarea maxlength="400" type="text"></textarea>
+                </div>
+                <div class="addAd__input__data">
+                    <div class="addAd__input__data-title">Введите данные от аккаунта</div>
+                    <input type="text">
+                </div>
+                <button class="addAd__publish">
+                    <div class="addAd__publish-text">
+                        Опубликовать объявление
+                    </div>
+                </button>
+            </div>
+        </div>
+    </section>
+    <script src = "script.js"></script>
 </body>
+
 </html>
