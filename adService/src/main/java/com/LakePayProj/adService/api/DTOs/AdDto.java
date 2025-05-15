@@ -15,6 +15,8 @@ public class AdDto {
     String body;
     String category;
     BigDecimal price;
+    String login;
+    String password;
     Integer countOfViews;
     Integer quantity;
     LocalDate dateOfPush;

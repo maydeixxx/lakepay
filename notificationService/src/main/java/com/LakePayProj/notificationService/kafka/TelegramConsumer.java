@@ -10,7 +10,6 @@ import org.springframework.http.MediaType;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -31,6 +30,23 @@ public class TelegramConsumer {
         String message = record.value();
         service.sendMessage(chatId, message);
         log.debug("Отправлено сообщение для chatId={}: {}", chatId, message);
+    }
+
+    @KafkaListener(topics = "ad_data", groupId = "MONEY")
+    public void sendAdDataToUser(ConsumerRecord<String, String> record) {
+        try {
+            Map<String, Object> data = objectMapper.readValue(record.value(), Map.class);
+            String tgId = data.get("tgId").toString();
+            String adId = data.get("adId").toString();
+            String login = data.get("login").toString();
+            String password = data.get("password").toString();
+            StringBuilder message = new StringBuilder();
+            message.append("Успешная покупка объявления (" + adId + ")\n" + "*Данные от аккаунта*\n").append("login: ").append(login).append("\n")
+                    .append("password: ").append(password);
+            service.sendMessage(tgId, message.toString().trim());
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
     }
 
     @KafkaListener(topics = "payment_created", groupId = "notification-group")
@@ -60,7 +76,7 @@ public class TelegramConsumer {
             message.append("🤑Successful deposit🤑\n");
             message.append("Amount: ").append(amount).append("\n");
             message.append("Asset: ").append(asset).append("\n");
-            message.append("Your current balance: ").append(balance).append("💵");
+            message.append("Your current balance: ").append(balance).append("$ 💵");
             service.sendMessage(chatId, message.toString().trim());
         } catch (Exception e) {
             log.error(e.getMessage());

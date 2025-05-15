@@ -1,7 +1,6 @@
 package com.LakePayProj.paymentService.application.services;
 
 import com.LakePayProj.paymentService.application.interfaces.services.IPaymentService;
-import com.LakePayProj.paymentService.infrastructure.PaymentEntity;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +21,7 @@ public class PaymentService implements IPaymentService {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
     private final KafkaTemplate<String, String> template;
+    private final String lakePayUrl = "https://lakepay.ru";
 
     @Value("${crypto-bot.api}")
     private String apiUrl;
@@ -61,6 +61,83 @@ public class PaymentService implements IPaymentService {
         } catch (Exception e) {
             log.error("Ошибка создания счёта в Crypto Bot: {}", e.getMessage(), e);
             return null;
+        }
+    }
+
+    @Override
+    public void buyAd(Long userId, Long adId) {
+        try {
+            String userResponse = restTemplate.getForObject(lakePayUrl + "/user_id/" + userId, String.class);
+            Map<String, Object> userData = objectMapper.readValue(userResponse, Map.class);
+            Long tgId = Long.valueOf(userData.get("tgId").toString());
+            log.info("TGID = {}", tgId);
+            Double balance = Double.valueOf(userData.get("balance").toString());
+            log.info("BALANCE = {}", balance);
+
+            String adResponse = restTemplate.getForObject(lakePayUrl + "/ad_id/" + adId, String.class);
+            Map<String, Object> adData = objectMapper.readValue(adResponse, Map.class);
+            String title = adData.get("title").toString();
+            log.info("TITLE = {}", title);
+            Double price = Double.valueOf(adData.get("price").toString());
+
+            String credentialsResponse = restTemplate.getForObject(lakePayUrl + "/ad_credentials/" + adId, String.class);
+            Map<String, String> credentials = objectMapper.readValue(credentialsResponse, Map.class);
+            String login = credentials.get("login");
+            String password = credentials.get("password");
+            log.info("LOGIN = {}", login);
+            log.info("PASSWORD = {}", password);
+
+            String message = objectMapper.writeValueAsString(Map.of(
+                    "tgId", tgId,
+                    "adId", adId,
+                    "password", password,
+                    "login", login
+            ));
+            if (balance >= price) {
+                template.send("ad_data", message);
+                log.info("Отправлено сообщение в топик ad_data message = {}", message);
+                updateUserBalance(userId, price, "buy");
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+    }
+
+    public void updateUserBalance(Long userId, Double amount, String operation) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            String response = restTemplate.getForObject(lakePayUrl + "/user_id/" + userId, String.class);
+            Map<String, Object> data = objectMapper.readValue(response, Map.class);
+            Double balance = Double.valueOf(data.get("balance").toString());
+            switch (operation) {
+                case "deposit" -> {
+                    Double newBalance = balance + amount;
+                    Map<String, Object> request = Map.of("balance", newBalance);
+                    HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
+                    restTemplate.exchange(
+                            lakePayUrl + "/update_user/" + userId,
+                            HttpMethod.PATCH,
+                            entity,
+                            String.class
+                    );
+                    log.info("Баланс пополнен: userId={}, operation={}, amount={}", userId, operation, amount);
+                }
+                case "buy" -> {
+                    Double newBalance = balance - amount;
+                    Map<String, Object> request = Map.of("balance", newBalance);
+                    HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
+                    restTemplate.exchange(
+                            lakePayUrl + "/update_user/" + userId,
+                            HttpMethod.PATCH,
+                            entity,
+                            String.class
+                    );
+                    log.info("Покупка совершена: userId={}, operation={}, amount={}", userId, operation, amount);
+                }
+            }
+
+        } catch (Exception e) {
+            log.error("Ошибка обновления баланса: userId={}, operation={}, error={}", userId, operation, e.getMessage(), e);
         }
     }
 

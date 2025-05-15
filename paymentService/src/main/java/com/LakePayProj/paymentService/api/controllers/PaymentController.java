@@ -1,5 +1,6 @@
 package com.LakePayProj.paymentService.api.controllers;
 
+import com.LakePayProj.paymentService.application.services.PaymentService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,20 +13,21 @@ import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping("/webhook")
+@RequestMapping()
 @RequiredArgsConstructor
 public class PaymentController {
     private final KafkaTemplate<String, String> kafkaTemplate;
+    private final PaymentService service;
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate;
     private final String lakePayUrl = "https://lakepay.ru";
 
-    @PostMapping()
+    @PostMapping("/webhook")
     public ResponseEntity<?> handleWebhook(@RequestBody Map<String, Object> payload) {
-        log.debug("Получен webhook: payload={}", payload); // Добавлено
+        log.debug("Получен webhook: payload={}", payload);
         try {
             String type = (String) payload.get("update_type");
-            log.debug("Webhook update_type: {}", type); // Добавлено
+            log.debug("Webhook update_type: {}", type);
             if (!"invoice_paid".equals(type)) {
                 log.debug("Игнорируем webhook с update_type: {}", type);
                 return ResponseEntity.ok().build();
@@ -35,7 +37,7 @@ public class PaymentController {
             String description = (String) invoice.get("description");
             Double amount = Double.valueOf(invoice.get("amount").toString());
             String currency = (String) invoice.get("asset");
-            log.debug("Webhook invoice: description={}, amount={}, currency={}", description, amount, currency); // Добавлено
+            log.debug("Webhook invoice: description={}, amount={}, currency={}", description, amount, currency);
 
             if (description.startsWith("Payment for ad")) {
                 Long adId = Long.parseLong(description.replace("Payment for ad ", ""));
@@ -48,7 +50,21 @@ public class PaymentController {
                 Map<String, Object> data = objectMapper.readValue(response, Map.class);
                 Long chatId = Long.valueOf(data.get("chatId").toString());
                 log.info("chatId = {}", chatId);
-                updateUserBalance(userId, amount, "deposit");
+                double cryptoToUsd;
+                switch (currency) {
+                    case "TRX" ->  {
+                        cryptoToUsd = amount * 0.27;
+                        service.updateUserBalance(userId, cryptoToUsd, "deposit");
+                    }
+                    case "ETH" -> {
+                        cryptoToUsd = amount * 2551.29;
+                        service.updateUserBalance(userId, cryptoToUsd, "deposit");
+                    }
+                    case "BTC" -> {
+                        cryptoToUsd = amount * 102521.46;
+                        service.updateUserBalance(userId, cryptoToUsd, "deposit");
+                    }
+                }
                 String newResponse = restTemplate.getForObject(lakePayUrl + "/user_id/" + userId, String.class);
                 Map<String, Object> userData = objectMapper.readValue(newResponse, Map.class);
                 Double balance = Double.valueOf(userData.get("balance").toString());
@@ -70,26 +86,11 @@ public class PaymentController {
         }
     }
 
-    private void updateUserBalance(Long userId, Double amount, String operation) {
-
-
-        try {
-            HttpHeaders headers = new HttpHeaders();
-            String response = restTemplate.getForObject(lakePayUrl + "/user_id/" + userId, String.class);
-            Map<String, Object> data = objectMapper.readValue(response, Map.class);
-            Double balance = Double.valueOf(data.get("balance").toString());
-            Double newBalance = balance + amount;
-            Map<String, Object> request = Map.of("balance", newBalance);
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
-            restTemplate.exchange(
-                    lakePayUrl + "/update_user/" + userId,
-                    HttpMethod.PATCH,
-                    entity,
-                    String.class
-            );
-            log.info("Баланс обновлён: userId={}, operation={}, amount={}", userId, operation, amount);
-        } catch (Exception e) {
-            log.error("Ошибка обновления баланса: userId={}, operation={}, error={}", userId, operation, e.getMessage(), e);
-        }
+    @GetMapping("/buy")
+    public ResponseEntity<Void> buyAd(@RequestBody Map<String, Long> data) {
+        Long userId = Long.valueOf(data.get("userId").toString());
+        Long adId = Long.valueOf(data.get("adId").toString());
+        service.buyAd(userId, adId);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }
