@@ -1,68 +1,280 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
-    <title>Spring Boot WebSocket Chat Application</title>
-    <link rel="stylesheet" href="css/main.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <link rel="stylesheet" href="css-nullifier.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
-<noscript>
-    <h2>Sorry! Your browser doesn't support Javascript</h2>
-</noscript>
-
-<div id="username-page">
-    <div class="username-page-container">
-        <h1 class="title">Type your username to enter the Chatroom</h1>
-        <form id="usernameForm" name="usernameForm">
-            <div class="form-group">
-                <input type="text" id="name" placeholder="Username" autocomplete="off" class="form-control" />
-            </div>
-            <div class="form-group">
-                <button type="submit" class="accent username-submit">Start Chatting</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div id="chat-page" class="hidden">
-    <aside class="chat-list">
-        <div class="chat-list-header">
-            <h2>Chats:</h2>
-        </div>
-        <ul id="chat-list-container">
-        </ul>
-        <form id="recipientForm" name="recipientForm">
-            <div class="form-group">
-                <input type="text" id="recipient" placeholder="Message to..." autocomplete="off" class="form-control" />
-            </div>
-            <div class="form-group">
-                <button type="submit" class="accent new-chat">New Chat</button>
-            </div>
-        </form>
-    </aside>
-    <div class="chat-container">
-        <div class="chat-header">
-            <h2>Spring WebSocket Chat Demo</h2>
-        </div>
-        <div class="connecting">
-            Connecting...
-        </div>
-        <ul id="messageArea">
-
-        </ul>
-        <form id="messageForm" name="messageForm">
-            <div class="form-group">
-                <div class="input-group clearfix">
-                    <input type="text" id="message" placeholder="Type a message..." autocomplete="off" class="form-control"/>
-                    <button type="submit" class="primary">Send</button>
+    <header class="header">
+        <div class="container">
+            <div class="header__inner">
+                <div class="header__logo">
+                    <a href="#" class="header__logo"><img src="images/Lake-Pay-end.png" alt=""></a>
+                </div>
+                <div class="header__catalog">
+                    <button>
+                        <img src="images/tri-rectangles.svg" alt="">
+                        <div class="header__catalog-text">Каталог</div>
+                    </button>
+                    <div class="header__catalog__panel">
+                        <div class="header__catalog__panel-categories">
+                            <ul>
+                                <li class="header__catalog__item">
+                                    <a href="#">
+                                        <div class="header__catalog__item-img">
+                                            <img src="images/cs2-category.jpg" alt="">
+                                        </div>
+                                        <div class="header__catalog__item-title">Заголовок 1</div>
+                                    </a>
+                                </li>
+                                <li class="header__catalog__item">
+                                    <a href="#">
+                                        <div class="header__catalog__item-img">
+                                            <img src="images/cs2-category.jpg" alt="">
+                                        </div>
+                                        <div class="header__catalog__item-title">Заголовок 1</div>
+                                    </a>
+                                </li>
+                                <li class="header__catalog__item">
+                                    <a href="#">
+                                        <div class="header__catalog__item-img">
+                                            <img src="images/cs2-category.jpg" alt="">
+                                        </div>
+                                        <div class="header__catalog__item-title">Заголовок 1</div>
+                                    </a>
+                                </li>
+                                <li class="header__catalog__item">
+                                    <a href="#">
+                                        <div class="header__catalog__item-img">
+                                            <img src="images/cs2-category.jpg" alt="">
+                                        </div>
+                                        <div class="header__catalog__item-title">Заголовок 1</div>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="header__input">
+                    <input name="text" placeholder=" Поиск" id=""></input>
+                </div>
+                <div class="header__btns">
+                    <li class="header__item">
+                        <a href="#">
+                            <img src="images/cart.svg" alt="">
+                        </a>
+                    </li>
+                    <li class="header__item">
+                        <a href="#">
+                            <img src="images/favorite.svg" alt="">
+                        </a>
+                    </li>
+                    <li class="header__item new-message">
+                        <a href="chats.html">
+                            <img src="images/chat.svg" alt="">
+                        </a>
+                    </li>
+                    <li class="header__item">
+                        <a href="#">
+                            <img src="images/user.svg" alt="">
+                        </a>
+                    </li>
                 </div>
             </div>
-        </form>
-    </div>
-</div>
+        </div>
+    </header>
+    <section class="categories">
+        <div class="container">
+            <div class="categories__inner">
+                <div class="categories__title">
+                    популярные категории
+                </div>
+                <div class="categories__category-blocks">
+                    <div class="categories__category-bloks-item">
+                        <a href="#">
+                            <img src="images/cs2-category.jpg" alt="">
+                        </a>
+                    </div>
+                    <div class="categories__category-bloks-item">
+                        <a href="#">
+                            <img src="images/cs2-category.jpg" alt="">
+                        </a>
+                    </div>
+                    <div class="categories__category-bloks-item">
+                        <a href="#">
+                            <img src="images/cs2-category.jpg" alt="">
+                        </a>
+                    </div>
+                    <div class="categories__category-bloks-item">
+                        <a href="#">
+                            <img src="images/cs2-category.jpg" alt="">
+                        </a>
+                    </div>
+                </div>
+                <div class="categories__category-blocks">
+                    <div class="categories__category-bloks-item">
+                        <a href="#">
+                            <img src="images/cs2-category.jpg" alt="">
+                        </a>
+                    </div>
+                    <div class="categories__category-bloks-item">
+                        <a href="#">
+                            <img src="images/cs2-category.jpg" alt="">
+                        </a>
+                    </div>
+                    <div class="categories__category-bloks-item">
+                        <a href="#">
+                            <img src="images/cs2-category.jpg" alt="">
+                        </a>
+                    </div>
+                    <div class="categories__category-bloks-item">
+                        <a href="#">
+                            <img src="images/cs2-category.jpg" alt="">
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="new">
+        <div class="container">
+            <div class="new__inner">
+                <div class="new__title">
+                    новые объявления
+                </div>
+            </div>
+            <div class="new__card">
+                <div class="new__card-img"><img src="images/cs2-category.jpg" alt=""></div>
+                <div class="new__card-text">
+                    <ul>
+                        <li><a href="#">
+                                <div class="new__card-title">Название товара</div>
+                            </a></li>
+                        <li>
+                            <div class="new__card-descr">Lorem Ipsum is simply dummy text of the...</div>
+                        </li>
+                    </ul>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.1.4/sockjs.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
-<script src="js/main.js"></script>
+                </div>
+                <div class="new__card-price">
+                    <button>2000 Р</button>
+                </div>
+                <div class="new__card-btn-favorite">
+                    <button><img src="images/favorite.svg" alt=""></button>
+                </div>
+                </a>
+            </div>
+
+            <div class="new__card">
+                <div class="new__card-img"><img src="images/cs2-category.jpg" alt=""></div>
+                <div class="new__card-text">
+                    <ul>
+                        <li><a href="#">
+                                <div class="new__card-title">Название товара</div>
+                            </a></li>
+                        <li>
+                            <div class="new__card-descr">Lorem Ipsum is simply dummy text of the...</div>
+                        </li>
+                    </ul>
+
+                </div>
+                <div class="new__card-price">
+                    <button>2000 Р</button>
+                </div>
+                <div class="new__card-btn-favorite">
+                    <button><img src="images/favorite.svg" alt=""></button>
+                </div>
+                </a>
+            </div>
+
+            <div class="new__card">
+                <div class="new__card-img"><img src="images/cs2-category.jpg" alt=""></div>
+                <div class="new__card-text">
+                    <ul>
+                        <li><a href="#">
+                                <div class="new__card-title">Название товара</div>
+                            </a></li>
+                        <li>
+                            <div class="new__card-descr">Lorem Ipsum is simply dummy text of the...</div>
+                        </li>
+                    </ul>
+
+                </div>
+                <div class="new__card-price">
+                    <button>2000 Р</button>
+                </div>
+                <div class="new__card-btn-favorite">
+                    <button><img src="images/favorite.svg" alt=""></button>
+                </div>
+                </a>
+            </div>
+
+            <div class="new__card">
+                <div class="new__card-img"><img src="images/cs2-category.jpg" alt=""></div>
+                <div class="new__card-text">
+                    <ul>
+                        <li><a href="#">
+                                <div class="new__card-title">Название товара</div>
+                            </a></li>
+                        <li>
+                            <div class="new__card-descr">Lorem Ipsum is simply dummy text of the...</div>
+                        </li>
+                    </ul>
+
+                </div>
+                <div class="new__card-price">
+                    <button>2000 Р</button>
+                </div>
+                <div class="new__card-btn-favorite">
+                    <button><img src="images/favorite.svg" alt=""></button>
+                </div>
+                </a>
+            </div>
+
+            <div class="new__card">
+                <div class="new__card-img"><img src="images/cs2-category.jpg" alt=""></div>
+                <div class="new__card-text">
+                    <ul>
+                        <li><a href="#">
+                                <div class="new__card-title">Название товара</div>
+                            </a></li>
+                        <li>
+                            <div class="new__card-descr">Lorem Ipsum is simply dummy text of the...</div>
+                        </li>
+                    </ul>
+
+                </div>
+                <div class="new__card-price">
+                    <button>2000 Р</button>
+                </div>
+                <div class="new__card-btn-favorite">
+                    <button><img src="images/favorite.svg" alt=""></button>
+                </div>
+            </div>
+
+            <div class="new__more">
+                <div class="new__more-text">
+                    <div class="new__more-title">Хотите посмотреть больше аккаунтов?</div>
+                    <div class="new__more-descr">Выберите нужную категорию, либо воспользуйтесь поиском!</div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <footer>
+        <div class="container">
+            <div class="footer__inner">
+
+            </div>
+        </div>
+    </footer>
 </body>
+
 </html>

@@ -1,0 +1,760 @@
+/* nulliifier-start */
+button{
+    border: 0;
+    outline: none;
+}
+input{
+    border: 0;
+    outline: none;
+}
+a{
+    text-decoration: none;
+    color: #000;
+}
+/* nulliifier-end */
+html{
+    background: linear-gradient(180deg, #1A1C2A 0%, #2D1E3A 100%);
+    font-family: "Press Start 2P";
+    background-attachment:fixed;
+    height: 100%;
+}
+
+body {
+    height: 100%;
+}
+
+.container{
+    max-width: 1170px;
+    margin: 0 auto;
+}
+
+/* header-start */
+.header__inner{
+    display: flex;
+}
+.header__logo{
+    margin-right: 60px;
+    margin-top: 15px;
+}
+.header__logo img{
+    width: 150px;
+}
+.header__catalog{
+    max-height: 48px;
+}
+.header__catalog button{
+    position: relative;
+    display: flex;
+    justify-content: start;
+    width: 170px;
+    height: 48px;
+    margin-top: 36px;
+    background-color: #9BDE00;
+    color: #659000;
+    border-radius: 20px;
+    cursor: pointer;
+    img{
+        margin-left: 7px;
+        height: 23px;
+        width: 16px;
+        margin-top: 12px;
+        margin-right: 13px;
+
+    }
+}
+.header__catalog__panel{
+    z-index: 1;
+    position: absolute;
+    display: none;
+    padding-top: 12px;
+    background-color: #9BDE00;
+    border-radius: 0 20px 20px 20px;
+}
+.header__catalog__panel-categories ul{
+    padding-left: 15px;
+    padding-right: 15px;
+    display: grid;
+    grid-template-columns: repeat(3, 240px);
+    column-gap: 15px;
+    row-gap: 15px;
+    padding-bottom: 15px;
+}
+.header__catalog__item-title{
+    padding-top: 12px;
+    background-color: #D9D9D9;
+    font-size: 12px;
+    text-align: center;
+    padding-bottom: 4px;
+    border-radius: 0 0 20px 20px;
+}
+.header__catalog__item{
+    max-width: 240px;
+    border-radius: 20px;
+}
+.header__catalog__item-img img{
+    border-radius: 20px 20px 0 0;
+    max-width: 240px;
+}
+.header__catalog:hover > .header__catalog__panel{
+    display: block;
+}
+.header__catalog:hover > button{
+    border-radius: 20px 20px 0 0;
+}
+.header__catalog-text{
+    margin-top: 14px;
+    font-family: "Press Start 2P";
+}
+.header__input{
+    margin-left: 30px;
+    border-radius: 20px;
+    margin-top: 36px;
+    width: 370px;
+    height: 48px;
+    background-color: #D9D9D9;
+    input{
+        padding-left: 20px;
+        border-radius: 20px;
+        background-color: #D9D9D9;
+        width: 370px;
+        height: 48px;
+    }
+    margin-right: 20px;
+}
+.header__btns{
+    display: flex;
+    justify-content: space-between;
+    margin-left: 30px;
+    margin-top: 35px;
+}
+.header__item a{
+    display: inline-block;
+    max-width: 70px;
+    height: 49px;
+    background-color: #F6BB3D;
+    border-radius: 15px;
+    margin-right: 30px;
+    img{
+        width: 37px;
+        height: 37px;
+        padding-left: 16px;
+        padding-right: 16px;
+        padding-top:8px;
+    }
+}
+.header__item:last-child{
+    margin-right: 0;
+}
+.new-message{
+    position: relative;
+}
+.new-message{
+    display: block;
+}
+.new-message::before{
+    content:"!";
+    text-align: center;
+    color:#fff;
+    display: inline-block;
+    background-color: #CB0052;
+    position: absolute;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    right: 18px;
+    top: -10px;
+}
+/* header-end */
+
+/* categories-start */
+.categories{
+    margin-top: 100px;
+}
+.categories__title{
+    text-transform: uppercase;
+    font-size: 40px;
+    color: #ECA100;
+    margin-bottom: 75px;
+}
+.categories__category-blocks{
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    &:last-child{
+        margin-bottom: 0;
+    }
+}
+.categories__category-bloks-item img{
+    width: 270px;
+    height: 141px;
+    border-radius: 20px;
+}
+/* categories-end */
+
+/* new-start */
+.new{
+    margin-top: 200px;
+    margin-bottom: 200px;
+
+}
+.new__title{
+    margin-bottom: 75px;
+    font-size: 40px;
+    color: #ECA100;
+    text-transform: uppercase;
+}
+.new__card{
+    background-color: #D9D9D9;
+    border-radius: 20px;
+    height: 120px;
+    display: flex;
+    img{
+        width: 185px;
+        height: 87px;
+        margin-top: 16px;
+        margin-left: 18px;
+        border-radius: 20px;
+    }
+    margin-bottom: 30px;
+}
+.new__card-text{
+    margin-left: 70px;
+    margin-top: 18px;
+    margin-right: 69px;
+    max-width: 530px;
+}
+.new__card-title{
+    font-size: 24px;
+}
+li .new__card-descr{
+    margin-top: 14px;
+    font-size: 16px;
+}
+.new__card-price button{
+    background-color: #F6BB3D;
+    font-family: "Press Start 2P";
+    width: 163px;
+    height: 60px;
+    border-radius: 20px;
+    margin-top: 30px;
+    margin-right: 38px;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.new__card-btn-favorite button{
+    display: inline-block;
+    width: 60px;
+    height: 60px;
+    cursor: pointer;
+    background-color: #F6BB3D;
+    border-radius: 20px;
+    margin-top: 30px;
+    img{
+        width: 46px;
+        height: 46px;
+        margin-left: 0;
+        margin-top: 8px;
+    }
+}
+.new__more{
+    background-color: #D9D9D9;
+    border-radius: 20px;
+    height: 120px;
+}
+.new__more-text{
+    margin-left: 74px;
+    max-width: 774px;
+}
+.new__more-title{
+    padding-top: 10px;
+    font-size: 24px;
+}
+.new__more-descr{
+    padding-top: 11px;
+    font-size: 16px;
+}
+
+/* new-end */
+
+.footer{
+
+}
+
+/* findedAd__filter-start */
+.findedAd{
+    margin-top: 40px;
+}
+.findedAd__inner{
+    display: flex;
+}
+.findedAd__filter-text{
+    margin-left: 18px;
+}
+.findedAd__filter{
+    background-color: #D9D9D9;
+    border-radius: 20px;
+    max-width: 270px;
+    padding-right: 14px;
+    input{
+        padding-left: 21px;
+        max-width: 156px;
+        height: 45px;
+        border-radius: 20px;
+        background-color: #F6BB3D;
+    }
+}
+.findedAd__filter-price{
+    padding-top: 10px;
+    padding-bottom: 38px;
+}
+.findedAd__filter-price-text{
+    padding-top: 12px;
+}
+.findedAd__filter-price-item{
+    margin-top: 14px;
+    display: flex;
+}
+.findedAd__filter-price-input{
+    background-color: #F6BB3D;
+    border-radius: 20px;
+}
+.filter__category__menu{
+    display: flex;
+    border-radius: 20px;
+    padding-bottom: 32px;
+    padding-top: 20px;
+}
+.filter__category__menu button{
+    background-color: #F6BB3D;
+    border-radius: 20px;
+    color: #996900;
+    font-family: "Press Start 2P";
+    display: flex;
+    justify-content: space-between;
+    width: 230px;
+    height: 52px;
+    align-items: center;
+    cursor: pointer;
+}
+.filter__category__menu-text{
+    padding-left: 23px;
+}
+.filter__category__menu-img{
+    margin-right: 10px;
+    img{
+        height: 24px;
+        width: 24px;
+    }
+}
+
+/* findedAd__filter-end */
+
+/* findedAd__ads-start*/
+.findedAd__ads{
+    margin-left: 30px;
+}
+.findedAd__ads__item{
+    display: flex;
+    background-color: #D9D9D9;
+    border-radius: 20px;
+    height: 120px;
+    align-items: center;
+}
+.findedAd__ads__item img{
+    width: 137px;
+    height: 87px;
+    border-radius: 20px;
+    margin-left: 13px;
+}
+.findedAd__ads__item-text{
+    padding-left: 50px;
+    display: flex;
+    ul{
+        padding-right: 15px;
+    }
+}
+.findedAd__ads__item-title{
+    font-size: 24px;
+}
+.findedAd__ads__item-descr{
+    font-size: 16px;
+    padding-top: 26px;
+}
+.findedAd__ads__btn-price{
+    align-content: center;
+}
+.findedAd__ads__btn-price button{
+    width: 167px;
+    height: 60px;
+    border-radius: 20px;
+    background-color: #F6BB3D;
+    cursor: pointer;
+    font-family: "Press Start 2P";
+    border-top: 30px;
+}
+.findedAd__ads__btn-favorite{
+    align-content: center;
+    padding-left: 30px;
+    padding-right: 30px;
+}
+.findedAd__ads__btn-favorite button{
+    cursor: pointer;
+    width: 60px;
+    height: 60px;
+    border-radius: 20px;
+    background-color: #F6BB3D;
+    img{
+        margin-left: 0;
+        width: 43px;
+        height: 43px;
+    }
+}
+.findedAd__ads-title{
+    max-width: 615px;
+    color: #F6BB3D;
+    margin-bottom: 42px;
+    font-size: 32px;
+}
+.findedAd__ads-sort{
+    background-color: #D9D9D9;
+    display: flex;
+    max-width: 270px;
+    height: 40px;
+    border-radius: 20px;
+    align-items: center;
+    margin-bottom: 42px;
+    justify-content: space-between;
+    padding-left: 10px;
+    padding-right: 10px;
+    cursor: pointer;
+}
+/* findedAd__ads-end*/
+
+/* userInfo-start*/
+.userInfo{
+    margin-top: 135px;
+}
+.userInfo__inner{
+    display: flex;
+    justify-content: space-between;
+}
+.userInfo__text{
+    color: #ECA100;
+    font-size: 40px;
+    span{
+        font-size: 24px;
+    }
+}
+.userInfo_dateOfReg{
+    font-size: 16px;
+}
+.userInfo__balance-text{
+    margin-top: 75px;
+    color: #9BDE00;
+}
+.userInfo__balance-btns-item{
+    margin-top: 20px;
+    background-color: #9BDE00;
+    width: 170px;
+    height: 62px;
+    border-radius: 20px;
+    font-family: "Press Start 2P";
+    cursor: pointer;
+}
+.userInfo__btn-exit{
+    margin-top: 40px;
+    background-color: #CB0052;
+    width: 170px;
+    height: 62px;
+    border-radius: 20px;
+    font-family: "Press Start 2P";
+    cursor: pointer;
+}
+.userInfo__img{
+    background-color: #f0f0f0;
+    width: 270px;
+    height: 270px;
+    border-radius: 20px;
+}
+/* userInfo-end */
+
+/* 404-start */
+.content404{
+    margin-top: 130px;
+    color: #ECA100;
+}
+.content404__title{
+    font-size: 40px;
+}
+.content404__descr{
+    margin-top: 58px;
+    max-width: 640px;
+    font-size: 24px;
+    margin-bottom: 30px;
+}
+.content404_btn a{
+    display: block;
+    background-color: #ECA100;
+    width: 230px;
+    height: 80px;
+    border-radius: 20px;
+    font-family: "Press Start 2P";
+    align-content: center;
+    padding-left: 10px;
+}
+/* 404-end */
+
+/* favorites-start */
+
+.favorites{
+    margin-top: 130px;
+    font-size: 40px;
+}
+.favorites__title{
+    color: #ECA100;
+    margin-bottom: 87px;
+}
+
+/* favorites-end */
+
+
+/* chats-start */
+.chats {
+    margin-block: 32px;
+    height: 70%;
+    display: flex;
+    flex-direction: column;
+    
+    .container {
+        flex: 1;
+    }
+}
+
+.chats__heading {
+    text-align: center;
+    margin-block: 20px;
+}
+
+.chats__inner {
+    display: flex;
+    height: 100%;
+    width: calc(100% - 32px);
+    margin: 0 auto;
+    gap: 32px;
+}
+
+.chats__section {
+    display: flex;
+    flex-direction: column;
+    background-color: #D9D9D9;
+    border-radius: 20px;
+    padding: 8px;
+}
+
+.chats__sidebar {
+    max-width: 300px;
+}
+
+.chats__list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: scroll;
+}
+
+.chats__history {
+    flex: 1;
+
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: scroll;
+
+    .message {
+        max-width: 60%;
+    }
+}
+
+.chats__meta {
+    display: flex;
+    padding: 8px;
+    border-bottom: 1px solid #000;
+    margin-bottom: 20px;
+}
+
+.meta__inner {
+    margin-left: 16px;
+    display: flex;
+    gap: 8px;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.meta__status {
+    font-size: 12px;
+    color: #444444;
+}
+
+.message {
+    display: flex;
+    align-items: start;
+    gap: 16px;
+    padding: 8px;
+    border-radius: 20px;
+    background-color: #00000020;
+}
+
+.message_new {
+    position: relative;
+}
+
+.message_new::before {
+    content:"!";
+        text-align: center;
+        color:#fff;
+        display: inline-block;
+        background-color: #CB0052;
+        position: absolute;
+        width: 25px;
+        height: 25px;
+        border-radius: 50%;
+        left: 0;
+        top: 0;
+        font-size: 16px;
+}
+
+.message__avatar {
+    background: #F6BB3D;
+    aspect-ratio: 1/1;
+    padding: 8px;
+    border-radius: 100%;
+}
+
+.message__author {
+    display: block;
+    margin-block: 1em;
+}
+
+.message__content {
+    font-size: .8em;
+}
+
+.message_preview {
+    font-size: 12px;
+
+    .message__content {
+        max-width: 200px;
+        text-overflow: ellipsis;
+        overflow: hidden; 
+        white-space: nowrap;
+    }
+}
+
+.message_right {
+   margin-left: auto; 
+}
+
+.chat-form {
+    margin-top: 32px;
+    width: 100%;
+    display: flex;
+    gap: 16px;
+}
+
+.chat-form__message {
+    flex: 1;
+    border-radius: 20px;
+    padding-inline: 16px;
+    height: 48px;
+    font-size: .8em;
+}
+
+.chat-form__submit {
+    width: 170px;
+    height: 48px;
+    background-color: #9BDE00;
+    color: #659000;
+    border-radius: 20px;
+    cursor: pointer;
+    font-family: inherit;
+}
+/* chats-end */
+
+/* ad-page-start */
+
+.ad{
+    margin-top: 140px;
+    color: #ECA100;
+}
+.ad__title{
+    color: #ECA100;
+    font-size: 40px;
+    margin-bottom: 42px;
+}
+.ad__main{
+    display: flex;
+    img{
+        border-radius: 20px;
+        max-width: 770px;
+        max-height: 417px;
+    }
+}
+.ad__main__descr{
+    margin-left: 30px;
+}
+.ad__main__descr-price{
+    font-size: 32px;
+    margin-bottom: 40px;
+}
+.ad__main__descr-btns{
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 54px;
+    button{
+        background-color: #F6BB3D;
+        padding: 16px 21px;
+        border-radius: 20px;
+        font-family: "Press Start 2P";
+        cursor: pointer;
+        height: 70px;
+        color: #996900;
+        img{
+            width: 45px;
+            height: 41px;
+            border-radius: 0;
+        }
+    }
+}
+.ad__main__descr-seller{
+    display: flex;
+    align-items: center;
+    img{
+        border-radius: 0;
+        margin-right: 20px;
+    }
+}
+.ad__main__descr-btn{
+    margin-top: 35px;
+    background-color: #F6BB3D;
+    width: 370px;
+    height: 48px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-family: "Press Start 2P";
+    color: #996900;
+}
+
+.ad__descr{
+    margin-top: 52px;
+}
+.ad__descr-title{
+    font-size: 32px;
+    margin-bottom: 27px;
+}
+.ad__descr-descr{
+    font-size: 20px;
+    line-height: 35px;
+}
+/* ad-page-end */
