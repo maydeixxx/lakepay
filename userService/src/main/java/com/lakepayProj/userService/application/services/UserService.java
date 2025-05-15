@@ -78,6 +78,9 @@ public class UserService implements IUserService {
         repository.delete(userById);
     }
 
+    /**
+     * Создание пользователя
+     */
     @Override
     public void saveUser(User user) {
         repository.save(mapper.userToUserEntity(user));
@@ -106,18 +109,34 @@ public class UserService implements IUserService {
         return userByTgId.getChatId();
     }
 
+    /**
+     * Получение пользователя по имени пользователя
+     *
+     * @return пользователь
+     */
     public User getByUsername(String username) {
         UserEntity userEntity = repository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         return mapper.userEntityToUser(userEntity);
     }
 
+    /**
+     * Получение пользователя по имени пользователя
+     * <p>
+     * Нужно для Spring Security
+     *
+     * @return пользователь
+     */
     public UserDetailsService userDetailsService() {
         return this::getByUsername;
     }
 
+    /**
+     * Получение текущего пользователя из контекста Spring Security
+     *
+     * @return текущий пользователь
+     */
     public User getCurrentUser() {
-        // Получение имени пользователя из контекста Spring Security
         var username = SecurityContextHolder.getContext().getAuthentication().getName();
         return getByUsername(username);
     }
