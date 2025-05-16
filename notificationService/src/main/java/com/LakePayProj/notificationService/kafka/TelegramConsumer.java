@@ -41,7 +41,7 @@ public class TelegramConsumer {
             String login = data.get("login").toString();
             String password = data.get("password").toString();
             StringBuilder message = new StringBuilder();
-            message.append("Успешная покупка объявления (" + adId + ")\n" + "*Данные от аккаунта*\n").append("login: ").append(login).append("\n")
+            message.append("Успешная покупка объявления 🆔 " + adId + "\n" + "*Данные от аккаунта*\n").append("login: ").append(login).append("\n")
                     .append("password: ").append(password);
             service.sendMessage(tgId, message.toString().trim());
         } catch (Exception e) {

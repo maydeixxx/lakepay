@@ -16,6 +16,7 @@ public class AdProducer {
 
         return String.format("""
                         🎮 *Продаётся аккаунт*
+                        🆔 *Id объявления:* %s
                         💬 *Заголовок:* %s
                         🕒 *Информация:* %s
                         👁  *Просмотров:* %s
@@ -25,6 +26,7 @@ public class AdProducer {
                         📌 *Категория:* %s
                         %s
                         """,
+                ad.getId(),
                 ad.getTitle(),
                 ad.getBody(),
                 ad.getCountOfViews(),

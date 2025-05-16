@@ -95,6 +95,7 @@ public class PaymentService implements IPaymentService {
             ));
             if (balance >= price) {
                 template.send("ad_data", message);
+                updateAdStatus(adId);
                 log.info("Отправлено сообщение в топик ad_data message = {}", message);
                 updateUserBalance(userId, price, "buy");
             }
@@ -138,6 +139,23 @@ public class PaymentService implements IPaymentService {
 
         } catch (Exception e) {
             log.error("Ошибка обновления баланса: userId={}, operation={}, error={}", userId, operation, e.getMessage(), e);
+        }
+    }
+
+    public void updateAdStatus(Long adId) {
+        try {
+            HttpHeaders httpHeaders = new HttpHeaders();
+            Map<String, Object> request = Map.of("sold", true);
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, httpHeaders);
+            restTemplate.exchange(
+                    lakePayUrl + "/update_ad/" + adId,
+                    HttpMethod.PATCH,
+                    entity,
+                    String.class
+            );
+            log.info("Изменен статус объявления = {}", true);
+        } catch (Exception e) {
+            log.error(e.getMessage());
         }
     }
 

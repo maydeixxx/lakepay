@@ -9,4 +9,5 @@ public interface IPaymentService {
     String createInvoice(Double amount, String currency, String description);
     void buyAd(Long userId, Long adId);
     void updateUserBalance(Long userId, Double amount, String operation);
+    void updateAdStatus(Long adId);
 }
