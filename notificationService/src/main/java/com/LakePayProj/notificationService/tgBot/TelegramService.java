@@ -105,6 +105,8 @@ public class TelegramService extends TelegramLongPollingBot {
 
         } else if (text.startsWith("/deposit")) {
             handleDepositRequest(text, tgId, chatId);
+        } else if (text.startsWith("/withdraw")){
+            handleWithdrawRequest(text, tgId, chatId);
         } else {
             switch (text) {
                 case "/start" -> sendMessage.setText("Привет! Я LakePayBot, выбери команду для взаимодействия.");

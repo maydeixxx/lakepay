@@ -97,6 +97,28 @@ public class TelegramConsumer {
         log.info("Отправлены уведомления о новых объявлениях для категории {}: {} пользователей", record.key(), subScribedUsers.size());
     }
 
+    @KafkaListener(topics = "withdraw_confirmed", groupId = "MONEY")
+    public void handleSuccessfulWithdraw(ConsumerRecord<String, String> record){
+        try {
+            Map<String, Object> data = objectMapper.readValue(record.value(), Map.class);
+            String userId = data.get("userId").toString();
+            String chatId = data.get("chatId").toString();
+            String amount = data.get("amount").toString();
+            String currency = data.get("currency").toString();
+            String balance = data.get("balance").toString();
+            StringBuilder message = new StringBuilder();
+            message.append("💸 Средства успешно выведены 💸\n");
+            message.append("Сумма: ").append(amount).append("\n");
+            message.append("Валюта: ").append(currency).append("\n");
+            message.append("Ваш текущий баланс: ").append(balance).append("$ 💵");
+            service.sendMessage(chatId, message.toString().trim());
+            log.info("Уведомление о выводе отправлено: userId={}, chatId={}, amount={}, currency={}",userId, chatId, amount, currency);
+        }
+        catch (Exception e){
+            log.error("Ошибка обработки withdraw_comfirmed");
+        }
+    }
+
     public List<String> getSubScribedUsers(String category) {
         try {
             return webClient.get()

@@ -10,4 +10,5 @@ public interface IPaymentService {
     void buyAd(Long userId, Long adId);
     void updateUserBalance(Long userId, Double amount, String operation);
     void updateAdStatus(Long adId);
+//    void withdraw(Long userId, )
 }

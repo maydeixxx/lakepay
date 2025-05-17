@@ -1,6 +1,8 @@
 package com.LakePayProj.paymentService.api.controllers;
 
 import com.LakePayProj.paymentService.application.services.PaymentService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,12 +41,8 @@ public class PaymentController {
             String currency = (String) invoice.get("asset");
             log.debug("Webhook invoice: description={}, amount={}, currency={}", description, amount, currency);
 
-            if (description.startsWith("Payment for ad")) {
-                Long adId = Long.parseLong(description.replace("Payment for ad ", ""));
-                String message = objectMapper.writeValueAsString(Map.of("adId", adId));
-                kafkaTemplate.send("payment_confirmed", message);
-                log.info("Оплата подтверждена: adId={}", adId);
-            } else if (description.startsWith("Deposit for user")) {
+
+            if (description.startsWith("Deposit for user")) {
                 Long userId = Long.parseLong(description.replace("Deposit for user ", ""));
                 String response = restTemplate.getForObject(lakePayUrl + "/user_id/" + userId, String.class);
                 Map<String, Object> data = objectMapper.readValue(response, Map.class);
@@ -52,7 +50,7 @@ public class PaymentController {
                 log.info("chatId = {}", chatId);
                 double cryptoToUsd;
                 switch (currency) {
-                    case "TRX" ->  {
+                    case "TRX" -> {
                         cryptoToUsd = amount * 0.27;
                         service.updateUserBalance(userId, cryptoToUsd, "deposit");
                     }
@@ -92,5 +90,41 @@ public class PaymentController {
         Long adId = Long.valueOf(data.get("adId").toString());
         service.buyAd(userId, adId);
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("/withdraw")
+    public ResponseEntity<?> withdrawFunds(@RequestBody Map<String, Object> request) {
+        try{
+            Long userId = Long.valueOf(request.get("userId").toString());
+            Double amount = Double.valueOf(request.get("amount").toString());
+            String currency = request.get("currency").toString();
+            log.debug("Запрос на вывод средств: userId={}, amount={}, currency={}", userId, amount, currency);
+
+            String userResponse = restTemplate.getForObject(lakePayUrl + "/user_id/" + userId, String.class);
+            Map<String, Object> userData = objectMapper.readValue(userResponse, Map.class);
+            Double balance = Double.valueOf(userData.get("balance").toString());
+            Long chatId = Long.valueOf(userData.get("chatId").toString());
+
+            if (balance < amount){
+                log.warn("Недостаточно средств для вывода: userId={}, balance={}, ammount={}", userId, balance, amount);
+                return ResponseEntity.badRequest().body("Недостаточно средств на балансе");
+            }
+            String message = objectMapper.writeValueAsString(Map.of(
+                    "userId", userId,
+                    "chatId", chatId,
+                    "amount", amount,
+                    "currency", currency,
+                    "balance", balance
+            ));
+            kafkaTemplate.send("withdraw_request", message);
+            log.info("Запрос на вывод отправлен в Kafka: userId={}, amount={}, currency={}", userId, amount, currency);
+
+            return ResponseEntity.ok().build();
+
+        } catch (JsonMappingException e) {
+            throw new RuntimeException(e);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

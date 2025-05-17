@@ -1,6 +1,8 @@
 package com.LakePayProj.paymentService.application.services;
 
 import com.LakePayProj.paymentService.application.interfaces.services.IPaymentService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +12,8 @@ import org.springframework.http.*;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
@@ -58,6 +62,7 @@ public class PaymentService implements IPaymentService {
                 return null;
             }
             return payUrl;
+
         } catch (Exception e) {
             log.error("Ошибка создания счёта в Crypto Bot: {}", e.getMessage(), e);
             return null;
@@ -104,6 +109,37 @@ public class PaymentService implements IPaymentService {
         }
     }
 
+    public boolean transferFunds(Long userId, Double amount, String currency) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Crypto-Pay-API-Token", apiToken);
+            Map<String, Object> request = Map.of(
+                    "user_id", userId,
+                    "amount", amount,
+                    "currency", currency
+            );
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
+            ResponseEntity<String> response = restTemplate.exchange(
+                    apiUrl + "/transfer",
+                    HttpMethod.POST,
+                    entity,
+                    String.class
+            );
+            Map<String, Object> responseData = objectMapper.readValue(response.getBody(), Map.class);
+
+            if (!(Boolean) responseData.getOrDefault("ok", false)) {
+                log.error("Не полуилось отправить средства", responseData.get("error"));
+            }
+            log.info("деньги перевелись userId={}, amount={}, currency={}", userId, amount, currency);
+            return true;
+
+        } catch (Exception e) {
+            log.error("Ошибка перевода средств через Crypto Bot: userId={}, error={}", userId, e.getMessage(), e);
+            return false;
+
+        }
+    }
+
     public void updateUserBalance(Long userId, Double amount, String operation) {
         try {
             HttpHeaders headers = new HttpHeaders();
@@ -135,6 +171,18 @@ public class PaymentService implements IPaymentService {
                     );
                     log.info("Покупка совершена: userId={}, operation={}, amount={}", userId, operation, amount);
                 }
+                case "withdraw" -> {
+                    Double newBalance = balance - amount;
+                    Map<String, Object> request = Map.of("balance", newBalance);
+                    HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
+                    restTemplate.exchange(
+                            lakePayUrl + "/update_user/" + userId,
+                            HttpMethod.PATCH,
+                            entity,
+                            String.class
+                    );
+                    log.info("Средства выведены: userId={}, operation={}, amount={}", userId, operation, amount);
+                }
             }
 
         } catch (Exception e) {
@@ -156,36 +204,6 @@ public class PaymentService implements IPaymentService {
             log.info("Изменен статус объявления = {}", true);
         } catch (Exception e) {
             log.error(e.getMessage());
-        }
-    }
-
-    @KafkaListener(topics = "deposit_request", groupId = "MONEY")
-    public void handleDepositRequest(ConsumerRecord<String, String> record) {
-        try {
-            Map<String, Object> data = objectMapper.readValue(record.value(), Map.class);
-            Long userId = Long.valueOf(data.get("userId").toString());
-            String currency = data.get("currency").toString();
-            Double amount = Double.valueOf(data.get("amount").toString());
-
-            if (currency == null || currency.isEmpty()) {
-                log.error("Invalid currency in deposit_request: userId={}", userId);
-                return;
-            }
-
-            String payUrl = createInvoice(amount, currency, "Deposit for user " + userId);
-            if (payUrl == null) {
-                log.error("Не удалось создать счёт для пополнения: userId={}, amount={}, currency={}", userId, amount, currency);
-                return;
-            }
-            String message = objectMapper.writeValueAsString(Map.of(
-                    "userId", userId,
-                    "payUrl", payUrl,
-                    "amount", amount,
-                    "currency", currency
-            ));
-            template.send("payment_created", message);
-        } catch (Exception e) {
-            log.error("Ошибка обработки = {} ", e.getMessage());
         }
     }
 }
