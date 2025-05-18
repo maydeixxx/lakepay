@@ -85,4 +85,11 @@ public class UserController {
                 .toList();
         return new ResponseEntity<>(list, HttpStatus.OK);
     }
+
+    @GetMapping("/user_tg/{id}")
+    public ResponseEntity<UserDTO> findUserByTgID(@PathVariable Long id) {
+        User userByTgId = service.findUserByTgId(id);
+        UserDTO userDTO = mapper.userToUserDTO(userByTgId);
+        return new ResponseEntity<>(userDTO, HttpStatus.OK);
+    }
 }
