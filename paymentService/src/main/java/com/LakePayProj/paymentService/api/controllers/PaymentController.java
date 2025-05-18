@@ -94,7 +94,7 @@ public class PaymentController {
 
     @PostMapping("/withdraw")
     public ResponseEntity<?> withdrawFunds(@RequestBody Map<String, Object> request) {
-        try{
+        try {
             Long userId = Long.valueOf(request.get("userId").toString());
             Double amount = Double.valueOf(request.get("amount").toString());
             String currency = request.get("currency").toString();
@@ -105,10 +105,11 @@ public class PaymentController {
             Double balance = Double.valueOf(userData.get("balance").toString());
             Long chatId = Long.valueOf(userData.get("chatId").toString());
 
-            if (balance < amount){
-                log.warn("Недостаточно средств для вывода: userId={}, balance={}, ammount={}", userId, balance, amount);
+            if (balance < amount) {
+                log.warn("Недостаточно средств для вывода: userId={}, balance={}, amount={}", userId, balance, amount);
                 return ResponseEntity.badRequest().body("Недостаточно средств на балансе");
             }
+
             String message = objectMapper.writeValueAsString(Map.of(
                     "userId", userId,
                     "chatId", chatId,
@@ -121,10 +122,9 @@ public class PaymentController {
 
             return ResponseEntity.ok().build();
 
-        } catch (JsonMappingException e) {
-            throw new RuntimeException(e);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            log.error("Ошибка обработки запроса на вывод: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().build();
         }
     }
 }

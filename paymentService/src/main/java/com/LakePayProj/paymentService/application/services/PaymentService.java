@@ -113,10 +113,12 @@ public class PaymentService implements IPaymentService {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.set("Crypto-Pay-API-Token", apiToken);
+            String spendId = "withdraw-" + userId + "-" + System.currentTimeMillis();
             Map<String, Object> request = Map.of(
                     "user_id", userId,
+                    "asset", currency,
                     "amount", amount,
-                    "currency", currency
+                    "spend_id", spendId
             );
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
             ResponseEntity<String> response = restTemplate.exchange(
@@ -128,15 +130,15 @@ public class PaymentService implements IPaymentService {
             Map<String, Object> responseData = objectMapper.readValue(response.getBody(), Map.class);
 
             if (!(Boolean) responseData.getOrDefault("ok", false)) {
-                log.error("Не полуилось отправить средства", responseData.get("error"));
+                log.error("Не получилось отправить средства: {}", responseData.get("error"));
+                return false;
             }
-            log.info("деньги перевелись userId={}, amount={}, currency={}", userId, amount, currency);
+            log.info("Деньги перевелись: userId={}, amount={}, currency={}, spendId={}", userId, amount, currency, spendId);
             return true;
 
         } catch (Exception e) {
             log.error("Ошибка перевода средств через Crypto Bot: userId={}, error={}", userId, e.getMessage(), e);
             return false;
-
         }
     }
 
@@ -187,6 +189,77 @@ public class PaymentService implements IPaymentService {
 
         } catch (Exception e) {
             log.error("Ошибка обновления баланса: userId={}, operation={}, error={}", userId, operation, e.getMessage(), e);
+        }
+    }
+
+    @KafkaListener(topics = "deposit_request", groupId = "MONEY")
+    public void handleDepositRequest(ConsumerRecord<String, String> record) {
+        try {
+            Map<String, Object> data = objectMapper.readValue(record.value(), Map.class);
+            Long userId = Long.valueOf(data.get("userId").toString());
+            String currency = data.get("currency").toString();
+            Double amount = Double.valueOf(data.get("amount").toString());
+
+            if (currency == null || currency.isEmpty()) {
+                log.error("Invalid currency in deposit_request: userId={}", userId);
+                return;
+            }
+
+            String payUrl = createInvoice(amount, currency, "Deposit for user " + userId);
+            if (payUrl == null) {
+                log.error("Не удалось создать счёт для пополнения: userId={}, amount={}, currency={}", userId, amount, currency);
+                return;
+            }
+            String message = objectMapper.writeValueAsString(Map.of(
+                    "userId", userId,
+                    "payUrl", payUrl,
+                    "amount", amount,
+                    "currency", currency
+            ));
+            template.send("payment_created", message);
+        } catch (Exception e) {
+            log.error("Ошибка обработки = {} ", e.getMessage());
+        }
+    }
+
+    @KafkaListener(topics = "withdraw_request", groupId = "MONEY")
+    public void handleWithdrawRequest(ConsumerRecord<String, String> record) {
+        try {
+            Map<String, Object> data = objectMapper.readValue(record.value(), Map.class);
+            Long userId = Long.valueOf(data.get("userId").toString());
+            Long chatId = Long.valueOf(data.get("chatId").toString());
+            Double amount = Double.valueOf(data.get("amount").toString());
+            String currency = data.get("currency").toString();
+            Double balance = Double.valueOf(data.get("balance").toString());
+
+            log.info("Обработка запроса на вывод: userId={}, amount={}, currency={}", userId, amount, currency);
+
+            boolean transferSuccess = transferFunds(chatId, amount, currency);
+
+            if (!transferSuccess) {
+                log.error("Вывод средств провалился: userId={}, amount={}, currency={}", userId, amount, currency);
+                String errorMessage = objectMapper.writeValueAsString(Map.of(
+                        "chatId", chatId,
+                        "error", "Не удалось выполнить вывод средств. Попробуйте позже."
+                ));
+                template.send("withdraw_failed", errorMessage);
+                return;
+            }
+
+            updateUserBalance(userId, amount, "withdraw");
+
+            String message = objectMapper.writeValueAsString(Map.of(
+                    "userId", userId,
+                    "chatId", chatId,
+                    "amount", amount,
+                    "currency", currency,
+                    "balance", balance - amount
+            ));
+            template.send("withdraw_confirmed", message);
+            log.info("Вывод подтверждён: userId={}, amount={}, currency={}", userId, amount, currency);
+
+        } catch (Exception e) {
+            log.error("Ошибка обработки withdraw_request: {}", e.getMessage(), e);
         }
     }
 
