@@ -102,7 +102,7 @@ public class PaymentService implements IPaymentService {
                 template.send("ad_data", message);
                 updateAdStatus(adId);
                 log.info("Отправлено сообщение в топик ad_data message = {}", message);
-                updateUserBalance(userId, price, "buy");
+                updateUserBalance(userId, price, "buy", "default");
             }
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -142,50 +142,48 @@ public class PaymentService implements IPaymentService {
         }
     }
 
-    public void updateUserBalance(Long userId, Double amount, String operation) {
+    public void updateUserBalance(Long userId, Double amount, String operation, String asset) {
         try {
             HttpHeaders headers = new HttpHeaders();
             String response = restTemplate.getForObject(lakePayUrl + "/user_id/" + userId, String.class);
             Map<String, Object> data = objectMapper.readValue(response, Map.class);
             Double balance = Double.valueOf(data.get("balance").toString());
+
+            Double newBalance;
             switch (operation) {
                 case "deposit" -> {
-                    Double newBalance = balance + amount;
-                    Map<String, Object> request = Map.of("balance", newBalance);
-                    HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
-                    restTemplate.exchange(
-                            lakePayUrl + "/update_user/" + userId,
-                            HttpMethod.PATCH,
-                            entity,
-                            String.class
-                    );
-                    log.info("Баланс пополнен: userId={}, operation={}, amount={}", userId, operation, amount);
+                    Double amountInUsd = amount;
+                    if (asset != null && !asset.isEmpty()) {
+                        switch (asset) {
+                            case "TRX" -> amountInUsd = amount * 0.27;
+                            case "ETH" -> amountInUsd = amount * 2551.29;
+                            case "BTC" -> amountInUsd = amount * 102521.46;
+                            default -> {
+                                log.error("Неподдерживаемая валюта: userId={}, asset={}", userId, asset);
+                                return;
+                            }
+                        }
+                    }
+                    newBalance = balance + amountInUsd;
                 }
-                case "buy" -> {
-                    Double newBalance = balance - amount;
-                    Map<String, Object> request = Map.of("balance", newBalance);
-                    HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
-                    restTemplate.exchange(
-                            lakePayUrl + "/update_user/" + userId,
-                            HttpMethod.PATCH,
-                            entity,
-                            String.class
-                    );
-                    log.info("Покупка совершена: userId={}, operation={}, amount={}", userId, operation, amount);
+                case "buy", "withdraw" -> {
+                    newBalance = balance - amount;
                 }
-                case "withdraw" -> {
-                    Double newBalance = balance - amount;
-                    Map<String, Object> request = Map.of("balance", newBalance);
-                    HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
-                    restTemplate.exchange(
-                            lakePayUrl + "/update_user/" + userId,
-                            HttpMethod.PATCH,
-                            entity,
-                            String.class
-                    );
-                    log.info("Средства выведены: userId={}, operation={}, amount={}", userId, operation, amount);
+                default -> {
+                    log.error("Недопустимая операция: userId={}, operation={}", userId, operation);
+                    return;
                 }
             }
+
+            Map<String, Object> request = Map.of("balance", newBalance);
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
+            restTemplate.exchange(
+                    lakePayUrl + "/update_user/" + userId,
+                    HttpMethod.PATCH,
+                    entity,
+                    String.class
+            );
+            log.info("Баланс обновлён: userId={}, operation={}, amount={}, newBalance={}", userId, operation, amount, newBalance);
 
         } catch (Exception e) {
             log.error("Ошибка обновления баланса: userId={}, operation={}, error={}", userId, operation, e.getMessage(), e);
@@ -246,14 +244,24 @@ public class PaymentService implements IPaymentService {
                 return;
             }
 
-            updateUserBalance(userId, amount, "withdraw");
+            Double amountInUsd;
+            switch (currency) {
+                case "TRX" -> amountInUsd = amount * 0.27;
+                case "ETH" -> amountInUsd = amount * 2551.29;
+                case "BTC" -> amountInUsd = amount * 102521.46;
+                default -> {
+                    log.error("Неподдерживаемая валюта: {}", currency);
+                    return;
+                }
+            }
 
+            updateUserBalance(userId, amountInUsd, "withdraw", null);
             String message = objectMapper.writeValueAsString(Map.of(
                     "userId", userId,
                     "chatId", chatId,
                     "amount", amount,
                     "currency", currency,
-                    "balance", balance - amount
+                    "balance", balance - amountInUsd
             ));
             template.send("withdraw_confirmed", message);
             log.info("Вывод подтверждён: userId={}, amount={}, currency={}", userId, amount, currency);

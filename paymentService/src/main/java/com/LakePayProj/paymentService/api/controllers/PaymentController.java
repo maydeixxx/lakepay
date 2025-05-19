@@ -43,26 +43,14 @@ public class PaymentController {
 
 
             if (description.startsWith("Deposit for user")) {
+                String operation = "deposit";
                 Long userId = Long.parseLong(description.replace("Deposit for user ", ""));
                 String response = restTemplate.getForObject(lakePayUrl + "/user_id/" + userId, String.class);
                 Map<String, Object> data = objectMapper.readValue(response, Map.class);
                 Long chatId = Long.valueOf(data.get("chatId").toString());
                 log.info("chatId = {}", chatId);
-                double cryptoToUsd;
-                switch (currency) {
-                    case "TRX" -> {
-                        cryptoToUsd = amount * 0.27;
-                        service.updateUserBalance(userId, cryptoToUsd, "deposit");
-                    }
-                    case "ETH" -> {
-                        cryptoToUsd = amount * 2551.29;
-                        service.updateUserBalance(userId, cryptoToUsd, "deposit");
-                    }
-                    case "BTC" -> {
-                        cryptoToUsd = amount * 102521.46;
-                        service.updateUserBalance(userId, cryptoToUsd, "deposit");
-                    }
-                }
+                service.updateUserBalance(userId, amount, operation, currency);
+
                 String newResponse = restTemplate.getForObject(lakePayUrl + "/user_id/" + userId, String.class);
                 Map<String, Object> userData = objectMapper.readValue(newResponse, Map.class);
                 Double balance = Double.valueOf(userData.get("balance").toString());
@@ -105,8 +93,19 @@ public class PaymentController {
             Double balance = Double.valueOf(userData.get("balance").toString());
             Long chatId = Long.valueOf(userData.get("chatId").toString());
 
-            if (balance < amount) {
-                log.warn("Недостаточно средств для вывода: userId={}, balance={}, amount={}", userId, balance, amount);
+            Double amountInUsd;
+            switch (currency) {
+                case "TRX" -> amountInUsd = amount * 0.27;
+                case "ETH" -> amountInUsd = amount * 2551.29;
+                case "BTC" -> amountInUsd = amount * 102521.46;
+                default -> {
+                    log.error("Неподдерживаемая валюта: {}", currency);
+                    return ResponseEntity.badRequest().body("Неподдерживаемая валюта");
+                }
+            }
+
+            if (balance < amountInUsd) {
+                log.warn("Недостаточно средств для вывода: userId={}, balance={}, amountInUsd={}", userId, balance, amountInUsd);
                 return ResponseEntity.badRequest().body("Недостаточно средств на балансе");
             }
 

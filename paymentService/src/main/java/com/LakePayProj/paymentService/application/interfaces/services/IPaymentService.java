@@ -8,7 +8,7 @@ import java.util.Map;
 public interface IPaymentService {
     String createInvoice(Double amount, String currency, String description);
     void buyAd(Long userId, Long adId);
-    void updateUserBalance(Long userId, Double amount, String operation);
+    void updateUserBalance(Long userId, Double amount, String operation, String asset);
     void updateAdStatus(Long adId);
 //    void withdraw(Long userId, )
 }
