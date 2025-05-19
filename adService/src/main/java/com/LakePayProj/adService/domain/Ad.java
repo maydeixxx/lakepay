@@ -14,6 +14,8 @@ public class Ad {
     private String body;
     private String category;
     private BigDecimal price;
+    private String login;
+    private String password;
     private Integer countOfViews;
     private Integer quantity;
     private LocalDate dateOfPush;

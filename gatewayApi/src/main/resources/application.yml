@@ -11,11 +11,11 @@ spring:
         - id: adService
           uri: lb://adService
           predicates:
-            - Path=/all_ads,/save_ad,/ad_delete/**,/ad_category/**,/ad_id/**,/update_ad/**
+            - Path=/all_ads,/save_ad,/ad_delete/**,/ad_category/**,/ad_id/**,/update_ad/**,/ad_credentials/**
         - id: paymentService
           uri: lb://paymentService
           predicates:
-            - Path=/pay/**
+            - Path=/webhook/**,/buy,/withdraw
 
 server:
   port: 8990

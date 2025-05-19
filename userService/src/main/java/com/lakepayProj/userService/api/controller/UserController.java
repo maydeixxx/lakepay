@@ -40,7 +40,6 @@ public class UserController {
     private final UserService service;
     private final ConcurrentHashMap<Long, Long> hash= new ConcurrentHashMap<>();
     private final UserProducer producer;
-    private final String tgBotToken = "7906616449:AAGLMQphhjOTHCgyAW9d9xlV94vN-Deai54";
 
     @GetMapping("/all_users")
     public ResponseEntity<List<UserDTO>> allUsers() {
@@ -138,7 +137,7 @@ public class UserController {
                 .sorted(Map.Entry.comparingByKey())
                 .forEach(entry -> sb.append(entry.getKey()).append("=").append(entry.getValue()).append("\n"));
 
-        if (sb.length() > 0) {
+        if (!sb.isEmpty()) {
             sb.deleteCharAt(sb.length() - 1);
         }
 
@@ -146,6 +145,7 @@ public class UserController {
 
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            String tgBotToken = "7906616449:AAGLMQphhjOTHCgyAW9d9xlV94vN-Deai54";
             byte[] key = digest.digest(tgBotToken.getBytes(UTF_8));
 
             Mac hmac = Mac.getInstance("HmacSHA256");
@@ -158,7 +158,7 @@ public class UserController {
                 validateHash.append(String.format("%02x", b));
             }
 
-            return hash.equals(validateHash.toString());
+            return hash.contentEquals(validateHash);
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
             throw new RuntimeException("Error generating HMAC", e);
         }

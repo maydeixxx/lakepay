@@ -10,7 +10,6 @@ import org.springframework.http.MediaType;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -33,6 +32,23 @@ public class TelegramConsumer {
         log.debug("Отправлено сообщение для chatId={}: {}", chatId, message);
     }
 
+    @KafkaListener(topics = "ad_data", groupId = "MONEY")
+    public void sendAdDataToUser(ConsumerRecord<String, String> record) {
+        try {
+            Map<String, Object> data = objectMapper.readValue(record.value(), Map.class);
+            String tgId = data.get("tgId").toString();
+            String adId = data.get("adId").toString();
+            String login = data.get("login").toString();
+            String password = data.get("password").toString();
+            StringBuilder message = new StringBuilder();
+            message.append("Успешная покупка объявления 🆔 " + adId + "\n" + "*Данные от аккаунта*\n").append("login: ").append(login).append("\n")
+                    .append("password: ").append(password);
+            service.sendMessage(tgId, message.toString().trim());
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+    }
+
     @KafkaListener(topics = "payment_created", groupId = "notification-group")
     public void handlePaymentCreated(ConsumerRecord<String, String> record) {
         try {
@@ -43,6 +59,27 @@ public class TelegramConsumer {
             log.info("Отправлена ссылка на оплату: userId={}, payUrl={}", userId, payUrl);
         } catch (Exception e) {
             log.error("Ошибка обработки payment_created: {}", e.getMessage(), e);
+        }
+    }
+
+    @KafkaListener(topics = "deposit_confirmed", groupId = "MONEY")
+    public void handleSuccessfulDeposit(ConsumerRecord<String, String> record) {
+        try {
+            Map<String, Object> data = objectMapper.readValue(record.value(), Map.class);
+            data.forEach((key, value) -> log.info("Key: {}, Value: {}", key, value));
+            StringBuilder message = new StringBuilder();
+            String chatId = data.get("chatId").toString();
+            log.info("chatId = {}", chatId);
+            String amount = data.get("amount").toString();
+            String asset = data.get("currency").toString();
+            String balance = data.get("balance").toString();
+            message.append("🤑Successful deposit🤑\n");
+            message.append("Amount: ").append(amount).append("\n");
+            message.append("Asset: ").append(asset).append("\n");
+            message.append("Your current balance: ").append(balance).append("$ 💵");
+            service.sendMessage(chatId, message.toString().trim());
+        } catch (Exception e) {
+            log.error(e.getMessage());
         }
     }
 
@@ -58,6 +95,28 @@ public class TelegramConsumer {
         List<String> subScribedUsers = getSubScribedUsers(record.key());
         subScribedUsers.forEach(user -> service.sendMessage(user, record.value()));
         log.info("Отправлены уведомления о новых объявлениях для категории {}: {} пользователей", record.key(), subScribedUsers.size());
+    }
+
+    @KafkaListener(topics = "withdraw_confirmed", groupId = "MONEY")
+    public void handleSuccessfulWithdraw(ConsumerRecord<String, String> record){
+        try {
+            Map<String, Object> data = objectMapper.readValue(record.value(), Map.class);
+            String userId = data.get("userId").toString();
+            String chatId = data.get("chatId").toString();
+            String amount = data.get("amount").toString();
+            String currency = data.get("currency").toString();
+            String balance = data.get("balance").toString();
+            StringBuilder message = new StringBuilder();
+            message.append("💸 Средства успешно выведены 💸\n");
+            message.append("Сумма: ").append(amount).append("\n");
+            message.append("Валюта: ").append(currency).append("\n");
+            message.append("Ваш текущий баланс: ").append(balance).append("$ 💵");
+            service.sendMessage(chatId, message.toString().trim());
+            log.info("Уведомление о выводе отправлено: userId={}, chatId={}, amount={}, currency={}",userId, chatId, amount, currency);
+        }
+        catch (Exception e){
+            log.error("Ошибка обработки withdraw_comfirmed");
+        }
     }
 
     public List<String> getSubScribedUsers(String category) {
