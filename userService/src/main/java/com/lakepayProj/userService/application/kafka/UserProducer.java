@@ -14,4 +14,14 @@ public class UserProducer {
         String message = user.getUserName() + ", вы успешно зарегистрировались!";
         template.send("usersLog", String.valueOf(user.getChatId()), message);
     }
+
+    public void sendInfoAboutSub(Long chatId, String category) {
+        String message = "🎮Вы успешно подписались на категорию: " + category + "🎮";
+        template.send("ads-sub", 0, chatId.toString(),  message);
+    }
+
+    public void sendInfoAboutUnSub(Long chatId, String category) {
+        String message = "🎮Вы успешно отписались от категории: " + category + "🎮";
+        template.send("ads-sub", 1, chatId.toString(),  message);
+    }
 }

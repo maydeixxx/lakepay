@@ -43,7 +43,7 @@ public class UserService implements IUserService {
                 case "role" -> userById.setRole(Role.valueOf(value.toString()));
                 case "adSub" -> {
                     List<String> subscriptions = userById.getSubscriptions();
-                    subscriptions.addLast(value.toString());
+                    subscriptions.add(value.toString());
                     userById.setSubscriptions(subscriptions);
                 }
                 case "delSub" -> {
@@ -92,13 +92,13 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public void subscribe(Long tgId, String category) {
-        UserEntity userByTgId = repository.findUserByTgId(tgId);
-        if (userByTgId == null) {
-            throw new IllegalArgumentException("User with tgId [" + tgId + "] not found");
+    public void subscribe(Long id, String category) {
+        UserEntity userById = repository.findUserById(id);
+        if (userById == null) {
+            throw new IllegalArgumentException("User with tgId [" + id + "] not found");
         }
 
-        List<String> subscriptions = userByTgId.getSubscriptions();
+        List<String> subscriptions = userById.getSubscriptions();
 
         if (subscriptions.contains(category)) {
             System.err.println("Пользователь уже подписан на эту категорию!");
@@ -106,20 +106,20 @@ public class UserService implements IUserService {
         }
 
         subscriptions.add(category);
-        userByTgId.setSubscriptions(subscriptions);
-        repository.saveAndFlush(userByTgId);
+        userById.setSubscriptions(subscriptions);
+        repository.saveAndFlush(userById);
     }
 
     @Override
-    public void unSubscribe(Long tgId, String category) {
-        UserEntity userByTgId = repository.findUserByTgId(tgId);
-        if (userByTgId == null) {
-            throw new IllegalArgumentException("User with id = [" + tgId + "] is null");
+    public void unSubscribe(Long id, String category) {
+        UserEntity userById = repository.findUserById(id);
+        if (userById == null) {
+            throw new IllegalArgumentException("User with id = [" + id + "] is null");
         }
-        List<String> subscriptions = userByTgId.getSubscriptions();
+        List<String> subscriptions = userById.getSubscriptions();
         subscriptions.removeIf(category1 -> category1.equals(category));
-        userByTgId.setSubscriptions(subscriptions);
-        repository.saveAndFlush(userByTgId);
+        userById.setSubscriptions(subscriptions);
+        repository.saveAndFlush(userById);
     }
 
     @Override
@@ -129,11 +129,5 @@ public class UserService implements IUserService {
                 .filter(userEntity -> userEntity.getSubscriptions().stream().anyMatch(category1 -> category1.equals(category)))
                 .map(mapper ::userEntityToUser)
                 .toList();
-    }
-
-    @Override
-    public List<String> getCategoriesById(Long tgId) {
-        UserEntity userById = repository.findUserById(tgId);
-        return mapper.userEntityToUser(userById).getSubscriptions();
     }
 }

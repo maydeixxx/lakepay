@@ -1,8 +1,7 @@
 package com.LakePayProj.paymentService.api.controllers;
 
 import com.LakePayProj.paymentService.application.services.PaymentService;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
+import com.LakePayProj.paymentService.application.services.kafka.PaymentProducer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +21,29 @@ public class PaymentController {
     private final PaymentService service;
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate;
+    private final PaymentProducer producer;
     private final String lakePayUrl = "https://lakepay.ru";
+
+    @PostMapping("/deposit")
+    public ResponseEntity<?> deposit(@RequestBody Map<String, Object> data) {
+        try {
+            String userId = data.get("userId").toString();
+            String currency = data.get("currency").toString();
+            Double amount = Double.valueOf(data.get("amount").toString());
+
+            String payUrl = service.createInvoice(amount, currency, "Deposit for user " + userId);
+            String message = objectMapper.writeValueAsString(Map.of(
+                    "userId", userId,
+                    "payUrl", payUrl,
+                    "amount", amount,
+                    "currency", currency
+            ));
+            producer.sendPaymentCreated(message);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Bad request" + e.getMessage());
+        }
+        return ResponseEntity.ok().build();
+    }
 
     @PostMapping("/webhook")
     public ResponseEntity<?> handleWebhook(@RequestBody Map<String, Object> payload) {

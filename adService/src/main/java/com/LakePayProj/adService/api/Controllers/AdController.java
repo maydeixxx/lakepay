@@ -5,6 +5,7 @@ import com.LakePayProj.adService.application.interfaces.mappers.IAdMapper;
 import com.LakePayProj.adService.application.services.AdService;
 import com.LakePayProj.adService.application.services.kafka.AdProducer;
 import com.LakePayProj.adService.domain.Ad;
+import com.LakePayProj.adService.infrastructure.AdEntity;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

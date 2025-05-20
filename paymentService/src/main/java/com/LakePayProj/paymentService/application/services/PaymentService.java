@@ -1,22 +1,18 @@
 package com.LakePayProj.paymentService.application.services;
 
 import com.LakePayProj.paymentService.application.interfaces.services.IPaymentService;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
+import com.LakePayProj.paymentService.application.services.kafka.PaymentProducer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
-import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -24,7 +20,7 @@ import java.util.Map;
 public class PaymentService implements IPaymentService {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
-    private final KafkaTemplate<String, String> template;
+    private final PaymentProducer producer;
     private final String lakePayUrl = "https://lakepay.ru";
 
     @Value("${crypto-bot.api}")
@@ -99,7 +95,7 @@ public class PaymentService implements IPaymentService {
                     "login", login
             ));
             if (balance >= price) {
-                template.send("ad_data", message);
+                producer.sendAdData(message);
                 updateAdStatus(adId);
                 log.info("Отправлено сообщение в топик ad_data message = {}", message);
                 updateUserBalance(userId, price, "buy", "default");
@@ -142,6 +138,39 @@ public class PaymentService implements IPaymentService {
         }
     }
 
+    @Override
+    public Double getExchangeCourse(String sourceAsset, String targetAsset) {
+        try {
+            HttpHeaders httpHeaders = new HttpHeaders();
+            httpHeaders.set("Crypto-Pay-Api-Token", apiToken);
+            HttpEntity<String> request = new HttpEntity<>(httpHeaders);
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                    apiUrl + "/getExchangeRates",
+                    HttpMethod.GET,
+                    request,
+                    String.class
+            );
+
+            Map<String, Object> data = objectMapper.readValue(response.getBody(), Map.class);
+
+            List<Map<String, Object>> rates = (List<Map<String, Object>>) (data.get("result"));
+            Optional<Map<String, Object>> rateData = rates.stream()
+                    .filter(r -> sourceAsset.equals(r.get("source")) && targetAsset.equals(r.get("target")))
+                    .findFirst();
+
+            if (rateData.isEmpty()) {
+                log.error("Курс для {} -> {} не найден", sourceAsset, targetAsset);
+                throw new RuntimeException("Курс для " + sourceAsset + " -> " + targetAsset + " не найден");
+            }
+
+            return Double.parseDouble(rateData.get().get("rate").toString());
+        } catch (Exception e) {
+            log.error("Ошибка получения курса валют: {}", e.getMessage(), e);
+            throw new RuntimeException("Ошибка получения курса валют: " + e.getMessage());
+        }
+    }
+
     public void updateUserBalance(Long userId, Double amount, String operation, String asset) {
         try {
             HttpHeaders headers = new HttpHeaders();
@@ -154,15 +183,8 @@ public class PaymentService implements IPaymentService {
                 case "deposit" -> {
                     Double amountInUsd = amount;
                     if (asset != null && !asset.isEmpty()) {
-                        switch (asset) {
-                            case "TRX" -> amountInUsd = amount * 0.27;
-                            case "ETH" -> amountInUsd = amount * 2551.29;
-                            case "BTC" -> amountInUsd = amount * 102521.46;
-                            default -> {
-                                log.error("Неподдерживаемая валюта: userId={}, asset={}", userId, asset);
-                                return;
-                            }
-                        }
+                        Double rate = getExchangeCourse(asset, "USD");
+                        amountInUsd = amount * rate;
                     }
                     newBalance = balance + amountInUsd;
                 }
@@ -187,87 +209,6 @@ public class PaymentService implements IPaymentService {
 
         } catch (Exception e) {
             log.error("Ошибка обновления баланса: userId={}, operation={}, error={}", userId, operation, e.getMessage(), e);
-        }
-    }
-
-    @KafkaListener(topics = "deposit_request", groupId = "MONEY")
-    public void handleDepositRequest(ConsumerRecord<String, String> record) {
-        try {
-            Map<String, Object> data = objectMapper.readValue(record.value(), Map.class);
-            Long userId = Long.valueOf(data.get("userId").toString());
-            String currency = data.get("currency").toString();
-            Double amount = Double.valueOf(data.get("amount").toString());
-
-            if (currency == null || currency.isEmpty()) {
-                log.error("Invalid currency in deposit_request: userId={}", userId);
-                return;
-            }
-
-            String payUrl = createInvoice(amount, currency, "Deposit for user " + userId);
-            if (payUrl == null) {
-                log.error("Не удалось создать счёт для пополнения: userId={}, amount={}, currency={}", userId, amount, currency);
-                return;
-            }
-            String message = objectMapper.writeValueAsString(Map.of(
-                    "userId", userId,
-                    "payUrl", payUrl,
-                    "amount", amount,
-                    "currency", currency
-            ));
-            template.send("payment_created", message);
-        } catch (Exception e) {
-            log.error("Ошибка обработки = {} ", e.getMessage());
-        }
-    }
-
-    @KafkaListener(topics = "withdraw_request", groupId = "MONEY")
-    public void handleWithdrawRequest(ConsumerRecord<String, String> record) {
-        try {
-            Map<String, Object> data = objectMapper.readValue(record.value(), Map.class);
-            Long userId = Long.valueOf(data.get("userId").toString());
-            Long chatId = Long.valueOf(data.get("chatId").toString());
-            Double amount = Double.valueOf(data.get("amount").toString());
-            String currency = data.get("currency").toString();
-            Double balance = Double.valueOf(data.get("balance").toString());
-
-            log.info("Обработка запроса на вывод: userId={}, amount={}, currency={}", userId, amount, currency);
-
-            boolean transferSuccess = transferFunds(chatId, amount, currency);
-
-            if (!transferSuccess) {
-                log.error("Вывод средств провалился: userId={}, amount={}, currency={}", userId, amount, currency);
-                String errorMessage = objectMapper.writeValueAsString(Map.of(
-                        "chatId", chatId,
-                        "error", "Не удалось выполнить вывод средств. Попробуйте позже."
-                ));
-                template.send("withdraw_failed", errorMessage);
-                return;
-            }
-
-            Double amountInUsd;
-            switch (currency) {
-                case "TRX" -> amountInUsd = amount * 0.27;
-                case "ETH" -> amountInUsd = amount * 2551.29;
-                case "BTC" -> amountInUsd = amount * 102521.46;
-                default -> {
-                    log.error("Неподдерживаемая валюта: {}", currency);
-                    return;
-                }
-            }
-
-            updateUserBalance(userId, amountInUsd, "withdraw", null);
-            String message = objectMapper.writeValueAsString(Map.of(
-                    "userId", userId,
-                    "chatId", chatId,
-                    "amount", amount,
-                    "currency", currency,
-                    "balance", balance - amountInUsd
-            ));
-            template.send("withdraw_confirmed", message);
-            log.info("Вывод подтверждён: userId={}, amount={}, currency={}", userId, amount, currency);
-
-        } catch (Exception e) {
-            log.error("Ошибка обработки withdraw_request: {}", e.getMessage(), e);
         }
     }
 
