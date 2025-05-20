@@ -56,7 +56,6 @@ public class TelegramService extends TelegramLongPollingBot {
                     new BotCommand("/help", "Получить список команд"),
                     new BotCommand("/info", "Получить информацию о LakePay"),
                     new BotCommand("/categories", "Список доступных категорий"),
-                    new BotCommand("/deposit", "пополнить баланс (формат: /deposit <amount> <currency>)"),
                     new BotCommand("/available_ads", "доступные объявления")
             );
             SetMyCommands setMyCommands = new SetMyCommands();
@@ -91,51 +90,24 @@ public class TelegramService extends TelegramLongPollingBot {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(chatId);
 
-        if (text.startsWith("/deposit")) {
-            handleDepositRequest(text, tgId, chatId);
-        } else {
-            switch (text) {
-                case "/start" -> sendMessage.setText("Привет! Я LakePayBot, выбери команду для взаимодействия.");
-                case "/reg" -> sendMessage.setText("Вот твоя ссылка на регистрацию:\nlakepay.ru/auth/telegram");
-                case "/help" ->
-                        sendMessage.setText("Список команд:\n/start\n/reg\n/help\n/info\n/categories\n/subscribe\n/unsubscribe\n/available_ads\n/pay");
-                case "/info" ->
-                        sendMessage.setText("Я бот биржи аккаунтов LakePay. Через меня можно зарегистрироваться и получать уведомления о новых объявлениях.");
-                case "/categories" -> sendMessage.setText("Доступные категории:\n" + String.join("\n", categories));
-                case "/available_ads" -> {
-                    producer.availableAds(tgId);
-                }
-                default -> sendMessage.setText("Неизвестная команда. Напишите /help для списка доступных команд.");
+        switch (text) {
+            case "/start" -> sendMessage.setText("Привет! Я LakePayBot, выбери команду для взаимодействия.");
+            case "/reg" -> sendMessage.setText("Вот твоя ссылка на регистрацию:\nlakepay.ru/auth/telegram");
+            case "/help" ->
+                    sendMessage.setText("Список команд:\n/start\n/reg\n/help\n/info\n/categories\n/subscribe\n/unsubscribe\n/available_ads\n/pay");
+            case "/info" ->
+                    sendMessage.setText("Я бот биржи аккаунтов LakePay. Через меня можно зарегистрироваться и получать уведомления о новых объявлениях.");
+            case "/categories" -> sendMessage.setText("Доступные категории:\n" + String.join("\n", categories));
+            case "/available_ads" -> {
+                producer.availableAds(tgId);
             }
+            default -> sendMessage.setText("Неизвестная команда. Напишите /help для списка доступных команд.");
         }
 
         producer.sendTgAndChatId(tgId, chatId);
 
         if (sendMessage.getText() != null) {
             execute(sendMessage);
-        }
-    }
-
-    public void handleDepositRequest(String message, Long tgId, Long chatId) {
-        try {
-            String[] parts = message.split(" ");
-            if (parts.length != 3) {
-                sendMessage(String.valueOf(chatId), "формат: /deposit <amount> <currency>)");
-            }
-
-            Double amount = Double.parseDouble(parts[1]);
-            String currency = parts[2].toUpperCase();
-
-            producer.sendTgAndChatId(tgId, chatId);
-
-            String response = restTemplate.getForObject(lakePayUrl + "/user_tg/" + tgId, String.class);
-            Map<String, Object> userData = objectMapper.readValue(response, Map.class);
-            Long userId = Long.valueOf(userData.get("id").toString());
-
-            producer.sendDepositRequest(userId, amount, currency);
-            sendMessage(String.valueOf(chatId), "запрос на пополнение отправлен, ожидайте ссылку");
-        } catch (Exception e) {
-            log.error(e.getMessage());
         }
     }
 
