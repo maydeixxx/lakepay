@@ -83,6 +83,17 @@ public class TelegramConsumer {
         }
     }
 
+    @KafkaListener(topics = "ads-sub", groupId = "subs", properties = {"partition.assignment.strategy=org.apache.kafka.clients.consumer.RangeAssignor"})
+    public void consumeSub(ConsumerRecord<String, String> record) {
+        int partition = record.partition();
+        String chatId = record.key();
+        String message = record.value();
+        switch (partition) {
+            case 0, 1 -> service.sendMessage(chatId, message);
+            default -> log.error("Неверный выбор partition");
+        }
+    }
+
     @KafkaListener(topics = "availableAds", groupId = "user-notifications")
     public void saveTgId(ConsumerRecord<String, String> record) {
         hashTgId = Long.valueOf(record.value());
@@ -197,6 +208,7 @@ public class TelegramConsumer {
 
         return String.format("""
                         🎮 *Продаётся аккаунт*
+                        🆔 *ID объявления:* %s
                         💬 *Заголовок:* %s
                         🕒 *Информация:* %s
                         👁  *Просмотров:* %s
@@ -206,6 +218,7 @@ public class TelegramConsumer {
                         📌 *Категория:* %s
                         %s
                         """,
+                ad.getOrDefault("id", "null"),
                 ad.getOrDefault("title", "не указан"),
                 ad.getOrDefault("body", "нет описания"),
                 ad.getOrDefault("countOfViews", 0),
