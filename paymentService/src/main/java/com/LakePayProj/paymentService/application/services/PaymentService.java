@@ -10,6 +10,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -30,7 +31,7 @@ public class PaymentService implements IPaymentService {
     private String apiToken;
 
     @Override
-    public String createInvoice(Double amount, String asset, String description) {
+    public String createInvoice(BigDecimal amount, String asset, String description) {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.set("Crypto-Pay-API-Token", apiToken);
@@ -72,14 +73,14 @@ public class PaymentService implements IPaymentService {
             Map<String, Object> userData = objectMapper.readValue(userResponse, Map.class);
             Long tgId = Long.valueOf(userData.get("tgId").toString());
             log.info("TGID = {}", tgId);
-            Double balance = Double.valueOf(userData.get("balance").toString());
+            BigDecimal balance = new BigDecimal(userData.get("balance").toString());
             log.info("BALANCE = {}", balance);
 
             String adResponse = restTemplate.getForObject(lakePayUrl + "/ad_id/" + adId, String.class);
             Map<String, Object> adData = objectMapper.readValue(adResponse, Map.class);
             String title = adData.get("title").toString();
             log.info("TITLE = {}", title);
-            Double price = Double.valueOf(adData.get("price").toString());
+            BigDecimal price = BigDecimal.valueOf(Double.parseDouble(adData.get("price").toString()));
 
             String credentialsResponse = restTemplate.getForObject(lakePayUrl + "/ad_credentials/" + adId, String.class);
             Map<String, String> credentials = objectMapper.readValue(credentialsResponse, Map.class);
@@ -94,7 +95,7 @@ public class PaymentService implements IPaymentService {
                     "password", password,
                     "login", login
             ));
-            if (balance >= price) {
+            if (balance.compareTo(price) >= 0) {
                 producer.sendAdData(message);
                 updateAdStatus(adId);
                 log.info("Отправлено сообщение в топик ad_data message = {}", message);
@@ -105,7 +106,7 @@ public class PaymentService implements IPaymentService {
         }
     }
 
-    public boolean transferFunds(Long userId, Double amount, String currency) {
+    public boolean transferFunds(Long userId, BigDecimal amount, String currency) {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.set("Crypto-Pay-API-Token", apiToken);
@@ -139,7 +140,7 @@ public class PaymentService implements IPaymentService {
     }
 
     @Override
-    public Double getExchangeCourse(String sourceAsset, String targetAsset) {
+    public BigDecimal getExchangeCourse(String sourceAsset, String targetAsset) {
         try {
             HttpHeaders httpHeaders = new HttpHeaders();
             httpHeaders.set("Crypto-Pay-Api-Token", apiToken);
@@ -164,32 +165,32 @@ public class PaymentService implements IPaymentService {
                 throw new RuntimeException("Курс для " + sourceAsset + " -> " + targetAsset + " не найден");
             }
 
-            return Double.parseDouble(rateData.get().get("rate").toString());
+            return new BigDecimal(rateData.get().get("rate").toString());
         } catch (Exception e) {
             log.error("Ошибка получения курса валют: {}", e.getMessage(), e);
             throw new RuntimeException("Ошибка получения курса валют: " + e.getMessage());
         }
     }
 
-    public void updateUserBalance(Long userId, Double amount, String operation, String asset) {
+    public void updateUserBalance(Long userId, BigDecimal amount, String operation, String asset) {
         try {
             HttpHeaders headers = new HttpHeaders();
             String response = restTemplate.getForObject(lakePayUrl + "/user_id/" + userId, String.class);
             Map<String, Object> data = objectMapper.readValue(response, Map.class);
-            Double balance = Double.valueOf(data.get("balance").toString());
+            BigDecimal balance = new BigDecimal(data.get("balance").toString());
 
-            Double newBalance;
+            BigDecimal newBalance;
             switch (operation) {
                 case "deposit" -> {
-                    Double amountInUsd = amount;
+                    BigDecimal amountInUsd = amount;
                     if (asset != null && !asset.isEmpty()) {
-                        Double rate = getExchangeCourse(asset, "USD");
-                        amountInUsd = amount * rate;
+                        BigDecimal rate = getExchangeCourse(asset, "USD");
+                        amountInUsd = amount.multiply(rate);
                     }
-                    newBalance = balance + amountInUsd;
+                    newBalance = balance.add(amountInUsd);
                 }
                 case "buy", "withdraw" -> {
-                    newBalance = balance - amount;
+                    newBalance = balance.subtract(amount);
                 }
                 default -> {
                     log.error("Недопустимая операция: userId={}, operation={}", userId, operation);

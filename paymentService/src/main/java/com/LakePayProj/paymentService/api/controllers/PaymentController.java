@@ -10,6 +10,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
+import java.math.BigDecimal;
 import java.util.Map;
 
 @Slf4j
@@ -29,7 +30,7 @@ public class PaymentController {
         try {
             String userId = data.get("userId").toString();
             String currency = data.get("currency").toString();
-            Double amount = Double.valueOf(data.get("amount").toString());
+            BigDecimal amount = new BigDecimal(data.get("amount").toString());
 
             String payUrl = service.createInvoice(amount, currency, "Deposit for user " + userId);
             String message = objectMapper.writeValueAsString(Map.of(
@@ -58,7 +59,7 @@ public class PaymentController {
 
             Map<String, Object> invoice = (Map) payload.get("payload");
             String description = (String) invoice.get("description");
-            Double amount = Double.valueOf(invoice.get("amount").toString());
+            BigDecimal amount = new BigDecimal(invoice.get("amount").toString());
             String currency = (String) invoice.get("asset");
             log.debug("Webhook invoice: description={}, amount={}, currency={}", description, amount, currency);
 
@@ -74,7 +75,7 @@ public class PaymentController {
 
                 String newResponse = restTemplate.getForObject(lakePayUrl + "/user_id/" + userId, String.class);
                 Map<String, Object> userData = objectMapper.readValue(newResponse, Map.class);
-                Double balance = Double.valueOf(userData.get("balance").toString());
+                BigDecimal balance = new BigDecimal(userData.get("balance").toString());
                 String message = objectMapper.writeValueAsString(Map.of(
                         "userId", userId,
                         "chatId", chatId,
@@ -105,27 +106,20 @@ public class PaymentController {
     public ResponseEntity<?> withdrawFunds(@RequestBody Map<String, Object> request) {
         try {
             Long userId = Long.valueOf(request.get("userId").toString());
-            Double amount = Double.valueOf(request.get("amount").toString());
+            BigDecimal amount = new BigDecimal(request.get("amount").toString());
             String currency = request.get("currency").toString();
             log.debug("Запрос на вывод средств: userId={}, amount={}, currency={}", userId, amount, currency);
 
             String userResponse = restTemplate.getForObject(lakePayUrl + "/user_id/" + userId, String.class);
             Map<String, Object> userData = objectMapper.readValue(userResponse, Map.class);
-            Double balance = Double.valueOf(userData.get("balance").toString());
+            BigDecimal balance = new BigDecimal(userData.get("balance").toString());
             Long chatId = Long.valueOf(userData.get("chatId").toString());
 
-            Double amountInUsd;
-            switch (currency) {
-                case "TRX" -> amountInUsd = amount * 0.27;
-                case "ETH" -> amountInUsd = amount * 2551.29;
-                case "BTC" -> amountInUsd = amount * 102521.46;
-                default -> {
-                    log.error("Неподдерживаемая валюта: {}", currency);
-                    return ResponseEntity.badRequest().body("Неподдерживаемая валюта");
-                }
-            }
+            BigDecimal amountInUsd;
+            BigDecimal rate = service.getExchangeCourse(currency, "USD");
+            amountInUsd = amount.multiply(rate);
 
-            if (balance < amountInUsd) {
+            if (balance.compareTo(amountInUsd) < 0) {
                 log.warn("Недостаточно средств для вывода: userId={}, balance={}, amountInUsd={}", userId, balance, amountInUsd);
                 return ResponseEntity.badRequest().body("Недостаточно средств на балансе");
             }
