@@ -1,5 +1,7 @@
 package com.lakepayProj.userService.api.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lakepayProj.userService.api.DTOs.UserDTO;
 import com.lakepayProj.userService.application.interfaces.mappers.IUserMapper;
 import com.lakepayProj.userService.application.kafka.UserProducer;
@@ -40,6 +42,29 @@ public class UserController {
     private final UserService service;
     private final ConcurrentHashMap<Long, Long> hash= new ConcurrentHashMap<>();
     private final UserProducer producer;
+    private final ObjectMapper objectMapper;
+
+    @PatchMapping("/subscribe")
+    public ResponseEntity<Void> subscribe(@RequestBody Map<String, Object> data) {
+        Long id = Long.valueOf(data.get("id").toString());
+        String category = data.get("category").toString();
+        User userById = service.findUserById(id);
+        Long chatId = userById.getChatId();
+        service.subscribe(id, category);
+        producer.sendInfoAboutSub(chatId, category);
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/unsubscribe")
+    public ResponseEntity<Void> unsubscribe(@RequestBody Map<String, Object> data) {
+        Long id = Long.valueOf(data.get("id").toString());
+        String category = data.get("category").toString();
+        User userById = service.findUserById(id);
+        Long chatId = userById.getChatId();
+        service.unSubscribe(id, category);
+        producer.sendInfoAboutUnSub(chatId, category);
+        return ResponseEntity.ok().build();
+    }
 
     @GetMapping("/all_users")
     public ResponseEntity<List<UserDTO>> allUsers() {
@@ -64,20 +89,20 @@ public class UserController {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "user already exists!");
         } else {
             service.saveUser(mapper.userDTOToUser(userDTO));
-            return new ResponseEntity<>(HttpStatus.OK);
+            return ResponseEntity.ok().build();
         }
     }
 
     @PatchMapping("/update_user/{id}")
     public ResponseEntity<Void> updatesUser(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
         service.updateUser(id, updates);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/delete_user/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         service.deleteUserByID(id);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/user_id/{id}")

@@ -7,7 +7,7 @@ spring:
         - id: userService
           uri: lb://userService
           predicates:
-            - Path=/auth/telegram,/auth/telegram/token,/all_users,/user_id/**,/user_role/**,/user_category/**,/save_user,/update_user/**,/delete_user/**,/categoriesById/**, /user_tg/**
+            - Path=/auth/telegram,/auth/telegram/token,/all_users,/user_id/**,/user_role/**,/user_category/**,/save_user,/update_user/**,/delete_user/**,/categoriesById/**, /user_tg/**, /unsubscribe, /subscribe
         - id: adService
           uri: lb://adService
           predicates:

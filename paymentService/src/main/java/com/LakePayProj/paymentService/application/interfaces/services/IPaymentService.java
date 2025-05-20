@@ -10,5 +10,5 @@ public interface IPaymentService {
     void buyAd(Long userId, Long adId);
     void updateUserBalance(Long userId, Double amount, String operation, String asset);
     void updateAdStatus(Long adId);
-//    void withdraw(Long userId, )
+    boolean transferFunds(Long userId, Double amount, String currency);
 }

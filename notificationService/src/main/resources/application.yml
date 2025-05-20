@@ -15,3 +15,5 @@ spring:
   application:
     name: notificationService
 
+tgBot:
+  token: "7906616449:AAGLMQphhjOTHCgyAW9d9xlV94vN-Deai54"
