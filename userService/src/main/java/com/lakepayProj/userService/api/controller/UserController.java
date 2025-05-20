@@ -10,6 +10,7 @@ import com.lakepayProj.userService.domain.model.User;
 import com.lakepayProj.userService.domain.valueObject.Role;
 import com.lakepayProj.userService.infrastructure.UserEntity;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.crypto.Mac;
+
 import javax.crypto.spec.SecretKeySpec;
 import java.math.BigDecimal;
 import java.security.InvalidKeyException;
@@ -34,6 +36,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/")
@@ -44,25 +47,33 @@ public class UserController {
     private final UserProducer producer;
     private final ObjectMapper objectMapper;
 
-    @PatchMapping("/subscribe")
-    public ResponseEntity<Void> subscribe(@RequestBody Map<String, Object> data) {
-        Long id = Long.valueOf(data.get("id").toString());
-        String category = data.get("category").toString();
-        User userById = service.findUserById(id);
-        Long chatId = userById.getChatId();
-        service.subscribe(id, category);
-        producer.sendInfoAboutSub(chatId, category);
+    @PatchMapping( "/subscribe")
+    public ResponseEntity<?> subscribe(@RequestBody Map<String, Object> data) {
+        try {
+            Long id = Long.valueOf(data.get("id").toString());
+            String category = data.get("category").toString();
+            User userById = service.findUserById(id);
+            Long chatId = userById.getChatId();
+            service.subscribe(id, category);
+            producer.sendInfoAboutSub(chatId, category);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Не удалось подписаться" + e.getMessage());
+        }
         return ResponseEntity.ok().build();
     }
 
     @PatchMapping("/unsubscribe")
-    public ResponseEntity<Void> unsubscribe(@RequestBody Map<String, Object> data) {
-        Long id = Long.valueOf(data.get("id").toString());
-        String category = data.get("category").toString();
-        User userById = service.findUserById(id);
-        Long chatId = userById.getChatId();
-        service.unSubscribe(id, category);
-        producer.sendInfoAboutUnSub(chatId, category);
+    public ResponseEntity<?> unsubscribe(@RequestBody Map<String, Object> data) {
+        try {
+            Long id = Long.valueOf(data.get("id").toString());
+            String category = data.get("category").toString();
+            User userById = service.findUserById(id);
+            Long chatId = userById.getChatId();
+            service.unSubscribe(id, category);
+            producer.sendInfoAboutUnSub(chatId, category);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Не удалось отписаться" + e.getMessage());
+        }
         return ResponseEntity.ok().build();
     }
 

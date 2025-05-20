@@ -16,12 +16,12 @@ public class UserProducer {
     }
 
     public void sendInfoAboutSub(Long chatId, String category) {
-        String message = "Вы успешно подписались на " + category;
+        String message = "🎮Вы успешно подписались на категорию: " + category + "🎮";
         template.send("ads-sub", 0, chatId.toString(),  message);
     }
 
     public void sendInfoAboutUnSub(Long chatId, String category) {
-        String message = "Вы успешно отписались от " + category;
+        String message = "🎮Вы успешно отписались от категории: " + category + "🎮";
         template.send("ads-sub", 1, chatId.toString(),  message);
     }
 }

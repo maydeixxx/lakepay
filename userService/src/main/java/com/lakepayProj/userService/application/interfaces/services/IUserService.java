@@ -19,5 +19,4 @@ public interface IUserService {
     void subscribe(Long id, String category);
     void unSubscribe(Long id, String category);
     List<User> findUserBySubs(String category);
-    List<String> getCategoriesById(Long tgId);
 }

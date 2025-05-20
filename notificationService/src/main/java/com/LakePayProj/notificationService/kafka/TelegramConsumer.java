@@ -208,6 +208,7 @@ public class TelegramConsumer {
 
         return String.format("""
                         🎮 *Продаётся аккаунт*
+                        🆔 *ID объявления:* %s
                         💬 *Заголовок:* %s
                         🕒 *Информация:* %s
                         👁  *Просмотров:* %s
@@ -217,6 +218,7 @@ public class TelegramConsumer {
                         📌 *Категория:* %s
                         %s
                         """,
+                ad.getOrDefault("id", "null"),
                 ad.getOrDefault("title", "не указан"),
                 ad.getOrDefault("body", "нет описания"),
                 ad.getOrDefault("countOfViews", 0),

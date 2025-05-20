@@ -2,9 +2,11 @@ package com.LakePayProj.adService.application.services.kafka;
 
 import com.LakePayProj.adService.api.DTOs.AdDto;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class AdProducer {
@@ -16,7 +18,6 @@ public class AdProducer {
 
         return String.format("""
                         🎮 *Продаётся аккаунт*
-                        🆔 *Id объявления:* %s
                         💬 *Заголовок:* %s
                         🕒 *Информация:* %s
                         👁  *Просмотров:* %s
@@ -26,7 +27,6 @@ public class AdProducer {
                         📌 *Категория:* %s
                         %s
                         """,
-                ad.getId(),
                 ad.getTitle(),
                 ad.getBody(),
                 ad.getCountOfViews(),

@@ -56,7 +56,8 @@ public class TelegramService extends TelegramLongPollingBot {
                     new BotCommand("/help", "Получить список команд"),
                     new BotCommand("/info", "Получить информацию о LakePay"),
                     new BotCommand("/categories", "Список доступных категорий"),
-                    new BotCommand("/deposit", "пополнить баланс (формат: /deposit <amount> <currency>)")
+                    new BotCommand("/deposit", "пополнить баланс (формат: /deposit <amount> <currency>)"),
+                    new BotCommand("/available_ads", "доступные объявления")
             );
             SetMyCommands setMyCommands = new SetMyCommands();
             setMyCommands.setCommands(commandList);
@@ -101,6 +102,9 @@ public class TelegramService extends TelegramLongPollingBot {
                 case "/info" ->
                         sendMessage.setText("Я бот биржи аккаунтов LakePay. Через меня можно зарегистрироваться и получать уведомления о новых объявлениях.");
                 case "/categories" -> sendMessage.setText("Доступные категории:\n" + String.join("\n", categories));
+                case "/available_ads" -> {
+                    producer.availableAds(tgId);
+                }
                 default -> sendMessage.setText("Неизвестная команда. Напишите /help для списка доступных команд.");
             }
         }

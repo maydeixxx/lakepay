@@ -11,4 +11,5 @@ public interface IPaymentService {
     void updateUserBalance(Long userId, Double amount, String operation, String asset);
     void updateAdStatus(Long adId);
     boolean transferFunds(Long userId, Double amount, String currency);
+    Double getExchangeCourse(String sourceAsset, String targetAsset);
 }

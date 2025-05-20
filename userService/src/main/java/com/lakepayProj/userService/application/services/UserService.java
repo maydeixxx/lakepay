@@ -43,7 +43,7 @@ public class UserService implements IUserService {
                 case "role" -> userById.setRole(Role.valueOf(value.toString()));
                 case "adSub" -> {
                     List<String> subscriptions = userById.getSubscriptions();
-                    subscriptions.addLast(value.toString());
+                    subscriptions.add(value.toString());
                     userById.setSubscriptions(subscriptions);
                 }
                 case "delSub" -> {
@@ -129,11 +129,5 @@ public class UserService implements IUserService {
                 .filter(userEntity -> userEntity.getSubscriptions().stream().anyMatch(category1 -> category1.equals(category)))
                 .map(mapper ::userEntityToUser)
                 .toList();
-    }
-
-    @Override
-    public List<String> getCategoriesById(Long tgId) {
-        UserEntity userById = repository.findUserById(tgId);
-        return mapper.userEntityToUser(userById).getSubscriptions();
     }
 }
