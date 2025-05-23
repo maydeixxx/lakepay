@@ -15,7 +15,6 @@ public class UserConsumer {
     public void handleSubscribe(ConsumerRecord<String, String> record) {
         if (record.partition() == 0) {
             service.subscribe(Long.valueOf(record.key()), record.value());
-
         } else if (record.partition() == 1) {
             service.unSubscribe(Long.valueOf(record.key()), record.value());
         }

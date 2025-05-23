@@ -3,9 +3,9 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/users_db
+    url: jdbc:postgresql://postgres-db:5432/lakepay_db
     username: postgres
-    password: secret
+    password: admin
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -22,7 +22,6 @@ spring:
 
   application:
     name: userService
-
 
 token:
   signing:
