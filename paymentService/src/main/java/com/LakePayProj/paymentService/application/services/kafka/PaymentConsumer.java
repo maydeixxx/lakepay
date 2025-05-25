@@ -8,6 +8,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.Map;
 
 @Slf4j
@@ -24,9 +25,9 @@ public class PaymentConsumer {
             Map<String, Object> data = objectMapper.readValue(record.value(), Map.class);
             Long userId = Long.valueOf(data.get("userId").toString());
             Long chatId = Long.valueOf(data.get("chatId").toString());
-            Double amount = Double.valueOf(data.get("amount").toString());
+            BigDecimal amount = new BigDecimal(data.get("amount").toString());
             String currency = data.get("currency").toString();
-            Double balance = Double.valueOf(data.get("balance").toString());
+            BigDecimal balance = new BigDecimal(data.get("balance").toString());
 
             log.info("Обработка запроса на вывод: userId={}, amount={}, currency={}", userId, amount, currency);
 
@@ -42,9 +43,9 @@ public class PaymentConsumer {
                 return;
             }
 
-            Double amountInUsd;
-            Double rate = service.getExchangeCourse(currency, "USD");
-            amountInUsd = amount * rate;
+            BigDecimal amountInUsd;
+            BigDecimal rate = service.getExchangeCourse(currency, "USD");
+            amountInUsd = amount.multiply(rate);
 
             service.updateUserBalance(userId, amountInUsd, "withdraw", null);
             String message = objectMapper.writeValueAsString(Map.of(
@@ -52,7 +53,7 @@ public class PaymentConsumer {
                     "chatId", chatId,
                     "amount", amount,
                     "currency", currency,
-                    "balance", balance - amountInUsd
+                    "balance", balance.subtract(amountInUsd)
             ));
             producer.sendWithdrawConfirmed(message);
             log.info("Вывод подтверждён: userId={}, amount={}, currency={}", userId, amount, currency);

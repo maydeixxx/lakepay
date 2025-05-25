@@ -2,14 +2,14 @@ package com.LakePayProj.paymentService.application.interfaces.services;
 
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
+import java.math.BigDecimal;
 
 @Service
 public interface IPaymentService {
-    String createInvoice(Double amount, String currency, String description);
+    String createInvoice(BigDecimal amount, String currency, String description);
     void buyAd(Long userId, Long adId);
-    void updateUserBalance(Long userId, Double amount, String operation, String asset);
+    void updateUserBalance(Long userId, BigDecimal amount, String operation, String asset);
     void updateAdStatus(Long adId);
-    boolean transferFunds(Long userId, Double amount, String currency);
-    Double getExchangeCourse(String sourceAsset, String targetAsset);
+    boolean transferFunds(Long userId, BigDecimal amount, String currency);
+    BigDecimal getExchangeCourse(String sourceAsset, String targetAsset);
 }
