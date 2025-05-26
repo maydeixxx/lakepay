@@ -9,6 +9,7 @@ import com.LakePayProj.adService.infrastructure.AdEntity;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -43,6 +44,8 @@ public class AdService implements IAdService {
 
     @Override
     public void saveAd(Ad ad) {
+        LocalDate dateOfPush = LocalDate.now();
+        ad.setDateOfPush(dateOfPush);
         repository.save(mapper.adDomainToEntity(ad));
     }
 

@@ -1,6 +1,5 @@
 package com.lakepayProj.userService.api.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lakepayProj.userService.api.DTOs.UserDTO;
 import com.lakepayProj.userService.application.interfaces.mappers.IUserMapper;
@@ -20,7 +19,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import javax.crypto.Mac;
 
@@ -43,17 +41,20 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public class UserController {
     private final IUserMapper mapper;
     private final UserService service;
-    private final ConcurrentHashMap<Long, Long> hash= new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Long, Long> hash = new ConcurrentHashMap<>();
     private final UserProducer producer;
     private final ObjectMapper objectMapper;
 
-    @PatchMapping( "/subscribe")
+    @PatchMapping("/subscribe")
     public ResponseEntity<?> subscribe(@RequestBody Map<String, Object> data) {
         try {
             Long id = Long.valueOf(data.get("id").toString());
             String category = data.get("category").toString();
             User userById = service.findUserById(id);
             Long chatId = userById.getChatId();
+            if (chatId == null || category == null) {
+                return ResponseEntity.badRequest().body("ChatId or category cant be null");
+            }
             service.subscribe(id, category);
             producer.sendInfoAboutSub(chatId, category);
         } catch (Exception e) {
@@ -70,6 +71,9 @@ public class UserController {
             User userById = service.findUserById(id);
             Long chatId = userById.getChatId();
             service.unSubscribe(id, category);
+            if (chatId == null || category == null) {
+                return ResponseEntity.badRequest().body("ChatId or category cant be null");
+            }
             producer.sendInfoAboutUnSub(chatId, category);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Не удалось отписаться" + e.getMessage());
@@ -78,74 +82,135 @@ public class UserController {
     }
 
     @GetMapping("/all_users")
-    public ResponseEntity<List<UserDTO>> allUsers() {
-        List<User> allUsers = service.findAllUsers();
-        List<UserDTO> list = allUsers.stream()
-                .map(mapper::userToUserDTO)
-                .toList();
-        return new ResponseEntity<>(list, HttpStatus.OK);
+    public ResponseEntity<?> allUsers() {
+        try {
+            List<User> allUsers = service.findAllUsers();
+            if (allUsers.isEmpty()) {
+                return ResponseEntity.badRequest().body("List is empty");
+            }
+            List<UserDTO> list = allUsers.stream()
+                    .map(mapper::userToUserDTO)
+                    .toList();
+            return new ResponseEntity<>(list, HttpStatus.OK);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
     }
 
     @GetMapping("/categoriesById/{id}")
-        public ResponseEntity<List<String>> findCategoriesByTgId(@PathVariable Long id) {
-        User userByTgId = service.findUserByTgId(id);
-        List<String> subscriptions = userByTgId.getSubscriptions();
-        return new ResponseEntity<>(subscriptions, HttpStatus.OK);
+    public ResponseEntity<?> findCategoriesByTgId(@PathVariable Long id) {
+        try {
+            User userByTgId = service.findUserByTgId(id);
+            if (userByTgId == null) {
+                return ResponseEntity.badRequest().body("There is no person with id = {" + id + "}");
+            }
+            List<String> subscriptions = userByTgId.getSubscriptions();
+            return new ResponseEntity<>(subscriptions, HttpStatus.OK);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
     }
 
     @PostMapping("/save_user")
-    public ResponseEntity<Void> saveUser(@RequestBody UserDTO userDTO) {
-        User userByTgId = service.findUserByTgId(userDTO.getTgId());
-        if (userByTgId != null) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "user already exists!");
-        } else {
-            service.saveUser(mapper.userDTOToUser(userDTO));
-            return ResponseEntity.ok().build();
+    public ResponseEntity<?> saveUser(@RequestBody UserDTO userDTO) {
+        try {
+            User userByTgId = service.findUserByTgId(userDTO.getTgId());
+            if (userByTgId != null) {
+                return ResponseEntity.badRequest().body("user already exists!");
+            } else {
+                service.saveUser(mapper.userDTOToUser(userDTO));
+                return ResponseEntity.ok().build();
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
     }
 
     @PatchMapping("/update_user/{id}")
-    public ResponseEntity<Void> updatesUser(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
-        service.updateUser(id, updates);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<?> updatesUser(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
+        try {
+            service.updateUser(id, updates);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
     }
 
     @DeleteMapping("/delete_user/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        service.deleteUserByID(id);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+        try {
+            User user = service.findUserById(id);
+            if (user == null) {
+                return ResponseEntity.badRequest().body("There is no person with id = {" + id + "}");
+            }
+            service.deleteUserByID(id);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
     }
 
     @GetMapping("/user_id/{id}")
-    public ResponseEntity<UserDTO> findUserById(@PathVariable Long id) {
-        User userDom = service.findUserById(id);
-        UserDTO userDTO = mapper.userToUserDTO(userDom);
-        return new ResponseEntity<>(userDTO, HttpStatus.OK);
+    public ResponseEntity<?> findUserById(@PathVariable Long id) {
+        try {
+            User userDom = service.findUserById(id);
+            if (userDom == null) {
+                return ResponseEntity.badRequest().body("There is no person with id = {" + id + "}");
+            }
+            UserDTO userDTO = mapper.userToUserDTO(userDom);
+            return new ResponseEntity<>(userDTO, HttpStatus.OK);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+
     }
 
     @GetMapping("user_role/{role}")
-    public ResponseEntity<List<UserDTO>> findUsersByRole(@PathVariable Role role) {
-        List<User> usersByRole = service.findUsersByRole(role);
-        List<UserDTO> usersDTO = usersByRole.stream()
-                .map(mapper::userToUserDTO)
-                .toList();
-        return new ResponseEntity<>(usersDTO, HttpStatus.OK);
+    public ResponseEntity<?> findUsersByRole(@PathVariable Role role) {
+        try {
+            List<User> usersByRole = service.findUsersByRole(role);
+            if (usersByRole.isEmpty()) {
+                return ResponseEntity.badRequest().body("There are no persons with role = {" + role + "}");
+            }
+            List<UserDTO> usersDTO = usersByRole.stream()
+                    .map(mapper::userToUserDTO)
+                    .toList();
+            return new ResponseEntity<>(usersDTO, HttpStatus.OK);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
     }
 
     @GetMapping(value = "/user_category/{category}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<UserDTO>> findUserBySubs(@PathVariable String category) {
-        List<User> userBySubs = service.findUserBySubs(category);
-        List<UserDTO> list = userBySubs.stream()
-                .map(mapper::userToUserDTO)
-                .toList();
-        return new ResponseEntity<>(list, HttpStatus.OK);
+    public ResponseEntity<?> findUserBySubs(@PathVariable String category) {
+        try {
+            List<User> userBySubs = service.findUserBySubs(category);
+            if (userBySubs.isEmpty()) {
+                return ResponseEntity.badRequest().body("There are no persons with category = {" + category + "}");
+            }
+            List<UserDTO> list = userBySubs.stream()
+                    .map(mapper::userToUserDTO)
+                    .toList();
+            return new ResponseEntity<>(list, HttpStatus.OK);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+
     }
 
     @GetMapping("/user_tg/{id}")
-    public ResponseEntity<UserDTO> findUserByTgID(@PathVariable Long id) {
-        User userByTgId = service.findUserByTgId(id);
-        UserDTO userDTO = mapper.userToUserDTO(userByTgId);
-        return new ResponseEntity<>(userDTO, HttpStatus.OK);
+    public ResponseEntity<?> findUserByTgID(@PathVariable Long id) {
+        try {
+            User userByTgId = service.findUserByTgId(id);
+            if (userByTgId == null) {
+                return ResponseEntity.badRequest().body("There is no person with id = {" + id + "}");
+            }
+            UserDTO userDTO = mapper.userToUserDTO(userByTgId);
+            return new ResponseEntity<>(userDTO, HttpStatus.OK);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("There is no person with id = {" + id + "}");
+        }
+
     }
 
     @GetMapping("auth/telegram")
