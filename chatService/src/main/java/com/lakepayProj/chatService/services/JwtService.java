@@ -1,5 +1,6 @@
 package com.lakepayProj.chatService.services;
 
+import com.lakepayProj.chatService.models.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -31,6 +32,28 @@ public class JwtService {
     }
 
     /**
+     * Генерация токена
+     *
+     * @param userDetails данные пользователя
+     * @return токен
+     */
+    public String generateToken(UserDetails userDetails) {
+        Map<String, Object> claims = new HashMap<>();
+        if (userDetails instanceof User customUserDetails) {
+            claims.put("id", customUserDetails.getId());
+            claims.put("username", customUserDetails.getUsername());
+            claims.put("urlPhoto", customUserDetails.getUrlPhoto());
+            claims.put("tgId", customUserDetails.getTgId());
+            claims.put("role", customUserDetails.getRole());
+        }
+        return generateToken(claims, userDetails);
+    }
+
+    public String extractUserId(String token) {
+        return extractClaim(token, c -> c.get("id", String.class));
+    }
+
+    /**
      * Проверка токена на валидность
      *
      * @param token       токен
@@ -53,6 +76,20 @@ public class JwtService {
     private <T> T extractClaim(String token, Function<Claims, T> claimsResolvers) {
         final Claims claims = extractAllClaims(token);
         return claimsResolvers.apply(claims);
+    }
+
+    /**
+     * Генерация токена
+     *
+     * @param extraClaims дополнительные данные
+     * @param userDetails данные пользователя
+     * @return токен
+     */
+    private String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
+        return Jwts.builder().setClaims(extraClaims).setSubject(userDetails.getUsername())
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + 100000 * 60 * 24))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256).compact();
     }
 
     /**
@@ -96,3 +133,4 @@ public class JwtService {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }
+

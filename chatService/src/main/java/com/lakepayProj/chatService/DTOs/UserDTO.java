@@ -2,7 +2,7 @@ package com.lakepayProj.chatService.DTOs;
 
 import lombok.Value;
 
-import com.lakepayProj.chatService.enums.Role;
+import com.lakepayProj.chatService.enums.UserRole;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -17,5 +17,5 @@ public class UserDTO {
     String urlPhoto;
     LocalDate dateOfReg;
     BigDecimal balance;
-    Role role;
+    UserRole role;
 }

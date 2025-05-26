@@ -29,6 +29,9 @@ public class ChatController {
 
     @MessageMapping("/chat")
     public void processMessage(@Payload ChatMessageDTO chatMessage) {
+        //
+        String username = (String) headerAccessor.getSessionAttributes().get("username");
+
         var chatId = chatRoomService.getChatId(chatMessage.getSenderName(), chatMessage.getRecipientName(), true);
 
         ChatMessage message = ChatMessage
@@ -54,6 +57,7 @@ public class ChatController {
     // TODO: Authenticate user
     @GetMapping("/chat/list/{username}")
     public ResponseEntity<List<String>> getAvailableChats(@PathVariable String username) {
+
         List<String> data = chatRoomService.getChatList(username);
         return new ResponseEntity<>(data, HttpStatus.OK);
     }

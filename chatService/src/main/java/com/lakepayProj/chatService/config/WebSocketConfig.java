@@ -1,6 +1,8 @@
 package com.lakepayProj.chatService.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lakepayProj.chatService.auth.JwtAuthenticationFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.converter.DefaultContentTypeResolver;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
@@ -13,13 +15,15 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 import java.util.List;
 
 @Configuration
+@RequiredArgsConstructor
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
-                .addInterceptors(new WsAuthHandshakeInterceptor())
-                .setHandshakeHandler(new WsHandshakeHandler())
+                .addInterceptors(jwtAuthenticationFilter)
                 .withSockJS();
     }
 
