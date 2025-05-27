@@ -4,7 +4,7 @@ server:
 spring:
   datasource:
     # Change db credentials before merging to dev
-    url: jdbc:postgresql://postgres-db:5432/chat_db
+    url: jdbc:postgresql://localhost:5432/chat_db
     username: postgres
     password: secret
     driver-class-name: org.postgresql.Driver
@@ -16,4 +16,4 @@ spring:
 
 token:
   signing:
-    key: *
+    key: your-secure-signing-key-here

@@ -18,13 +18,10 @@ import java.util.List;
 @RequiredArgsConstructor
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/ws")
-                .addInterceptors(jwtAuthenticationFilter)
-                .withSockJS();
+        registry.addEndpoint("/ws").withSockJS();
     }
 
     @Override
