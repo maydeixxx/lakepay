@@ -33,9 +33,9 @@ import java.util.List;
 @RequestMapping("chat")
 @AllArgsConstructor
 public class ChatController {
-    private IChatMessageMapper messageMapper;
     private SimpMessagingTemplate messagingTemplate;
     private IUserMapper userMapper;
+    private IChatMessageMapper messageMapper;
     private ChatMessageService chatMessageService;
     private ChatRoomService chatRoomService;
     private UserService userService;
@@ -72,7 +72,7 @@ public class ChatController {
         User sender = userService.getCurrentUser();
 
         List<String> data = chatRoomService.getChatList(sender.getUsername());
-        return new ResponseEntity<>(data, HttpStatus.OK);
+        return ResponseEntity.ok(data);
     }
 
     @GetMapping(path = "/info/{id}", produces = "application/json")
@@ -80,21 +80,23 @@ public class ChatController {
         User sender = userService.getCurrentUser();
         User recipient = userService.getById(id);
 
-        return new ResponseEntity<>(new ChatRoomDTO(
+        return ResponseEntity.ok(new ChatRoomDTO(
                 id,
                 userMapper.toDTO(sender),
                 userMapper.toDTO(recipient)
-        ), HttpStatus.OK);
+        ));
     }
 
-//    @GetMapping(path = "/history/{id}", produces = "application/json")
-//    public @ResponseBody ResponseEntity<List<ChatMessageDTO>> getChatHistory(@PathVariable Long id) {
-//        User sender = userService.getCurrentUser();
-//        User recipient = userService.getById(id);
-//
-//
-//    }
-//
+    @GetMapping(path = "/history/{id}", produces = "application/json")
+    public @ResponseBody ResponseEntity<List<ChatMessageDTO>> getChatHistory(@PathVariable Long id) {
+        User sender = userService.getCurrentUser();
+        User recipient = userService.getById(id);
+
+        var messages = chatMessageService.findChatMessages(sender.getUsername(), recipient.getUsername())
+                .stream().map(messageMapper::toDTO).toList();
+        return ResponseEntity.ok(messages);
+    }
+
 //    @GetMapping("/messages/{senderName}/{recipientName}")
 //    public ResponseEntity<List<ChatMessageDTO>> getChatMessages(@PathVariable String senderName, @PathVariable String recipientName) {
 //        List<ChatMessage> messages = chatMessageService.findChatMessages(senderName, recipientName);
