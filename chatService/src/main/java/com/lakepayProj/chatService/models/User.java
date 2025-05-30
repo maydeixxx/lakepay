@@ -18,10 +18,10 @@ import java.util.List;
 @Embeddable
 public class User implements UserDetails {
     private long id;
-    private String urlPhoto;
-    private UserRole role;
     private long tgId;
     private String username;
+    private String urlPhoto;
+    private UserRole role;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

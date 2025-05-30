@@ -16,4 +16,7 @@ spring:
 
 token:
   signing:
-    key: your-secure-signing-key-here
+    key: DajeRi8ErJlN9EjIfgr8PJwkagj8j4XI3ePoANmysKL
+
+debug: true
+
