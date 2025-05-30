@@ -20,9 +20,9 @@ public class ChatRoom {
     private Long id;
     private String chatId;
     @Column(nullable = false)
-    private String senderName;
+    private User sender;
     @Column(nullable = false)
-    private String recipientName;
+    private User recipient;
     @OneToMany(mappedBy = "chatId")
     private List<ChatMessage> messages;
 }
