@@ -41,57 +41,39 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
-        String jwt = null;
-
         // Получаем токен из заголовка
         var authHeader = request.getHeader(HEADER_NAME);
 
-        if (StringUtils.hasText(authHeader) && StringUtils.startsWithIgnoreCase(authHeader, BEARER_PREFIX)) {
-            jwt = authHeader.substring(BEARER_PREFIX.length());
-        } else {
+        if (!StringUtils.hasText(authHeader) || !StringUtils.startsWithIgnoreCase(authHeader, BEARER_PREFIX)) {
             log.debug("No valid Authorization header found.");
             filterChain.doFilter(request, response);
             return;
         }
+
+        var jwt = authHeader.substring(BEARER_PREFIX.length());
 
         // Если токен валиден, то аутентифицируем пользователя
         log.debug("JWT received: {}", jwt);
         var id = jwtService.extractUserId(jwt);
 
         if (id != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            try {
-                // User user = userService.getById(id);
-                // Mock user
-                User user = userService.getById();
-                if (user == null) {
-                    log.error("Couldn't find user with ID {}", id);
-                    filterChain.doFilter(request, response);
-                    return;
-                }
-
-                if (jwtService.isTokenValid(jwt, user)) {
-                    SecurityContext context = SecurityContextHolder.createEmptyContext();
-
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            user,
-                            null,
-                            user.getAuthorities()
-                    );
-
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    context.setAuthentication(authToken);
-                    SecurityContextHolder.setContext(context);
-
-                    return;
-                }
-            } catch (HttpClientErrorException | HttpServerErrorException e) {
-                log.error("LakePay not responding: {}", e.getMessage());
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            // User user = userService.getById(id);
+            // Mock user
+            User user = userService.getById();
+            if (user == null) {
+                log.error("Couldn't find user with ID {}", id);
+                filterChain.doFilter(request, response);
                 return;
-            } catch (JsonProcessingException e) {
-                log.error("Couldn't parse user: {}", e.getMessage());
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                return;
+            }
+
+            if (jwtService.isTokenValid(jwt, user)) {
+                SecurityContext context = SecurityContextHolder.createEmptyContext();
+
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(user,null, user.getAuthorities());
+
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                context.setAuthentication(authToken);
+                SecurityContextHolder.setContext(context);
             }
         }
 

@@ -20,17 +20,20 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.List;
 
 @Slf4j
 @Controller
+@RequestMapping("chat")
 @AllArgsConstructor
 public class ChatController {
+    private IChatMessageMapper messageMapper;
     private SimpMessagingTemplate messagingTemplate;
     private ChatMessageService chatMessageService;
     private ChatRoomService chatRoomService;
-    private IChatMessageMapper messageMapper;
     private UserService userService;
 
     @MessageMapping("/chat")
@@ -60,11 +63,11 @@ public class ChatController {
         );
     }
 
-    // TODO: Authenticate user
-    @GetMapping("/chat/list")
-    public ResponseEntity<List<String>> getAvailableChats() {
+    @GetMapping(path = "/list", produces = "application/json")
+    public @ResponseBody ResponseEntity<List<String>> getAvailableChats() {
         User user = userService.getCurrentUser();
-        log.info("Received api request from {}", user.getUsername());
+//        log.info("Received api request from {}", user.getUsername());
+
         List<String> data = chatRoomService.getChatList(user.getUsername());
         return new ResponseEntity<>(data, HttpStatus.OK);
     }
