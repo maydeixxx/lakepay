@@ -86,9 +86,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
                     var id = jwtService.extractUserId(jwt);
                     if (SecurityContextHolder.getContext().getAuthentication() == null) {
-                        // User user = userService.getById(id);
-                        // Mock user
-                        User user = userService.getById();
+                        User user = userService.getById(id);
 
                         if (jwtService.isTokenValid(jwt, user)) {
                             SecurityContext context = SecurityContextHolder.createEmptyContext();

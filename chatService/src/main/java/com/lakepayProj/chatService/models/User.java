@@ -1,7 +1,7 @@
 package com.lakepayProj.chatService.models;
 
 import com.lakepayProj.chatService.enums.UserRole;
-import jakarta.persistence.Embeddable;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,12 +15,15 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Embeddable
+@Entity
+@Table(name = "users")
 public class User implements UserDetails {
-    private long id;
-    private long tgId;
+    @Id
+    private Long id;
+    private Long tgId;
     private String username;
     private String urlPhoto;
+    @Enumerated(EnumType.ORDINAL)
     private UserRole role;
 
     @Override

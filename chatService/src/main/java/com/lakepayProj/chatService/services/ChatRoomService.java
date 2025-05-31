@@ -1,6 +1,7 @@
 package com.lakepayProj.chatService.services;
 
 import com.lakepayProj.chatService.models.ChatRoom;
+import com.lakepayProj.chatService.models.User;
 import com.lakepayProj.chatService.repository.IChatRoomRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,13 +14,13 @@ import java.util.Optional;
 public class ChatRoomService {
     private IChatRoomRepository repository;
 
-    public Optional<String> getChatId(String senderName, String recipientName, boolean createIfNotExist) {
+    public Optional<String> getChatId(User sender, User recipient, boolean createIfNotExist) {
         return repository
-                .findBySenderNameAndRecipientName(senderName, recipientName)
+                .findBySenderUsernameAndRecipientUsername(sender.getUsername(), recipient.getUsername())
                 .map(ChatRoom::getChatId)
                 .or(() -> {
                     // Prevent user from opening a chat with themselves
-                    if (recipientName.compareTo(senderName) == 0) {
+                    if (recipient.getUsername().compareTo(sender.getUsername()) == 0) {
                         return Optional.empty();
                     }
 
@@ -27,30 +28,33 @@ public class ChatRoomService {
                         return Optional.empty();
                     }
 
-                    String chatId = createChatId(senderName, recipientName);
+                    String chatId = createChatId(sender, recipient);
 
                     return Optional.of(chatId);
                 });
     }
 
     public List<String> getChatList(String username) {
-        return repository.findByRecipientName(username).stream().map(ChatRoom::getRecipientName).toList();
+        return repository.findByRecipientUsername(username)
+                .stream()
+                .map(room -> room.getRecipient().getUsername())
+                .toList();
     }
 
-    public String createChatId(String senderName, String recipientName) {
-        String chatId = String.format("%s_%s", senderName, recipientName);
+    public String createChatId(User sender, User recipient) {
+        String chatId = String.format("%s_%s", sender.getUsername(), recipient.getUsername());
 
         ChatRoom senderRoom = ChatRoom
                 .builder()
-                .senderName(senderName)
-                .recipientName(recipientName)
+                .sender(sender)
+                .recipient(recipient)
                 .chatId(chatId)
                 .build();
 
         ChatRoom recipientRoom = ChatRoom
                 .builder()
-                .senderName(recipientName)
-                .recipientName(senderName)
+                .sender(recipient)
+                .recipient(sender)
                 .chatId(chatId)
                 .build();
 

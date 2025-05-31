@@ -2,6 +2,7 @@ package com.lakepayProj.chatService.services;
 
 import com.lakepayProj.chatService.enums.MessageStatus;
 import com.lakepayProj.chatService.models.ChatMessage;
+import com.lakepayProj.chatService.models.User;
 import com.lakepayProj.chatService.repository.IChatMessageRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,11 +23,11 @@ public class ChatMessageService {
     }
 
     public long newMessageCount(String recipientName) {
-        return repository.countByRecipientNameAndStatus(recipientName, MessageStatus.RECEIVED);
+        return repository.countByRecipientUsernameAndStatus(recipientName, MessageStatus.RECEIVED);
     }
 
-    public List<ChatMessage> findChatMessages(String senderName, String recipientName) {
-        Optional<String> chatId = chatRoomService.getChatId(senderName, recipientName, false);
+    public List<ChatMessage> findChatMessages(User sender, User recipient) {
+        Optional<String> chatId = chatRoomService.getChatId(sender, recipient, false);
         return chatId.map(id -> repository.findByChatId(id)).orElse(new ArrayList<>());
     }
 

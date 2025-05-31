@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface IChatRoomRepository extends JpaRepository<ChatRoom, Long> {
-    Optional<ChatRoom> findBySenderNameAndRecipientName(String senderName, String recipientName);
     Optional<ChatRoom> findByChatId(String chatId);
-    List<ChatRoom> findBySenderName(String senderName);
-    List<ChatRoom> findByRecipientName(String recipientName);
+    Optional<ChatRoom> findBySenderUsernameAndRecipientUsername(String senderUsername, String recipientUsername);
+    List<ChatRoom> findBySenderUsername(String senderUsername);
+    List<ChatRoom> findByRecipientUsername(String recipientUsername);
 }

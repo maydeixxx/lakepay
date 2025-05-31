@@ -92,17 +92,8 @@ public class ChatController {
         User sender = userService.getCurrentUser();
         User recipient = userService.getById(id);
 
-        var messages = chatMessageService.findChatMessages(sender.getUsername(), recipient.getUsername())
+        var messages = chatMessageService.findChatMessages(sender, recipient)
                 .stream().map(messageMapper::toDTO).toList();
         return ResponseEntity.ok(messages);
     }
-
-//    @GetMapping("/messages/{senderName}/{recipientName}")
-//    public ResponseEntity<List<ChatMessageDTO>> getChatMessages(@PathVariable String senderName, @PathVariable String recipientName) {
-//        List<ChatMessage> messages = chatMessageService.findChatMessages(senderName, recipientName);
-//        messages.forEach(message -> chatMessageService.markAsDelivered(message));
-//
-//        List<ChatMessageDTO> data = messages.stream().map(messageMapper::toDTO).toList();
-//        return new ResponseEntity<>(data, HttpStatus.OK);
-//    }
 }

@@ -19,9 +19,9 @@ public class ChatRoom {
     @GeneratedValue
     private Long id;
     private String chatId;
-    @Column(nullable = false)
+    @ManyToOne
     private User sender;
-    @Column(nullable = false)
+    @ManyToOne
     private User recipient;
     @OneToMany(mappedBy = "chatId")
     private List<ChatMessage> messages;

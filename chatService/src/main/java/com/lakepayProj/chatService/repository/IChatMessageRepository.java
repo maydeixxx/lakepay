@@ -8,5 +8,5 @@ import java.util.List;
 
 public interface IChatMessageRepository extends JpaRepository<ChatMessage, Long> {
     List<ChatMessage> findByChatId(String chatId);
-    long countByRecipientNameAndStatus(String recipientName, MessageStatus status);
+    long countByRecipientUsernameAndStatus(String recipientUsername, MessageStatus status);
 }

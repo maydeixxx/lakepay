@@ -15,8 +15,10 @@ public class ChatMessage {
     @Id
     @GeneratedValue
     private Long id;
-    private String senderName;
-    private String recipientName;
+    @ManyToOne
+    private User sender;
+    @ManyToOne
+    private User recipient;
     private String content;
     private Date date;
     @Enumerated(EnumType.STRING)

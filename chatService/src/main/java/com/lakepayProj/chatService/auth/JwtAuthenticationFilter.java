@@ -57,9 +57,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
         var id = jwtService.extractUserId(jwt);
 
         if (id != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            // User user = userService.getById(id);
-            // Mock user
-            User user = userService.getById();
+            User user = userService.getById(id);
             if (user == null) {
                 log.error("Couldn't find user with ID {}", id);
                 filterChain.doFilter(request, response);
