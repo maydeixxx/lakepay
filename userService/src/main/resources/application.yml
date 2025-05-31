@@ -1,0 +1,40 @@
+server:
+  port: 8081
+
+
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres-db:5432/lakepay_db
+    username: postgres
+    password: admin
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create
+
+  kafka:
+    bootstrap-servers: kafka:29092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+  application:
+    name: userService
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-service:8761/eureka/
+
+crypto-bot:
+  api-url: https://testnet-pay.crypt.bot/api/
+  api-token: 377626:AAo0yQy9CN9vOBx6u3phGvrwZlDegfSqBUi
+
+token:
+  signing:
+    key: * # JWT signing key
+  telegram:
+    bot: * # Authentication Telegram bot token
