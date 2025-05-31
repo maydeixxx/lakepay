@@ -4,19 +4,27 @@ server:
 spring:
   datasource:
     # Change db credentials before merging to dev
-    url: jdbc:postgresql://localhost:5432/chat_db
+    url: jdbc:postgresql://postgres-db:5432/lakepay_db
     username: postgres
-    password: secret
+    password: admin
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: update
       database: postgresql
       database-platform: org.hibernate.dialect.PostgreSQLDialect
+  application:
+    name: chat-service
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-service:8761/eureka/
 
 token:
   signing:
     key: DajeRi8ErJlN9EjIfgr8PJwkagj8j4XI3ePoANmysKL
 
+#TODO: Disable on prod
 debug: true
 
