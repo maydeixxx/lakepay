@@ -1,10 +1,9 @@
 server:
   port: 8081
 
-
 spring:
   datasource:
-    url: jdbc:postgresql://postgres-db:5432/lakepay_db
+    url: jdbc:postgresql://lakePayPostgres:5432/lakepay_db
     username: postgres
     password: admin
     driver-class-name: org.postgresql.Driver
