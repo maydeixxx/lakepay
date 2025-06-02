@@ -1,5 +1,6 @@
 package com.lakepayProj.userService.domain.model;
 
+import com.lakepayProj.userService.application.interfaces.repos.IRoleRepository;
 import com.lakepayProj.userService.domain.valueObject.Role;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -15,6 +16,8 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 public class User implements UserDetails {
+    private final IRoleRepository roleRepository;
+
     private Long id;
     private String username;
     private List<String> subscriptions;
@@ -23,11 +26,11 @@ public class User implements UserDetails {
     private String urlPhoto;
     private LocalDate dateOfReg;
     private BigDecimal balance;
-    private Role role;
+    private Collection<Role> roles;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(role.name()));
+        return roles.stream().map(role -> new SimpleGrantedAuthority(role.getName())).toList();
     }
 
     @Override

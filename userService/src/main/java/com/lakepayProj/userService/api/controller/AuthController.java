@@ -1,14 +1,13 @@
 package com.lakepayProj.userService.api.controller;
 
-
 import com.lakepayProj.userService.api.DTOs.JwtAuthenticationResponse;
-import com.lakepayProj.userService.application.interfaces.mappers.IUserMapper;
 import com.lakepayProj.userService.application.services.AuthenticationService;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
@@ -17,10 +16,9 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/auth/telegram")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class AuthController {
     private final AuthenticationService authService;
-
 
     @GetMapping
     public ResponseEntity<Resource> getAuthScript() {
@@ -31,21 +29,16 @@ public class AuthController {
     }
 
     @PostMapping("/token")
-    public ResponseEntity<JwtAuthenticationResponse> authenticate(
-            @RequestBody Map<String, String> telegramData,
-            HttpServletResponse response
-    ) {
-//        System.out.println("Полученные данные: " + telegramData);
-
+    public ResponseEntity<JwtAuthenticationResponse> authenticate(@RequestBody Map<String, String> telegramData) {
         try {
             JwtAuthenticationResponse result = authService.authenticateTelegram(telegramData);
             return ResponseEntity.ok(result);
         } catch (BadCredentialsException e) {
-            response.setStatus(403);
-            return ResponseEntity.ok(new JwtAuthenticationResponse("Authentication failed", null));
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new JwtAuthenticationResponse("Authentication failed", null));
         } catch (Exception e) {
-            response.setStatus(500);
-            return ResponseEntity.ok(new JwtAuthenticationResponse("Server error", null));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new JwtAuthenticationResponse("Server error: " + e.getMessage(), null));
         }
     }
 }

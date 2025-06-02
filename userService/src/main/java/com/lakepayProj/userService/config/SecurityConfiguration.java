@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -40,12 +42,22 @@ public class SecurityConfiguration {
                 }))
                 // Настройка доступа к конечным точкам
                 .authorizeHttpRequests(request -> request
-                        // .requestMatchers("/auth/**").permitAll()
-                        // .anyRequest().authenticated()
+                        .requestMatchers("/auth/").permitAll()
+                        .requestMatchers("/user_id/").hasRole("ADMIN")
+                        .requestMatchers("/user_category/").hasRole("ADMIN")
+                        .requestMatchers("/all_users").hasRole("ADMIN")
+                        .requestMatchers("/delete_user/").hasRole("ADMIN")
+                        .requestMatchers("/user_role/").hasRole("ADMIN")
+                        .requestMatchers("/update_user/").authenticated()
                         .anyRequest().permitAll()
                 )
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
     }
 }

@@ -1,12 +1,18 @@
 package com.lakepayProj.userService.domain.valueObject;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 
-@JsonFormat(shape = JsonFormat.Shape.STRING)
-@AllArgsConstructor
-public enum Role {
-    Admin,
-    Moderator,
-    User
+@Entity
+@Data
+@Table(name = "roles")
+public class Role {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private int id;
+
+    @Column(name = "name")
+    private String name;
 }

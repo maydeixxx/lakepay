@@ -2,7 +2,9 @@ package com.lakepayProj.userService.api.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lakepayProj.userService.api.DTOs.UserDTO;
+import com.lakepayProj.userService.api.DTOs.UserUpdateDTO;
 import com.lakepayProj.userService.application.interfaces.mappers.IUserMapper;
+import com.lakepayProj.userService.application.interfaces.repos.IRoleRepository;
 import com.lakepayProj.userService.application.kafka.UserProducer;
 import com.lakepayProj.userService.application.services.UserService;
 import com.lakepayProj.userService.domain.model.User;
@@ -24,18 +26,38 @@ import java.util.Map;
 @RequestMapping("/")
 public class UserController {
     private final IUserMapper mapper;
-    private final UserService service;
+    private final UserService userService;
     private final UserProducer producer;
     private final ObjectMapper objectMapper;
+    private final IRoleRepository roleRepository;
+
+    @PostMapping("/add_role")
+    public ResponseEntity<?> saveRole(@RequestBody List<Role> roles) {
+        try {
+            roleRepository.saveAll(roles);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/get_roles")
+    public ResponseEntity<?> getAllRoles() {
+        try {
+            return ResponseEntity.ok(roleRepository.findAll());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 
     @PatchMapping( "/subscribe")
     public ResponseEntity<?> subscribe(@RequestBody Map<String, Object> data) {
         try {
             Long id = Long.valueOf(data.get("id").toString());
             String category = data.get("category").toString();
-            User userById = service.findUserById(id);
+            User userById = userService.findUserById(id);
             Long chatId = userById.getChatId();
-            service.subscribe(id, category);
+            userService.subscribe(id, category);
             producer.sendInfoAboutSub(chatId, category);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Не удалось подписаться" + e.getMessage());
@@ -43,24 +65,9 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
-    @PatchMapping("/unsubscribe")
-    public ResponseEntity<?> unsubscribe(@RequestBody Map<String, Object> data) {
-        try {
-            Long id = Long.valueOf(data.get("id").toString());
-            String category = data.get("category").toString();
-            User userById = service.findUserById(id);
-            Long chatId = userById.getChatId();
-            service.unSubscribe(id, category);
-            producer.sendInfoAboutUnSub(chatId, category);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Не удалось отписаться" + e.getMessage());
-        }
-        return ResponseEntity.ok().build();
-    }
-
     @GetMapping("/all_users")
     public ResponseEntity<List<UserDTO>> allUsers() {
-        List<User> allUsers = service.findAllUsers();
+        List<User> allUsers = userService.findAllUsers();
         List<UserDTO> list = allUsers.stream()
                 .map(mapper::userToUserDTO)
                 .toList();
@@ -69,53 +76,57 @@ public class UserController {
 
     @GetMapping("/categoriesById/{id}")
         public ResponseEntity<List<String>> findCategoriesByTgId(@PathVariable Long id) {
-        User userByTgId = service.findUserByTgId(id);
+        User userByTgId = userService.findUserByTgId(id);
         List<String> subscriptions = userByTgId.getSubscriptions();
         return new ResponseEntity<>(subscriptions, HttpStatus.OK);
     }
 
     @PostMapping("/save_user")
     public ResponseEntity<Void> saveUser(@RequestBody UserDTO userDTO) {
-        User userByTgId = service.findUserByTgId(userDTO.getTgId());
+        User userByTgId = userService.findUserByTgId(userDTO.getTgId());
         if (userByTgId != null) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "user already exists!");
         } else {
-            service.saveUser(mapper.userDTOToUser(userDTO));
+            userService.saveUser(mapper.userDTOToUser(userDTO));
             return ResponseEntity.ok().build();
         }
     }
 
     @PatchMapping("/update_user/{id}")
-    public ResponseEntity<Void> updatesUser(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
-        service.updateUser(id, updates);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody UserUpdateDTO updates) {
+        try {
+            userService.updateUser(id, updates);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @DeleteMapping("/delete_user/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        service.deleteUserByID(id);
+        userService.deleteUserByID(id);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/user_id/{id}")
     public ResponseEntity<UserDTO> findUserById(@PathVariable Long id) {
-        User userDom = service.findUserById(id);
+        User userDom = userService.findUserById(id);
         UserDTO userDTO = mapper.userToUserDTO(userDom);
         return new ResponseEntity<>(userDTO, HttpStatus.OK);
     }
 
-    @GetMapping("user_role/{role}")
-    public ResponseEntity<List<UserDTO>> findUsersByRole(@PathVariable Role role) {
-        List<User> usersByRole = service.findUsersByRole(role);
-        List<UserDTO> usersDTO = usersByRole.stream()
-                .map(mapper::userToUserDTO)
-                .toList();
-        return new ResponseEntity<>(usersDTO, HttpStatus.OK);
-    }
+//    @GetMapping("user_role/{role}")
+//    public ResponseEntity<List<UserDTO>> findUsersByRole(@PathVariable Role role) {
+//        List<User> usersByRole = service.findUsersByRole(role);
+//        List<UserDTO> usersDTO = usersByRole.stream()
+//                .map(mapper::userToUserDTO)
+//                .toList();
+//        return new ResponseEntity<>(usersDTO, HttpStatus.OK);
+//    }
 
     @GetMapping(value = "/user_category/{category}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<UserDTO>> findUserBySubs(@PathVariable String category) {
-        List<User> userBySubs = service.findUserBySubs(category);
+        List<User> userBySubs = userService.findUserBySubs(category);
         List<UserDTO> list = userBySubs.stream()
                 .map(mapper::userToUserDTO)
                 .toList();
@@ -124,7 +135,7 @@ public class UserController {
 
     @GetMapping("/user_tg/{id}")
     public ResponseEntity<UserDTO> findUserByTgID(@PathVariable Long id) {
-        User userByTgId = service.findUserByTgId(id);
+        User userByTgId = userService.findUserByTgId(id);
         UserDTO userDTO = mapper.userToUserDTO(userByTgId);
         return new ResponseEntity<>(userDTO, HttpStatus.OK);
     }

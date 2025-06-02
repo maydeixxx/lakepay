@@ -1,7 +1,6 @@
 package com.lakepayProj.userService.auth;
 
 import com.lakepayProj.userService.domain.model.TelegramAuthenticationToken;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
@@ -18,8 +17,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 @Component
 public class TelegramAuthenticationManager implements AuthenticationManager {
 
-    @Value("${token.telegram.bot}")
-    private String botToken;
+    private String botToken = "7906616449:AAGLMQphhjOTHCgyAW9d9xlV94vN-Deai54";
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
