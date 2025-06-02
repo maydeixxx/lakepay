@@ -8,6 +8,8 @@ services:
       - myNetwork
     image: eureka-service:latest
     build:
+      context: eurekaService
+      dockerfile: Dockerfile
       context: .
       dockerfile: eureka-service/src/main/resources/Dockerfile
     restart: unless-stopped
@@ -35,6 +37,8 @@ services:
       - myNetwork
     image: user-service:latest
     build:
+      context: userService
+      dockerfile: Dockerfile
       context: .
       dockerfile: userService/src/main/resources/Dockerfile
     restart: unless-stopped

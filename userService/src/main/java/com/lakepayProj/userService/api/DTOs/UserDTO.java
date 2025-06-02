@@ -1,24 +1,22 @@
 package com.lakepayProj.userService.api.DTOs;
 
 import com.lakepayProj.userService.domain.valueObject.Role;
-import lombok.Value;
+import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 
-/**
- * DTO for {@link com.lakepayProj.userService.infrastructure.UserEntity}
- */
-@Value
+@Data
 public class UserDTO {
-    Long id;
-    String userName;
-    List<String> subscriptions;
-    Long tgId;
-    Long chatId;
-    String urlPhoto;
-    LocalDate dateOfReg;
-    BigDecimal balance;
-    Role role;
+    private Long id;
+    private String username;
+    private List<String> subscriptions;
+    private Long tgId;
+    private Long chatId;
+    private String urlPhoto;
+    private LocalDate dateOfReg;
+    private BigDecimal balance;
+    private Collection<Role> role;
 }

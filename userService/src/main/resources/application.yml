@@ -1,9 +1,10 @@
 server:
   port: 8081
 
+
 spring:
   datasource:
-    url: jdbc:postgresql://lakePayPostgres:5432/lakepay_db
+    url: jdbc:postgresql://postgres-db:5432/lakepay_db
     username: postgres
     password: admin
     driver-class-name: org.postgresql.Driver
@@ -31,3 +32,11 @@ eureka:
 crypto-bot:
   api-url: https://testnet-pay.crypt.bot/api/
   api-token: 377626:AAo0yQy9CN9vOBx6u3phGvrwZlDegfSqBUi
+
+token:
+  signing:
+    key: q1o7M1V+7R1Qyx4e0y1m8qLC+xRP0U8UwK0QH5Xt7lQ=
+    lifetime: 1h
+
+  telegram:
+    bot:
