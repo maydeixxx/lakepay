@@ -24,4 +24,8 @@ public class PaymentProducer {
     public void sendAdData(String message) {
         template.send("ad_data", message);
     }
+
+    public void getAdData(String id) {
+        template.send("get_ad_data", 0, "adId", id );
+    }
 }

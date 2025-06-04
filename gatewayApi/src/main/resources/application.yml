@@ -7,7 +7,7 @@ spring:
         - id: userService
           uri: lb://userService
           predicates:
-            - Path=/auth/telegram, /auth/telegram/token, /all_users, /user_id/**, /user_role/**, /user_category/**, /save_user, /update_user/**, /delete_user/**, /categoriesById/**, /user_tg/**, /unsubscribe, /subscribe
+            - Path=/auth/telegram, /auth/telegram/token, /all_users, /user_id/**, /user_role/**, /user_category/**, /save_user, /update_user/**, /delete_user/**, /categoriesById/**, /user_tg/**, /unsubscribe, /subscribe, /add_role
         - id: adService
           uri: lb://adService
           predicates:
@@ -15,7 +15,7 @@ spring:
         - id: paymentService
           uri: lb://paymentService
           predicates:
-            - Path=/webhook/**, /buy, /withdraw, /deposit
+            - Path=/pay/webhook, /buy, /withdraw, /deposit
 
 server:
   port: 8990

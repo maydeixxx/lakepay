@@ -69,6 +69,7 @@ public class AuthenticationService {
             User user = userService.findUserByTgId(tgId);
 
             Long chatId = chats.get(tgId);
+            logger.info(chatId.toString());
             if (chatId == null) {
                 logger.warn("Chat ID для tgId {} не найден", tgId);
                 return new JwtAuthenticationResponse("Chat id is null", null);
@@ -81,6 +82,7 @@ public class AuthenticationService {
             } else {
                 UserEntity userEntity = UserEntity.builder()
                         .tgId(tgId)
+                        .chatId(chatId)
                         .username(request.get("username"))
                         .urlPhoto(request.get("photo_url"))
                         .dateOfReg(LocalDate.now())

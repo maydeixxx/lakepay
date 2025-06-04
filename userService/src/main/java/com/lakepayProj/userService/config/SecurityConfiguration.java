@@ -42,13 +42,6 @@ public class SecurityConfiguration {
                 }))
                 // Настройка доступа к конечным точкам
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("/auth/").permitAll()
-                        .requestMatchers("/user_id/").hasRole("ADMIN")
-                        .requestMatchers("/user_category/").hasRole("ADMIN")
-                        .requestMatchers("/all_users").hasRole("ADMIN")
-                        .requestMatchers("/delete_user/").hasRole("ADMIN")
-                        .requestMatchers("/user_role/").hasRole("ADMIN")
-                        .requestMatchers("/update_user/").authenticated()
                         .anyRequest().permitAll()
                 )
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))

@@ -1,19 +1,27 @@
 package com.LakePayProj.paymentService.application.services;
 
+import com.LakePayProj.paymentService.application.interfaces.repos.PaymentRepository;
 import com.LakePayProj.paymentService.application.interfaces.services.IPaymentService;
 import com.LakePayProj.paymentService.application.services.kafka.PaymentProducer;
+import com.LakePayProj.paymentService.infrastructure.PaymentEntity;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
@@ -22,7 +30,9 @@ public class PaymentService implements IPaymentService {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
     private final PaymentProducer producer;
+    private final PaymentRepository paymentRepository;
     private final String lakePayUrl = "https://lakepay.ru";
+    private final ConcurrentHashMap<Long, Long> sellerIdCache = new ConcurrentHashMap<>();
 
     @Value("${crypto-bot.api}")
     private String apiUrl;
@@ -54,34 +64,48 @@ public class PaymentService implements IPaymentService {
             }
             Map<String, Object> result = (Map<String, Object>) responseData.get("result");
             String payUrl = (String) result.get("pay_url");
+            String invoiceId = result.get("invoice_id").toString();
             if (payUrl == null) {
                 log.error("No pay_url in Crypto Bot response: {}", result);
                 return null;
             }
-            return payUrl;
+            PaymentEntity payment = new PaymentEntity();
+            payment.setUserId(Long.parseLong(description.replace("Deposit for user ", "")));
+            payment.setCreatedAt(LocalDateTime.now().toString());
+            payment.setAmount(amount);
+            payment.setInvoiceId(invoiceId);
+            payment.setCurrency(asset);
+            payment.setStatus("PENDING");
+            paymentRepository.save(payment);
 
+            return payUrl;
         } catch (Exception e) {
             log.error("Ошибка создания счёта в Crypto Bot: {}", e.getMessage(), e);
             return null;
         }
     }
 
+    @Transactional
     @Override
     public void buyAd(Long userId, Long adId) {
         try {
+            // User data
             String userResponse = restTemplate.getForObject(lakePayUrl + "/user_id/" + userId, String.class);
             Map<String, Object> userData = objectMapper.readValue(userResponse, Map.class);
-            Long tgId = Long.valueOf(userData.get("tgId").toString());
-            log.info("TGID = {}", tgId);
+            Long buyTgId = Long.valueOf(userData.get("tgId").toString());
+            Long chatId = Long.parseLong(userData.get("chatId").toString());
+            log.info("TGID = {}", buyTgId);
             BigDecimal balance = new BigDecimal(userData.get("balance").toString());
             log.info("BALANCE = {}", balance);
 
+            // Ad data
             String adResponse = restTemplate.getForObject(lakePayUrl + "/ad_id/" + adId, String.class);
             Map<String, Object> adData = objectMapper.readValue(adResponse, Map.class);
             String title = adData.get("title").toString();
             log.info("TITLE = {}", title);
             BigDecimal price = BigDecimal.valueOf(Double.parseDouble(adData.get("price").toString()));
 
+            // Credentials
             String credentialsResponse = restTemplate.getForObject(lakePayUrl + "/ad_credentials/" + adId, String.class);
             Map<String, String> credentials = objectMapper.readValue(credentialsResponse, Map.class);
             String login = credentials.get("login");
@@ -89,17 +113,78 @@ public class PaymentService implements IPaymentService {
             log.info("LOGIN = {}", login);
             log.info("PASSWORD = {}", password);
 
+            // Get sellerId
+            Long sellerId = getSellerId(adId);
+            if (sellerId == null) {
+                log.error("sellerId для adId={} не получен", adId);
+                return;
+            }
+            log.info("sellerId = {}", sellerId);
+
+            if (balance.compareTo(price) < 0) {
+                log.warn("Недостаточно средств: userId={}, balance={}, price={}", userId, balance, price);
+                return;
+            }
+
+            BigDecimal trxToUsd = getExchangeCourse("TRX", "USD");
+            BigDecimal priceToTrx = price.divide(getExchangeCourse("TRX", "USD"), 8, RoundingMode.HALF_UP);
+            boolean transferSuccess = transferFunds(sellerId, priceToTrx, "TRX");
+            if (!transferSuccess) {
+                log.error("Не удалось перевести средства продавцу: sellerId={}, amount={}", sellerId, price);
+                return;
+            }
+
             String message = objectMapper.writeValueAsString(Map.of(
-                    "tgId", tgId,
+                    "tgId", buyTgId,
                     "adId", adId,
                     "password", password,
-                    "login", login
+                    "login", login,
+                    "sellerId", sellerId
             ));
-            if (balance.compareTo(price) >= 0) {
-                producer.sendAdData(message);
-                updateAdStatus(adId);
-                log.info("Отправлено сообщение в топик ad_data message = {}", message);
-                updateUserBalance(userId, price, "buy", "default");
+
+            producer.sendAdData(message);
+            updateAdStatus(adId);
+            updateUserBalance(userId, price, "buy", "default");
+            log.info("Покупка завершена: userId={}, adId={}, message={}", userId, adId, message);
+        } catch (Exception e) {
+            log.error("Ошибка покупки объявления: userId={}, adId={}, error={}", userId, adId, e.getMessage(), e);
+        }
+    }
+
+
+    public Long getSellerId(Long adId) {
+        try {
+            Long sellerId = sellerIdCache.get(adId);
+            if (sellerId != null) {
+                log.info("sellerId={} найден в кэше для adId={}", sellerId, adId);
+                return sellerId;
+            }
+
+            producer.getAdData(adId.toString());
+            log.info("Отправлен запрос для sellerId, adId={}", adId);
+
+            Thread.sleep(500);
+            sellerId = sellerIdCache.get(adId);
+            if (sellerId != null) {
+                log.info("sellerId={} получен для adId={}", sellerId, adId);
+                return sellerId;
+            }
+            return null;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return null;
+        }
+    }
+
+    @KafkaListener(topics = "get_ad_data", groupId = "PAYMENT_MONEY")
+    public void getSellerId(ConsumerRecord<String, String> record) {
+        try {
+            if (record.partition() == 1) {
+                log.info("Получено сообщение в get_ad_data partition=1: key={}, value={}", record.key(), record.value());
+                Map<String, Object> data = objectMapper.readValue(record.value(), Map.class);
+                Long adId = Long.parseLong(data.get("adId").toString());
+                Long sellerId = Long.parseLong(data.get("sellerId").toString());
+                sellerIdCache.put(adId, sellerId);
             }
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -172,6 +257,7 @@ public class PaymentService implements IPaymentService {
         }
     }
 
+    @Transactional
     public void updateUserBalance(Long userId, BigDecimal amount, String operation, String asset) {
         try {
             HttpHeaders headers = new HttpHeaders();
@@ -207,7 +293,6 @@ public class PaymentService implements IPaymentService {
                     String.class
             );
             log.info("Баланс обновлён: userId={}, operation={}, amount={}, newBalance={}", userId, operation, amount, newBalance);
-
         } catch (Exception e) {
             log.error("Ошибка обновления баланса: userId={}, operation={}, error={}", userId, operation, e.getMessage(), e);
         }

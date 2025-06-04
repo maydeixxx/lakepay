@@ -21,4 +21,5 @@ public class AdDto {
     Integer quantity;
     LocalDate dateOfPush;
     Boolean sold;
+    Long sellerId;
 }

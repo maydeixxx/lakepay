@@ -48,9 +48,11 @@ public class UserService implements IUserService, UserDetailsService {
 
         if (updates.getUserName() != null) {
             userById.setUsername(updates.getUserName());
+            userRepository.save(userById);
         }
         if (updates.getUrlPhoto() != null) {
             userById.setUrlPhoto(updates.getUrlPhoto());
+            userRepository.save(userById);
         }
         if (updates.getRoleIds() != null) {
             Collection<Role> roles = new ArrayList<>();
@@ -61,22 +63,29 @@ public class UserService implements IUserService, UserDetailsService {
             }
             userById.getRoles().clear();
             userById.getRoles().addAll(roles);
+            userRepository.save(userById);
         }
         if (updates.getAdSub() != null) {
             List<String> subscriptions = userById.getSubscriptions();
             if (subscriptions == null) {
                 subscriptions = new ArrayList<>();
                 userById.setSubscriptions(subscriptions);
+                userRepository.save(userById);
             }
             subscriptions.add(updates.getAdSub());
         }
+        if (updates.getBalance() != null) {
+            userById.setBalance(updates.getBalance());
+            userRepository.save(userById);
+        }
         if (updates.getDelSub() != null) {
-            Collection<String> subscriptions = userById.getSubscriptions();
+            List<String> subscriptions = userById.getSubscriptions();
             if (subscriptions != null) {
                 subscriptions.removeIf(category -> category.equals(updates.getDelSub()));
+                userById.setSubscriptions(subscriptions);
+                userRepository.save(userById);
             }
         }
-        userRepository.save(userById);
     }
 
 

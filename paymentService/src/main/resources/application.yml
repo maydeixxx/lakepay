@@ -26,9 +26,12 @@ eureka:
   client:
     service-url:
       defaultZone: http://eureka-service:8761/eureka/
+  instance:
+    prefer-ip-address: true
+    hostname: payment-service
 
 crypto-bot:
-  api: https://testnet-pay.crypt.bot/api/
+  api: https://testnet-pay.crypt.bot/api
   token: 36875:AAS1Wn7fEsFVdceQiM0buxOkHHCra0cOrnE
 
 server:

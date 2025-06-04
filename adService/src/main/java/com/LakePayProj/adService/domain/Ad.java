@@ -20,4 +20,5 @@ public class Ad {
     private Integer quantity;
     private LocalDate dateOfPush;
     private Boolean sold;
+    private Long sellerId;
 }
