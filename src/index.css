@@ -95,3 +95,28 @@ h6 {
   --color-muted: oklch(0.269 0 0);
   --color-muted-foreground: oklch(0.708 0 0);
 }
+
+@layer utilities {
+  .container {
+    @media (width >= 40rem /* 640px */) {
+      width: min(calc(100% - 2rem), 40rem);
+      max-width: 40rem /* 640px */;
+    }
+    @media (width >= 48rem /* 768px */) {
+      width: min(calc(90% - 2rem), 48rem);
+      max-width: min(calc(100% - 2rem), 48rem) /* 768px */;
+    }
+    @media (width >= 64rem /* 1024px */) {
+      width: min(calc(100% - 2rem), 64rem);
+      max-width: 64rem /* 1024px */;
+    }
+    @media (width >= 80rem /* 1280px */) {
+      width: min(calc(100% - 2rem), 80rem);
+      max-width: 80rem /* 1280px */;
+    }
+    @media (width >= 96rem /* 1536px */) {
+      width: min(calc(100% - 4rem), 96rem);
+      max-width: 96rem /* 1536px */;
+    }
+  }
+}
