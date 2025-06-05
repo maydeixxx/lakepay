@@ -47,7 +47,7 @@ function HeaderCatalog() {
           <Card className="bg-background py-0 overflow-hidden">
             <a href={category.url}>
               <img src={category.photo} alt={`Photo of ${category.title}`} />
-              <h4 className="text-center py-2">{category.title}</h4>
+              <h4 className="text-center py-2 font-bold">{category.title}</h4>
             </a>
           </Card>
         ))}
