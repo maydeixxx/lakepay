@@ -12,6 +12,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -26,19 +27,32 @@ public class UserConsumer {
     public void handleUserId(ConsumerRecord<String, String> record) {
         User user = null;
         Long userId = Long.parseLong(record.value());
-        if (record.partition() == 0) {
-            user = userService.findUserById(userId);
-        }
+        user = userService.findUserById(userId);
+        log.info("USER = {}", user);
         try {
             if (user != null) {
                 String response = objectMapper.writeValueAsString(Map.of(
                         "tgId", user.getTgId(),
                         "balance", user.getBalance()
                 ));
-                template.send("get_user_data_by_id", 1, "userIdResponse", response);
+                template.send("responseToUserData", "userIdResponse", response);
             }
         } catch (JsonProcessingException e) {
             log.error(e.getMessage());
         }
+    }
+
+    @KafkaListener(topics = "get_sub_users", groupId = "subscribed_users")
+    public void handleSubscribedUsersRequest(ConsumerRecord<String, String> record) {
+        String category = record.value();
+        List<User> users = userService.findUserBySubs(category);
+        List<Long> chatIds = users.stream().map(User::getChatId).toList();
+        try {
+            String response = objectMapper.writeValueAsString(chatIds);
+            template.send("response_sub_users", "users", response);
+        } catch (JsonProcessingException e) {
+            log.error(e.getMessage());
+        }
+
     }
 }

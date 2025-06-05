@@ -23,4 +23,8 @@ public class TelegramProducer {
     public void availableAds(Long tgId) {
         template.send("availableAds", String.valueOf(tgId));
     }
+
+    public void getUsers(String adCategory) {
+        template.send("get_sub_users", "category", adCategory);
+    }
 }

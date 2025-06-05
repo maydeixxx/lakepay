@@ -1,17 +1,17 @@
 package com.LakePayProj.notificationService.kafka;
 
 import com.LakePayProj.notificationService.tgBot.TelegramService;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.MediaType;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -23,6 +23,8 @@ public class TelegramConsumer {
     private final WebClient webClient;
     private final ObjectMapper objectMapper;
     private Long hashTgId;
+    private final TelegramProducer producer;
+    private final List<String> cacheSubscribedUsers = new ArrayList<>();
 
     @KafkaListener(topics = "usersLog", groupId = "user-notifications")
     public void sendNewUser(ConsumerRecord<String, String> record) {
@@ -103,9 +105,17 @@ public class TelegramConsumer {
 
     @KafkaListener(topics = "ads", groupId = "ads-sub")
     public void sendNewAds(ConsumerRecord<String, String> record) {
-        List<String> subScribedUsers = getSubScribedUsers(record.key());
-        subScribedUsers.forEach(user -> service.sendMessage(user, record.value()));
-        log.info("Отправлены уведомления о новых объявлениях для категории {}: {} пользователей", record.key(), subScribedUsers.size());
+        producer.getUsers(record.key());
+        try {
+            Thread.sleep(2000);
+            log.info(cacheSubscribedUsers.toString());
+            cacheSubscribedUsers.forEach(user -> {
+                service.sendMessage(String.valueOf(user), record.value());
+            });
+            log.info("Отправлены уведомления о новых объявлениях для категории {}: {} пользователей", record.key(), cacheSubscribedUsers);
+        } catch (Exception e) {
+            log.error("Error = {}", e.getMessage());
+        }
     }
 
     @KafkaListener(topics = "withdraw_confirmed", groupId = "MONEY")
@@ -126,27 +136,19 @@ public class TelegramConsumer {
             log.info("Уведомление о выводе отправлено: userId={}, chatId={}, amount={}, currency={}",userId, chatId, amount, currency);
         }
         catch (Exception e){
-            log.error("Ошибка обработки withdraw_comfirmed");
+            log.error("Ошибка обработки withdraw_confirmed");
         }
     }
 
-    public List<String> getSubScribedUsers(String category) {
+    @KafkaListener(topics = "response_sub_users", groupId = "subscribed_users")
+    public void getSubScribedUsers(ConsumerRecord<String, String> record) {
         try {
-            return webClient.get()
-                    .uri("https://lakepay.ru/user_category/{category}", category)
-                    .accept(MediaType.APPLICATION_JSON)
-                    .retrieve()
-                    .onStatus(status -> status.isError(), response -> {
-                        log.error("Ошибка при запросе подписчиков категории {}: {}", category, response.statusCode());
-                        return Mono.error(new RuntimeException("Сервер вернул ошибку: " + response.statusCode()));
-                    })
-                    .bodyToFlux(new ParameterizedTypeReference<Map<String, Object>>() {})
-                    .map(userMap -> String.valueOf(userMap.get("chatId")))
-                    .collectList()
-                    .block();
+            List<Integer> chatIds = objectMapper.readValue(record.value(), List.class);
+            cacheSubscribedUsers.addAll(chatIds.stream().map(String::valueOf).toList());
+
+            log.info(cacheSubscribedUsers.toString());
         } catch (Exception e) {
-            log.error("Не удалось получить подписчиков категории {}: {}", category, e.getMessage());
-            return List.of();
+            log.error("Не удалось получить подписчиков категории {}: {}", record.value(), e.getMessage());
         }
     }
 

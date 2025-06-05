@@ -30,6 +30,6 @@ public class PaymentProducer {
     }
 
     public void getUserDataById(String id) {
-        template.send("get_user_data_by_id", 0, "userId", id);
+        template.send("get_user_data_by_id", "userId", id);
     }
 }

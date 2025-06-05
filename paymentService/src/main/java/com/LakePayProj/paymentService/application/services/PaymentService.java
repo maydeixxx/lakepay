@@ -194,18 +194,16 @@ public class PaymentService implements IPaymentService {
         }
     }
 
-    @KafkaListener(topics = "get_user_data_by_id", groupId = "userData")
+    @KafkaListener(topics = "responseToUserData", groupId = "userData")
     public void getUserData(ConsumerRecord<String, String> record) {
         try {
-            if (record.partition() == 1) {
-                log.info("New message = {}, {}", record.key(), record.value());
-                Map<String, Object> userData = objectMapper.readValue(record.value(), Map.class);
-                Long tgId = Long.parseLong(userData.get("tgId").toString());
-                BigDecimal balance = new BigDecimal(userData.get("balance").toString());
-                cacheUserData.put("tgId", tgId);
-                cacheUserData.put("balance", balance);
-                log.info("Recorded USER DATA: tgId = {}, balance = {}", tgId, balance);
-            }
+            log.info("New message = {}, {}", record.key(), record.value());
+            Map<String, Object> userData = objectMapper.readValue(record.value(), Map.class);
+            Long tgId = Long.parseLong(userData.get("tgId").toString());
+            BigDecimal balance = new BigDecimal(userData.get("balance").toString());
+            cacheUserData.put("tgId", tgId);
+            cacheUserData.put("balance", balance);
+            log.info("Recorded USER DATA: tgId = {}, balance = {}", tgId, balance);
         } catch (Exception e) {
             log.error(e.getMessage());
         }

@@ -4,14 +4,16 @@ import com.LakePayProj.paymentService.application.interfaces.repos.PaymentReposi
 import com.LakePayProj.paymentService.application.services.PaymentService;
 import com.LakePayProj.paymentService.application.services.kafka.PaymentProducer;
 import com.LakePayProj.paymentService.infrastructure.PaymentEntity;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.http.*;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.util.Map;
@@ -26,10 +28,23 @@ public class PaymentController {
     private final PaymentService service;
     private final PaymentRepository paymentRepository;
     private final ObjectMapper objectMapper;
-    private final RestTemplate restTemplate;
     private final PaymentProducer producer;
-    private final String lakePayUrl = "https://lakepay.ru";
     private final ConcurrentHashMap<String, Object> cacheUserData = new ConcurrentHashMap<>();
+
+    @KafkaListener(topics = "responseToUserData", groupId = "userData")
+    public void getUserDataAById(ConsumerRecord<String, String> record) {
+        try {
+            log.info("User data = {}", record.value());
+            Map<String, Object> userData = objectMapper.readValue(record.value(), Map.class);
+            Long tgId = Long.parseLong(userData.get("tgId").toString());
+            BigDecimal balance = new BigDecimal(userData.get("balance").toString());
+            cacheUserData.put("tgId", tgId);
+            cacheUserData.put("balance", balance);
+            log.info("User data: tgId = {}, balance = {}", tgId, balance);
+        } catch (JsonProcessingException e) {
+            log.error(e.getMessage());
+        }
+    }
 
     @Transactional
     @PostMapping("/pay/webhook")
@@ -62,22 +77,18 @@ public class PaymentController {
             log.debug("Webhook invoice: invoiceId={}, description={}, amount={}, currency={}", invoiceId, description, amount, currency);
 
             if (description.startsWith("Deposit for user")) {
-                String operation = "deposit";
                 Long userId = Long.parseLong(description.replace("Deposit for user ", ""));
-                String response = restTemplate.getForObject(lakePayUrl + "/user_id/" + userId, String.class);
-                Map<String, Object> userData = objectMapper.readValue(response, Map.class);
-                Long chatId = Long.valueOf(userData.get("chatId").toString());
-                BigDecimal balance = new BigDecimal(userData.get("balance").toString());
-                log.info("chatId = {}", chatId);
-
+                log.info(cacheUserData.toString());
+                String operation = "deposit";
+                Thread.sleep(10000);
+                Long tgId = Long.parseLong(cacheUserData.get("tgId").toString());
                 BigDecimal newBalance = service.updateUserBalance(userId, amount, operation, currency);
-
                 payment.setStatus("COMPLETED");
                 paymentRepository.save(payment);
 
                 String message = objectMapper.writeValueAsString(Map.of(
                         "userId", userId,
-                        "chatId", chatId,
+                        "chatId", tgId,
                         "amount", amount,
                         "currency", currency,
                         "balance", newBalance
@@ -93,10 +104,12 @@ public class PaymentController {
         }
     }
 
+
     @PostMapping("/deposit")
     public ResponseEntity<?> deposit(@RequestBody Map<String, Object> data) {
         try {
             String userId = data.get("userId").toString();
+            producer.getUserDataById(userId);
             String currency = data.get("currency").toString();
             BigDecimal amount = new BigDecimal(data.get("amount").toString());
 
@@ -141,11 +154,11 @@ public class PaymentController {
             String currency = request.get("currency").toString();
             log.debug("Запрос на вывод средств: userId={}, amount={}, currency={}", userId, amount, currency);
 
-            String userResponse = restTemplate.getForObject(lakePayUrl + "/user_id/" + userId, String.class);
-            Map<String, Object> userData = objectMapper.readValue(userResponse, Map.class);
-            BigDecimal balance = new BigDecimal(userData.get("balance").toString());
-            Long chatId = Long.valueOf(userData.get("chatId").toString());
-
+            producer.getUserDataById(userId.toString());
+            Thread.sleep(2000);
+            Long tgId = Long.parseLong(cacheUserData.get("tgId").toString());
+            BigDecimal balance = new BigDecimal(cacheUserData.get("balance").toString());
+            log.info("balance = {}, tgId = {}", tgId, balance);
             BigDecimal amountInUsd;
             BigDecimal rate = service.getExchangeCourse(currency, "USD");
             amountInUsd = amount.multiply(rate);
@@ -157,7 +170,7 @@ public class PaymentController {
 
             String message = objectMapper.writeValueAsString(Map.of(
                     "userId", userId,
-                    "chatId", chatId,
+                    "chatId", tgId,
                     "amount", amount,
                     "currency", currency,
                     "balance", balance

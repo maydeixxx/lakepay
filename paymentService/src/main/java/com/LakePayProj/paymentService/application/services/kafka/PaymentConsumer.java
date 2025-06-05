@@ -47,7 +47,7 @@ public class PaymentConsumer {
             BigDecimal rate = service.getExchangeCourse(currency, "USD");
             amountInUsd = amount.multiply(rate);
 
-            BigDecimal newBalance = service.updateUserBalance(userId, amountInUsd, "withdraw", null);
+            service.updateUserBalance(userId, amountInUsd, "withdraw", null);
             String message = objectMapper.writeValueAsString(Map.of(
                     "userId", userId,
                     "chatId", chatId,
