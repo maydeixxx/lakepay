@@ -6,12 +6,14 @@ import { legacy_createStore as createStore } from "redux";
 import rootReducer from "./reducer";
 import "./index.css";
 import App from "./App.tsx";
+import Home from "./pages/index.tsx";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
-  },
+    children: [{ index: true, Component: Home }]
+  }
 ]);
 
 const store = createStore(rootReducer);
@@ -21,6 +23,5 @@ createRoot(document.getElementById("root")!).render(
     <StrictMode>
       <RouterProvider router={router} />
     </StrictMode>
-    ,
-  </Provider>,
+  </Provider>
 );
