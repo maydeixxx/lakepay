@@ -91,7 +91,7 @@ const destinations = [
 
 function HeaderNavBar() {
   return (
-    <nav className="w-full">
+    <nav className="shrink-0">
       <ul className="flex gap-6">
         {destinations.map((dest) => (
           <NavLink to={dest.url} end>
@@ -110,7 +110,7 @@ export function Header() {
         <img
           src={logo}
           alt="Lake Pay written in big letters"
-          className="max-h-24 mr-12"
+          className="max-h-24 mr-16"
         />
         <HeaderCatalog />
         <HeaderSearchBar />
