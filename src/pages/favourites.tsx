@@ -1,7 +1,7 @@
 import game from "@/assets/cs2-category.jpg";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
-import favouriteIcon from "@/assets/favorite.svg";
+import { FavouriteIcon } from "@/icons/FavouriteIcon";
 
 // TODO: Fetch favourite ads from server
 const ads = [
@@ -9,25 +9,29 @@ const ads = [
     title: "Название товара",
     description: "Lorem Ipsum is simply dummy text of the...",
     photo: game,
-    price: 1000
+    price: 1000,
+    favourite: true
   },
   {
     title: "Название товара",
     description: "Lorem Ipsum is simply dummy text of the...",
     photo: game,
-    price: 2000
+    price: 2000,
+    favourite: true
   },
   {
     title: "Название товара",
     description: "Lorem Ipsum is simply dummy text of the...",
     photo: game,
-    price: 3000
+    price: 3000,
+    favourite: true
   },
   {
     title: "Название товара",
     description: "Lorem Ipsum is simply dummy text of the...",
     photo: game,
-    price: 4000
+    price: 4000,
+    favourite: true
   }
 ];
 
@@ -50,8 +54,11 @@ export default function FavouritesPage() {
               </div>
               <div className="flex gap-4 items-center">
                 <Button variant="secondary">{`${ad.price} Р`}</Button>
+                {/* Add on click handler with a confirmation popup to delete from favourites */}
                 <Button size="icon" variant="secondary" className="p-2">
-                  <img src={favouriteIcon} alt="" />
+                  <FavouriteIcon
+                    className={`${ad.favourite ? "text-destructive" : "text-secondary-foreground"}`}
+                  />
                 </Button>
               </div>
             </Card>

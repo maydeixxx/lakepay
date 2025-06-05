@@ -1,10 +1,8 @@
-import { Header } from "@/components/Header";
-import favouriteIcon from "@/assets/favorite.svg";
-
 // TODO: Fetch popular categories from server
 import game from "@/assets/cs2-category.jpg";
 import { Card } from "@/components/Card";
 import { Button } from "@/components/Button";
+import { FavouriteIcon } from "@/icons/FavouriteIcon";
 const categories = [
   {
     title: "CS2",
@@ -34,25 +32,29 @@ const ads = [
     title: "Название товара",
     description: "Lorem Ipsum is simply dummy text of the...",
     photo: game,
-    price: 1000
+    price: 1000,
+    favourite: false
   },
   {
     title: "Название товара",
     description: "Lorem Ipsum is simply dummy text of the...",
     photo: game,
-    price: 2000
+    price: 2000,
+    favourite: true
   },
   {
     title: "Название товара",
     description: "Lorem Ipsum is simply dummy text of the...",
     photo: game,
-    price: 3000
+    price: 3000,
+    favourite: false
   },
   {
     title: "Название товара",
     description: "Lorem Ipsum is simply dummy text of the...",
     photo: game,
-    price: 4000
+    price: 4000,
+    favourite: false
   }
 ];
 
@@ -89,8 +91,11 @@ export default function Home() {
               </div>
               <div className="flex gap-4 items-center">
                 <Button variant="secondary">{`${ad.price} Р`}</Button>
+                {/* Add on click listener add/remove from favourites */}
                 <Button size="icon" variant="secondary" className="p-2">
-                  <img src={favouriteIcon} alt="" />
+                  <FavouriteIcon
+                    className={`${ad.favourite ? "text-destructive" : "text-secondary-foreground"}`}
+                  />
                 </Button>
               </div>
             </Card>

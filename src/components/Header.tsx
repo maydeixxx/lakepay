@@ -35,7 +35,7 @@ function HeaderCatalog() {
     <Popover>
       <PopoverTrigger asChild>
         <Button className="hidden xl:inline-flex">
-          <img src={menu} alt="Hamburger menu" className="size-8" />
+          <MenuIcon className="text-primary-foreground size-8"></MenuIcon>
           <span>Каталог</span>
         </Button>
       </PopoverTrigger>
@@ -72,6 +72,7 @@ import favouriteIcon from "@/assets/favorite.svg";
 import chatIcon from "@/assets/chat.svg";
 import userIcon from "@/assets/user.svg";
 import { NavLink } from "react-router";
+import { MenuIcon } from "@/icons/MenuIcon";
 
 const destinations = [
   {
@@ -111,7 +112,7 @@ function HeaderNavBar() {
       <Popover>
         <PopoverTrigger asChild>
           <Button variant="secondary" className="inline-flex lg:hidden">
-            <img src={menu} alt="Hamburger menu" className="size-8" />
+            <MenuIcon className="text-secondary-foreground size-8"></MenuIcon>
           </Button>
         </PopoverTrigger>
         <PopoverContent className="bg-card border-none">
