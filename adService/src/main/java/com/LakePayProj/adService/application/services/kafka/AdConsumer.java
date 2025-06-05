@@ -25,28 +25,6 @@ public class AdConsumer {
     private final ObjectMapper objectMapper;
     private final KafkaTemplate<String, String> template;
 
-    @KafkaListener(topics = "payment_confirmed", groupId = "ad-group")
-    public void handlePaymentConfirmed(ConsumerRecord<String, String> record) {
-        try {
-            Map<String, Object> data = objectMapper.readValue(record.value(), Map.class);
-            Long adId = Long.valueOf(data.get("adId").toString());
-
-            Optional<AdEntity> adEntityOptional = adRepository.findById(adId);
-            if (adEntityOptional.isPresent()) {
-                AdEntity adEntity = adEntityOptional.get();
-                Ad ad = adMapper.adEntityToAdDomain(adEntity);
-                ad.setSold(true);
-                adEntity = adMapper.adDomainToEntity(ad);
-                adRepository.save(adEntity);
-                log.info("Объявление {} помечено как продано", adId);
-            } else {
-                log.warn("Объявление с adId={} не найдено", adId);
-            }
-        } catch (Exception e) {
-            log.error("Ошибка обработки payment_confirmed: {}", e.getMessage(), e);
-        }
-    }
-
     @KafkaListener(topics = "get_ad_data", groupId = "AD_MONEY")
     public void sendAdToPaymentService(ConsumerRecord<String, String> record) {
         if (record.partition() == 0) {
@@ -60,6 +38,7 @@ public class AdConsumer {
                         "sellerId", sellerId
                 ));
                 template.send("get_ad_data", 1, adId.toString(), response);
+                log.info("Отправлен sellerId в paymentService. SellerId = {}", sellerId);
             } catch (Exception e) {
                 log.error(e.getMessage());
             }

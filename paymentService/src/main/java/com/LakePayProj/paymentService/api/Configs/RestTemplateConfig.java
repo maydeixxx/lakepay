@@ -14,7 +14,7 @@ public class RestTemplateConfig {
     @Bean
     public RestTemplate restTemplate() throws Exception {
         var sslContext = SSLContexts.custom()
-                .loadTrustMaterial((chain, authType) -> true) // Для теста
+                .loadTrustMaterial((chain, authType) -> true)
                 .build();
         var socketFactory = SSLConnectionSocketFactoryBuilder.create()
                 .setSslContext(sslContext)

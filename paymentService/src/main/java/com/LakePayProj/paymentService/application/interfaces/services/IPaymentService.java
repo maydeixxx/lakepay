@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 public interface IPaymentService {
     String createInvoice(BigDecimal amount, String currency, String description);
     void buyAd(Long userId, Long adId);
-    void updateUserBalance(Long userId, BigDecimal amount, String operation, String asset);
+    BigDecimal updateUserBalance(Long userId, BigDecimal amount, String operation, String asset);
     void updateAdStatus(Long adId);
     boolean transferFunds(Long userId, BigDecimal amount, String currency);
     BigDecimal getExchangeCourse(String sourceAsset, String targetAsset);

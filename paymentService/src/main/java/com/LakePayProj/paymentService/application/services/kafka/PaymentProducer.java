@@ -28,4 +28,8 @@ public class PaymentProducer {
     public void getAdData(String id) {
         template.send("get_ad_data", 0, "adId", id );
     }
+
+    public void getUserDataById(String id) {
+        template.send("get_user_data_by_id", 0, "userId", id);
+    }
 }

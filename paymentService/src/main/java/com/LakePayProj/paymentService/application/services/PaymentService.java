@@ -33,6 +33,7 @@ public class PaymentService implements IPaymentService {
     private final PaymentRepository paymentRepository;
     private final String lakePayUrl = "https://lakepay.ru";
     private final ConcurrentHashMap<Long, Long> sellerIdCache = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Object> cacheUserData = new ConcurrentHashMap<>();
 
     @Value("${crypto-bot.api}")
     private String apiUrl;
@@ -90,12 +91,15 @@ public class PaymentService implements IPaymentService {
     public void buyAd(Long userId, Long adId) {
         try {
             // User data
-            String userResponse = restTemplate.getForObject(lakePayUrl + "/user_id/" + userId, String.class);
-            Map<String, Object> userData = objectMapper.readValue(userResponse, Map.class);
-            Long buyTgId = Long.valueOf(userData.get("tgId").toString());
-            Long chatId = Long.parseLong(userData.get("chatId").toString());
+            producer.getUserDataById(userId.toString());
+            Thread.sleep(2000);
+            if (cacheUserData.isEmpty()) {
+                log.error("User data not recorded");
+                return;
+            }
+            Long buyTgId = Long.valueOf(cacheUserData.get("tgId").toString());
             log.info("TGID = {}", buyTgId);
-            BigDecimal balance = new BigDecimal(userData.get("balance").toString());
+            BigDecimal balance = new BigDecimal(cacheUserData.get("balance").toString());
             log.info("BALANCE = {}", balance);
 
             // Ad data
@@ -114,7 +118,7 @@ public class PaymentService implements IPaymentService {
             log.info("PASSWORD = {}", password);
 
             // Get sellerId
-            Long sellerId = getSellerId(adId);
+            Long sellerId = getSellerIdConsume(adId);
             if (sellerId == null) {
                 log.error("sellerId для adId={} не получен", adId);
                 return;
@@ -126,7 +130,7 @@ public class PaymentService implements IPaymentService {
                 return;
             }
 
-            BigDecimal trxToUsd = getExchangeCourse("TRX", "USD");
+
             BigDecimal priceToTrx = price.divide(getExchangeCourse("TRX", "USD"), 8, RoundingMode.HALF_UP);
             boolean transferSuccess = transferFunds(sellerId, priceToTrx, "TRX");
             if (!transferSuccess) {
@@ -144,15 +148,14 @@ public class PaymentService implements IPaymentService {
 
             producer.sendAdData(message);
             updateAdStatus(adId);
-            updateUserBalance(userId, price, "buy", "default");
+            BigDecimal newBalance = updateUserBalance(userId, price, "buy", "default");
             log.info("Покупка завершена: userId={}, adId={}, message={}", userId, adId, message);
         } catch (Exception e) {
             log.error("Ошибка покупки объявления: userId={}, adId={}, error={}", userId, adId, e.getMessage(), e);
         }
     }
 
-
-    public Long getSellerId(Long adId) {
+    public Long getSellerIdConsume(Long adId) {
         try {
             Long sellerId = sellerIdCache.get(adId);
             if (sellerId != null) {
@@ -163,7 +166,7 @@ public class PaymentService implements IPaymentService {
             producer.getAdData(adId.toString());
             log.info("Отправлен запрос для sellerId, adId={}", adId);
 
-            Thread.sleep(500);
+            Thread.sleep(2000);
             sellerId = sellerIdCache.get(adId);
             if (sellerId != null) {
                 log.info("sellerId={} получен для adId={}", sellerId, adId);
@@ -176,8 +179,8 @@ public class PaymentService implements IPaymentService {
         }
     }
 
-    @KafkaListener(topics = "get_ad_data", groupId = "PAYMENT_MONEY")
-    public void getSellerId(ConsumerRecord<String, String> record) {
+    @KafkaListener(topics = "get_ad_data", groupId = "AD_MONEY")
+    public void getSellerIdConsume(ConsumerRecord<String, String> record) {
         try {
             if (record.partition() == 1) {
                 log.info("Получено сообщение в get_ad_data partition=1: key={}, value={}", record.key(), record.value());
@@ -185,6 +188,23 @@ public class PaymentService implements IPaymentService {
                 Long adId = Long.parseLong(data.get("adId").toString());
                 Long sellerId = Long.parseLong(data.get("sellerId").toString());
                 sellerIdCache.put(adId, sellerId);
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+    }
+
+    @KafkaListener(topics = "get_user_data_by_id", groupId = "userData")
+    public void getUserData(ConsumerRecord<String, String> record) {
+        try {
+            if (record.partition() == 1) {
+                log.info("New message = {}, {}", record.key(), record.value());
+                Map<String, Object> userData = objectMapper.readValue(record.value(), Map.class);
+                Long tgId = Long.parseLong(userData.get("tgId").toString());
+                BigDecimal balance = new BigDecimal(userData.get("balance").toString());
+                cacheUserData.put("tgId", tgId);
+                cacheUserData.put("balance", balance);
+                log.info("Recorded USER DATA: tgId = {}, balance = {}", tgId, balance);
             }
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -258,14 +278,14 @@ public class PaymentService implements IPaymentService {
     }
 
     @Transactional
-    public void updateUserBalance(Long userId, BigDecimal amount, String operation, String asset) {
+    public BigDecimal updateUserBalance(Long userId, BigDecimal amount, String operation, String asset) {
+        BigDecimal newBalance = null;
         try {
             HttpHeaders headers = new HttpHeaders();
             String response = restTemplate.getForObject(lakePayUrl + "/user_id/" + userId, String.class);
             Map<String, Object> data = objectMapper.readValue(response, Map.class);
             BigDecimal balance = new BigDecimal(data.get("balance").toString());
 
-            BigDecimal newBalance;
             switch (operation) {
                 case "deposit" -> {
                     BigDecimal amountInUsd = amount;
@@ -280,7 +300,7 @@ public class PaymentService implements IPaymentService {
                 }
                 default -> {
                     log.error("Недопустимая операция: userId={}, operation={}", userId, operation);
-                    return;
+                    return null;
                 }
             }
 
@@ -296,6 +316,7 @@ public class PaymentService implements IPaymentService {
         } catch (Exception e) {
             log.error("Ошибка обновления баланса: userId={}, operation={}, error={}", userId, operation, e.getMessage(), e);
         }
+        return newBalance;
     }
 
     public void updateAdStatus(Long adId) {

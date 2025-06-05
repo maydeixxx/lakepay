@@ -15,6 +15,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @RestController
@@ -28,6 +29,7 @@ public class PaymentController {
     private final RestTemplate restTemplate;
     private final PaymentProducer producer;
     private final String lakePayUrl = "https://lakepay.ru";
+    private final ConcurrentHashMap<String, Object> cacheUserData = new ConcurrentHashMap<>();
 
     @Transactional
     @PostMapping("/pay/webhook")
@@ -68,7 +70,7 @@ public class PaymentController {
                 BigDecimal balance = new BigDecimal(userData.get("balance").toString());
                 log.info("chatId = {}", chatId);
 
-                service.updateUserBalance(userId, amount, operation, currency);
+                BigDecimal newBalance = service.updateUserBalance(userId, amount, operation, currency);
 
                 payment.setStatus("COMPLETED");
                 paymentRepository.save(payment);
@@ -78,7 +80,7 @@ public class PaymentController {
                         "chatId", chatId,
                         "amount", amount,
                         "currency", currency,
-                        "balance", balance
+                        "balance", newBalance
                 ));
                 kafkaTemplate.send("deposit_confirmed", message);
                 log.info("Пополнение подтверждено: userId={}, amount={}, currency={}", userId, amount, currency);

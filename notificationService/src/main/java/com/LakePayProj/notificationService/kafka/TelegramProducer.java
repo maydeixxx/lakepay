@@ -23,18 +23,4 @@ public class TelegramProducer {
     public void availableAds(Long tgId) {
         template.send("availableAds", String.valueOf(tgId));
     }
-
-    public void sendDepositRequest(Long userId, Double amount, String currency) {
-        try {
-            String message = objectMapper.writeValueAsString(Map.of(
-                    "userId", userId,
-                    "amount", amount,
-                    "currency", currency
-            ));
-            template.send("deposit_request", message);
-            log.info("Отправлен запрос на пополнение счёта: userid = {}, amount = {}, currency = {}", userId, amount, currency);
-        } catch (Exception e) {
-            log.error(e.getMessage());
-        }
-    }
 }
