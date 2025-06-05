@@ -7,12 +7,16 @@ import rootReducer from "./reducer";
 import "./index.css";
 import App from "./App.tsx";
 import Home from "./pages/index.tsx";
+import NotFoundPage from "./pages/not-found.tsx";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
-    children: [{ index: true, Component: Home }]
+    children: [
+      { index: true, Component: Home },
+      { path: "*", Component: NotFoundPage }
+    ]
   }
 ]);
 

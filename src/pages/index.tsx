@@ -59,7 +59,6 @@ const ads = [
 export default function Home() {
   return (
     <>
-      <Header />
       <section className="container mx-auto py-16">
         <h1 className="text-secondary text-4xl mb-8">Популярные категории</h1>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
