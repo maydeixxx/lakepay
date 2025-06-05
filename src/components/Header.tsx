@@ -34,7 +34,10 @@ function HeaderCatalog() {
   return (
     <Popover>
       <PopoverTrigger>
-        <Button icon={menu}>Каталог</Button>
+        <Button>
+          <img src={menu} alt="Hamburger menu" className="size-6" />
+          <span>Каталог</span>
+        </Button>
       </PopoverTrigger>
       <PopoverContent
         align="start"
@@ -72,18 +75,22 @@ import { NavLink } from "react-router";
 
 const destinations = [
   {
+    title: "Cart",
     url: "/cart",
     icon: cartIcon
   },
   {
+    title: "Favourite",
     url: "/favourite",
     icon: favouriteIcon
   },
   {
+    title: "Chat",
     url: "/chat",
     icon: chatIcon
   },
   {
+    title: "Profile",
     url: "/profile",
     icon: userIcon
   }
@@ -95,7 +102,9 @@ function HeaderNavBar() {
       <ul className="flex gap-6">
         {destinations.map((dest) => (
           <NavLink to={dest.url} end>
-            <Button icon={dest.icon} variant="secondary" />
+            <Button variant="secondary">
+              <img src={dest.icon} alt={dest.title} className="size-8" />
+            </Button>
           </NavLink>
         ))}
       </ul>

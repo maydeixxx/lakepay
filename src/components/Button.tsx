@@ -21,7 +21,6 @@ const sizeStyles: Record<ButtonSize, string> = {
 interface ButtonProps extends React.ComponentProps<"button"> {
   variant?: ButtonVariant;
   size?: ButtonSize;
-  icon?: string;
 }
 
 export function Button({
@@ -29,7 +28,6 @@ export function Button({
   size = "default",
   children,
   className,
-  icon,
   ...props
 }: ButtonProps) {
   const combinedClassname = cn(
@@ -41,7 +39,6 @@ export function Button({
 
   return (
     <button className={combinedClassname} {...props}>
-      {icon && <img src={icon} className="size-6" />}
       {children}
     </button>
   );
