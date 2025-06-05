@@ -138,11 +138,13 @@ export function Header() {
   return (
     <>
       <div className="flex h-32 items-center gap-2 md:gap-8 mx-auto container">
-        <img
-          src={logo}
-          alt="Lake Pay written in big letters"
-          className="max-h-16 lg:max-h-24"
-        />
+        <NavLink to="/" className="max-w-16 sm:max-w-24 lg:max-w-32">
+          <img
+            src={logo}
+            alt="Lake Pay written in big letters"
+            className="w-full h-auto"
+          />
+        </NavLink>
         <HeaderCatalog />
         <HeaderSearchBar />
         <HeaderNavBar />

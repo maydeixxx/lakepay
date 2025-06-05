@@ -8,6 +8,7 @@ import "./index.css";
 import App from "./App.tsx";
 import Home from "./pages/index.tsx";
 import NotFoundPage from "./pages/not-found.tsx";
+import FavouritesPage from "./pages/favourites.tsx";
 
 const router = createBrowserRouter([
   {
@@ -15,6 +16,7 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       { index: true, Component: Home },
+      { path: "/favourite", Component: FavouritesPage },
       { path: "*", Component: NotFoundPage }
     ]
   }
