@@ -15,7 +15,7 @@ const sizeStyles: Record<ButtonSize, string> = {
   default: "h-8 px-4 py-6 has-[>img]:px-6",
   sm: "h-8 rounded-lg gap-1.5 px-3 has-[>img]:px-2.5",
   lg: "h-10 rounded-2lx px-6 has-[>img]:px-4",
-  icon: "size-9"
+  icon: "size-10"
 };
 
 interface ButtonProps extends React.ComponentProps<"button"> {

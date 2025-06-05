@@ -32,7 +32,7 @@ export default function Home() {
       <Header />
       <div className="container mx-auto py-16">
         <h1 className="text-secondary text-4xl mb-8">Популярные категории</h1>
-        <div className="grid grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {categories.concat(categories).map((category) => (
             <Card className="bg-background py-0 overflow-hidden">
               <a href={category.url}>

@@ -33,9 +33,9 @@ const categories = [
 function HeaderCatalog() {
   return (
     <Popover>
-      <PopoverTrigger>
-        <Button>
-          <img src={menu} alt="Hamburger menu" className="size-6" />
+      <PopoverTrigger asChild>
+        <Button className="hidden xl:inline-flex">
+          <img src={menu} alt="Hamburger menu" className="size-8" />
           <span>Каталог</span>
         </Button>
       </PopoverTrigger>
@@ -61,7 +61,7 @@ function HeaderSearchBar() {
   return (
     <Input
       placeholder="Поиск..."
-      className="px-4 py-6 border-none bg-background shrink"
+      className="px-4 py-6 border-none bg-background shrink min-w-48"
     />
   );
 }
@@ -99,7 +99,7 @@ const destinations = [
 function HeaderNavBar() {
   return (
     <nav className="shrink-0">
-      <ul className="flex gap-6">
+      <ul className="gap-6 hidden lg:flex">
         {destinations.map((dest) => (
           <NavLink to={dest.url} end>
             <Button variant="secondary">
@@ -108,6 +108,28 @@ function HeaderNavBar() {
           </NavLink>
         ))}
       </ul>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="secondary" className="inline-flex lg:hidden">
+            <img src={menu} alt="Hamburger menu" className="size-8" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="bg-card border-none">
+          <div className="flex flex-col gap-4">
+            {destinations.map((dest) => (
+              <NavLink to={dest.url} end>
+                <Button
+                  variant="secondary"
+                  className="gap-4 w-full justify-start"
+                >
+                  <img src={dest.icon} alt={dest.title} className="size-8" />
+                  <span>{dest.title}</span>
+                </Button>
+              </NavLink>
+            ))}
+          </div>
+        </PopoverContent>
+      </Popover>
     </nav>
   );
 }
@@ -115,11 +137,11 @@ function HeaderNavBar() {
 export function Header() {
   return (
     <>
-      <div className="flex h-32 items-center gap-8 mx-auto container">
+      <div className="flex h-32 items-center gap-2 md:gap-8 mx-auto container">
         <img
           src={logo}
           alt="Lake Pay written in big letters"
-          className="max-h-24 mr-16"
+          className="max-h-16 lg:max-h-24"
         />
         <HeaderCatalog />
         <HeaderSearchBar />
