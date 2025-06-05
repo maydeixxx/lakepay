@@ -540,6 +540,11 @@ li .new__card-descr{
     width: 750px;
     height: 48px;
 }
+
+.addAd__inputTitle input:focus-visible{
+    border: solid #F6BB3D 2px;
+}
+
 .addAd__input__category{
     padding-left: 45px;
     padding-top: 40px;
@@ -563,6 +568,10 @@ li .new__card-descr{
 .addAd__input__descr-title{
     padding-left: 45px;
     padding-top: 40px;
+}
+
+.addAd__input__descr-title textarea{
+    outline: #F6BB3D;
 }
 .addAd__input__descr textarea{
     margin-left: 45px;
