@@ -1,54 +1,36 @@
-# React + TypeScript + Vite
+# Lakepay React Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Lakepay frontend implementation using React library, tailwind for styling and redux as a global state management solution.
 
-Currently, two official plugins are available:
+UI Reference: [Lakepay Figma project](https://www.figma.com/design/NlSkPY5PjufcQvw5Ylvhip/LakePay?node-id=175-14&t=M0tiscss7XFypXlB-1)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Pages
 
-## Expanding the ESLint configuration
+- [x] Home
+- [x] Not found
+- [x] Favourites
+- [ ] Chats
+- [ ] Login
+- [ ] Product
+- [ ] User
+- [ ] Cart
+- [ ] Search
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Current Tasks
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-});
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from "eslint-plugin-react-x";
-import reactDom from "eslint-plugin-react-dom";
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    "react-x": reactX,
-    "react-dom": reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs["recommended-typescript"].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-});
-```
+- Add pages
+- - Chats
+- - Login
+- - Product
+- - User
+- - Cart
+- - Search
+- Authentication
+- - Add auth state reducers
+- - Add auth state actions
+- - Attach logic to UI
+- Pulling data
+- - Fetch profuct categories
+- - Fetch favourites
+- - Fetch new ads
+- - Search products
