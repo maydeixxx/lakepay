@@ -5,7 +5,7 @@ import {
   succeededLoadingUser,
   type UserAction
 } from "./userActions";
-import type { AppDispatch } from "@/redux/store";
+import type { AppDispatch, AppThunk } from "@/redux/store";
 import type { RootState } from "@/redux/reducer";
 import type { ThunkAction } from "redux-thunk";
 
@@ -64,8 +64,8 @@ export default function userReducer(
 }
 
 export const fetchUser =
-  (userId: string): ThunkAction<void, RootState, unknown, UserAction> =>
-  async (dispatch: AppDispatch) => {
+  (userId: string): AppThunk =>
+  async (dispatch) => {
     dispatch(loadingUser());
     try {
       const response = await fetch(USERS_URL + userId);
