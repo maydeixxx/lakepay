@@ -1,4 +1,4 @@
-import { Button } from "@/components/Button";
+import { Button, type ButtonProps } from "@/components/Button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/Popover";
 import { Card } from "@/components/Card";
 import logo from "@/assets/Lake-Pay-end.png";
@@ -30,27 +30,32 @@ const categories = [
   }
 ];
 
-function HeaderCatalog() {
+function HeaderCatalog({
+  align,
+  ...props
+}: ButtonProps & { align?: "start" | "end" | "center" }) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button className="hidden xl:inline-flex">
-          <MenuIcon className="text-primary-foreground size-8"></MenuIcon>
+        <Button {...props}>
+          <MenuIcon className="size-8"></MenuIcon>
           <span>Каталог</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        align="start"
-        className="bg-primary rounded-3xl border-none grid grid-cols-3 gap-4 w-xl"
+        align={align}
+        className="bg-primary rounded-3xl border-none max-w-xl w-screen"
       >
-        {categories.map((category) => (
-          <Card className="bg-background py-0 overflow-hidden">
-            <a href={category.url}>
-              <img src={category.photo} alt={`Photo of ${category.title}`} />
-              <h4 className="text-center py-2 font-bold">{category.title}</h4>
-            </a>
-          </Card>
-        ))}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 overflow-y-auto max-h-96 md:max-h-64 pr-2">
+          {categories.concat(categories).map((category) => (
+            <Card className="bg-background py-0 overflow-hidden">
+              <a href={category.url}>
+                <img src={category.photo} alt={`Photo of ${category.title}`} />
+                <h4 className="text-center py-2 font-bold">{category.title}</h4>
+              </a>
+            </Card>
+          ))}
+        </div>
       </PopoverContent>
     </Popover>
   );
@@ -100,7 +105,7 @@ const destinations = [
 function HeaderNavBar() {
   return (
     <nav className="shrink-0">
-      <ul className="gap-6 hidden lg:flex">
+      <ul className="gap-6 hidden xl:flex">
         {destinations.map((dest) => (
           <NavLink to={dest.url} end>
             <Button variant="secondary">
@@ -111,7 +116,7 @@ function HeaderNavBar() {
       </ul>
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant="secondary" className="inline-flex lg:hidden">
+          <Button variant="secondary" className="inline-flex xl:hidden">
             <MenuIcon className="text-secondary-foreground size-8"></MenuIcon>
           </Button>
         </PopoverTrigger>
@@ -128,6 +133,11 @@ function HeaderNavBar() {
                 </Button>
               </NavLink>
             ))}
+            <HeaderCatalog
+              variant="secondary"
+              align="end"
+              className="justify-start px-6"
+            />
           </div>
         </PopoverContent>
       </Popover>
@@ -146,7 +156,7 @@ export function Header() {
             className="w-full h-auto"
           />
         </NavLink>
-        <HeaderCatalog />
+        <HeaderCatalog className="hidden xl:inline-flex" align="start" />
         <HeaderSearchBar />
         <HeaderNavBar />
       </div>

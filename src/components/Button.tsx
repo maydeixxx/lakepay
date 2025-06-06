@@ -18,7 +18,7 @@ const sizeStyles: Record<ButtonSize, string> = {
   icon: "size-10"
 };
 
-interface ButtonProps extends React.ComponentProps<"button"> {
+export interface ButtonProps extends React.ComponentProps<"button"> {
   variant?: ButtonVariant;
   size?: ButtonSize;
 }
