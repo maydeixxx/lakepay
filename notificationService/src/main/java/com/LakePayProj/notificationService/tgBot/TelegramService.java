@@ -28,8 +28,6 @@ public class TelegramService extends TelegramLongPollingBot {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
     private final List<String> categories = List.of("PUBG", "CS2", "FORTNITE", "DEADLOCK", "DOTA2");
-    private static final List<String> SUPPORTED_CURRENCIES = List.of("USDT");
-    private final WebClientConfig webClientConfig;
     private String chatIdHash;
 
     @Override

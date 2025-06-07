@@ -4,20 +4,17 @@ import com.LakePayProj.paymentService.application.interfaces.repos.PaymentReposi
 import com.LakePayProj.paymentService.application.services.PaymentService;
 import com.LakePayProj.paymentService.application.services.kafka.PaymentProducer;
 import com.LakePayProj.paymentService.infrastructure.PaymentEntity;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.http.*;
-import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -29,22 +26,7 @@ public class PaymentController {
     private final PaymentRepository paymentRepository;
     private final ObjectMapper objectMapper;
     private final PaymentProducer producer;
-    private final ConcurrentHashMap<String, Object> cacheUserData = new ConcurrentHashMap<>();
 
-    @KafkaListener(topics = "responseToUserData", groupId = "userData")
-    public void getUserDataAById(ConsumerRecord<String, String> record) {
-        try {
-            log.info("User data = {}", record.value());
-            Map<String, Object> userData = objectMapper.readValue(record.value(), Map.class);
-            Long tgId = Long.parseLong(userData.get("tgId").toString());
-            BigDecimal balance = new BigDecimal(userData.get("balance").toString());
-            cacheUserData.put("tgId", tgId);
-            cacheUserData.put("balance", balance);
-            log.info("User data: tgId = {}, balance = {}", tgId, balance);
-        } catch (JsonProcessingException e) {
-            log.error(e.getMessage());
-        }
-    }
 
     @Transactional
     @PostMapping("/pay/webhook")
@@ -60,16 +42,19 @@ public class PaymentController {
 
             Map<String, Object> invoice = (Map) payload.get("payload");
             String invoiceId = invoice.get("invoice_id").toString();
-            if (paymentRepository.existsByInvoiceIdAndStatus(invoiceId, "COMPLETED")) {
+
+            Optional<PaymentEntity> existingPayment = paymentRepository.findByInvoiceId(invoiceId);
+            if (existingPayment.isPresent() && "COMPLETED".equals(existingPayment.get().getStatus())) {
                 log.info("Счет {} уже обработан", invoiceId);
                 return ResponseEntity.ok().build();
             }
 
-            PaymentEntity payment = paymentRepository.findByInvoiceId(invoiceId);
-            if (payment == null) {
-                log.error("Платёж {} не найден в базе, обработка прервана", invoiceId);
-                return ResponseEntity.badRequest().body("Платёж не найден: invoiceId=" + invoiceId);
-            }
+            PaymentEntity payment = existingPayment.orElseGet(() -> {
+                PaymentEntity newPayment = new PaymentEntity();
+                newPayment.setInvoiceId(invoiceId);
+                newPayment.setStatus("PENDING");
+                return paymentRepository.save(newPayment);
+            });
 
             String description = (String) invoice.get("description");
             BigDecimal amount = new BigDecimal(invoice.get("amount").toString());
@@ -78,12 +63,25 @@ public class PaymentController {
 
             if (description.startsWith("Deposit for user")) {
                 Long userId = Long.parseLong(description.replace("Deposit for user ", ""));
-                log.info(cacheUserData.toString());
+                Map<String, Object> userData = service.getUserDataFromCache(userId);
+                if (userData == null) {
+                    log.warn("Данные пользователя не найдены в кэше для userId={}", userId);
+                    producer.getUserDataById(userId.toString());
+                    Thread.sleep(2000);
+                    userData = service.getUserDataFromCache(userId);
+                    if (userData == null) {
+                        log.error("Не удалось получить данные пользователя для userId={}", userId);
+                        return ResponseEntity.badRequest().body("Данные пользователя не найдены");
+                    }
+                }
+                Long tgId = Long.valueOf(userData.get("tgId").toString());
+
                 String operation = "deposit";
-                Thread.sleep(10000);
-                Long tgId = Long.parseLong(cacheUserData.get("tgId").toString());
                 BigDecimal newBalance = service.updateUserBalance(userId, amount, operation, currency);
                 payment.setStatus("COMPLETED");
+                payment.setUserId(userId);
+                payment.setAmount(amount);
+                payment.setCurrency(currency);
                 paymentRepository.save(payment);
 
                 String message = objectMapper.writeValueAsString(Map.of(
@@ -93,7 +91,7 @@ public class PaymentController {
                         "currency", currency,
                         "balance", newBalance
                 ));
-                kafkaTemplate.send("deposit_confirmed", message);
+                kafkaTemplate.send("deposit_confirmed", userId.toString(), message);
                 log.info("Пополнение подтверждено: userId={}, amount={}, currency={}", userId, amount, currency);
                 return ResponseEntity.ok().build();
             }
@@ -104,7 +102,6 @@ public class PaymentController {
         }
     }
 
-
     @PostMapping("/deposit")
     public ResponseEntity<?> deposit(@RequestBody Map<String, Object> data) {
         try {
@@ -113,7 +110,6 @@ public class PaymentController {
             String currency = data.get("currency").toString();
             BigDecimal amount = new BigDecimal(data.get("amount").toString());
 
-            // Проверяем, есть ли активные счета для пользователя
             if (paymentRepository.existsByUserIdAndStatus(Long.parseLong(userId), "PENDING")) {
                 log.warn("Для пользователя userId={} уже существует активный счет", userId);
                 return ResponseEntity.badRequest().body("У пользователя уже есть активный счет");
@@ -156,9 +152,14 @@ public class PaymentController {
 
             producer.getUserDataById(userId.toString());
             Thread.sleep(2000);
-            Long tgId = Long.parseLong(cacheUserData.get("tgId").toString());
-            BigDecimal balance = new BigDecimal(cacheUserData.get("balance").toString());
-            log.info("balance = {}, tgId = {}", tgId, balance);
+            Map<String, Object> userData = service.getUserDataFromCache(userId);
+            if (userData == null) {
+                log.error("Данные пользователя не найдены для userId={}", userId);
+                return ResponseEntity.badRequest().body("Данные пользователя не найдены");
+            }
+            Long tgId = Long.valueOf(userData.get("tgId").toString());
+            BigDecimal balance = new BigDecimal(userData.get("balance").toString());
+            log.info("balance = {}, tgId = {}", balance, tgId);
             BigDecimal amountInUsd;
             BigDecimal rate = service.getExchangeCourse(currency, "USD");
             amountInUsd = amount.multiply(rate);
@@ -175,11 +176,10 @@ public class PaymentController {
                     "currency", currency,
                     "balance", balance
             ));
-            kafkaTemplate.send("withdraw_request", message);
+            kafkaTemplate.send("withdraw_request", userId.toString(), message);
             log.info("Запрос на вывод отправлен в Kafka: userId={}, amount={}, currency={}", userId, amount, currency);
 
             return ResponseEntity.ok().build();
-
         } catch (Exception e) {
             log.error("Ошибка обработки запроса на вывод: {}", e.getMessage(), e);
             return ResponseEntity.badRequest().build();
