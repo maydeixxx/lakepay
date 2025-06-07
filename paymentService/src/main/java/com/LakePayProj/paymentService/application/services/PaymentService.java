@@ -31,9 +31,9 @@ public class PaymentService implements IPaymentService {
     private final ObjectMapper objectMapper;
     private final PaymentProducer producer;
     private final PaymentRepository paymentRepository;
-    private final String lakePayUrl = "https://lakepay.ru";
     private final ConcurrentHashMap<Long, Long> sellerIdCache = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Long, Map<String, Object>> cacheUserData = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Long, Map<String, Object>> cachedAdDataForSell = new ConcurrentHashMap<>();
 
     @Value("${crypto-bot.api}")
     private String apiUrl;
@@ -104,15 +104,17 @@ public class PaymentService implements IPaymentService {
             BigDecimal balance = new BigDecimal(userData.get("balance").toString());
 
             cacheUserData.clear();
-            String adResponse = restTemplate.getForObject(lakePayUrl + "/ad_id/" + adId, String.class);
-            Map<String, Object> adData = objectMapper.readValue(adResponse, Map.class);
+            producer.getAdData(adId.toString(), "price_credentials");
+            Thread.sleep(2000);
+            Map<String, Object> adData = cachedAdDataForSell.get(adId);
+            if (adData.isEmpty()) {
+                log.error("Данные не получены!!");
+                return;
+            }
             BigDecimal price = BigDecimal.valueOf(Double.parseDouble(adData.get("price").toString()));
-
-            String credentialsResponse = restTemplate.getForObject(lakePayUrl + "/ad_credentials/" + adId, String.class);
-            Map<String, String> credentials = objectMapper.readValue(credentialsResponse, Map.class);
-            String login = credentials.get("login");
-            String password = credentials.get("password");
-
+            String login = adData.get("login").toString();
+            String password = adData.get("password").toString();
+            log.info("Данные: price = {}, login = {}, password = {}", price, login, password);
             Long sellerId = getSellerIdConsume(adId);
 
             if (sellerId == null) {
@@ -150,7 +152,7 @@ public class PaymentService implements IPaymentService {
         }
     }
 
-    @KafkaListener(topics = "responseToUserData", groupId = "userData")
+    @KafkaListener(topics = "get_user_data_by_id_response", groupId = "userData")
     public void getUserData(ConsumerRecord<String, String> record) {
         try {
             log.info("Получено сообщение в responseToUserData: key={}, value={}", record.key(), record.value());
@@ -175,7 +177,7 @@ public class PaymentService implements IPaymentService {
                 return sellerId;
             }
 
-            producer.getAdData(adId.toString());
+            producer.getAdData(adId.toString(), "sellerId");
             Thread.sleep(2000);
             sellerId = sellerIdCache.get(adId);
             if (sellerId != null) {
@@ -191,14 +193,27 @@ public class PaymentService implements IPaymentService {
 
     @KafkaListener(topics = "get_ad_data_response", groupId = "AD_MONEY")
     public void getSellerIdConsume(ConsumerRecord<String, String> record) {
-        try {
-            log.info("Получено сообщение в get_ad_data partition=1: key={}, value={}", record.key(), record.value());
-            Map<String, Object> data = objectMapper.readValue(record.value(), Map.class);
-            Long adId = Long.parseLong(data.get("adId").toString());
-            Long sellerId = Long.parseLong(data.get("sellerId").toString());
-            sellerIdCache.put(adId, sellerId);
-        } catch (Exception e) {
-            log.error("Ошибка обработки get_ad_data: {}", e.getMessage());
+        if (record.partition() == 0) {
+            try {
+                log.info("Получено сообщение в get_ad_data_response partition=0: key={}, value={}", record.key(), record.value());
+                Map<String, Object> data = objectMapper.readValue(record.value(), Map.class);
+                Long adId = Long.parseLong(data.get("adId").toString());
+                Long sellerId = Long.parseLong(data.get("sellerId").toString());
+                sellerIdCache.put(adId, sellerId);
+            } catch (Exception e) {
+                log.error("Ошибка обработки get_ad_data: {}", e.getMessage());
+            }
+        } else if (record.partition() == 1) {
+            try {
+                log.info("Получено сообщение в get_ad_data_response partition=1: key={}, value={}", record.key(), record.value());
+                Long adId = Long.parseLong(record.key());
+                Map<String, Object> adData = objectMapper.readValue(record.value(), Map.class);
+                log.info("Полученные данные = {}", adData);
+                cachedAdDataForSell.put(adId, adData);
+                log.info("Кэшированные данные = {}", cachedAdDataForSell);
+            } catch (Exception e) {
+                log.error("Error = {}", e.getMessage());
+            }
         }
     }
 
@@ -270,8 +285,15 @@ public class PaymentService implements IPaymentService {
     public BigDecimal updateUserBalance(Long userId, BigDecimal amount, String operation, String asset) {
         BigDecimal newBalance = null;
         try {
-            String response = restTemplate.getForObject(lakePayUrl + "/user_id/" + userId, String.class);
-            Map<String, Object> data = objectMapper.readValue(response, Map.class);
+            producer.getUserDataById(userId.toString());
+            Thread.sleep(2000);
+            Map<String, Object> data = getUserDataFromCache(userId);
+            if (data == null) {
+                log.error("Не удалось получить данные пользователя userId={}", userId);
+                return null;
+            }
+            log.info("Получены данные для пользователя: id = {}", data);
+
             BigDecimal balance = new BigDecimal(data.get("balance").toString());
 
             if ("deposit".equals(operation)) {
@@ -300,15 +322,8 @@ public class PaymentService implements IPaymentService {
                     return null;
                 }
             }
-
-            Map<String, Object> request = Map.of("balance", newBalance);
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, new HttpHeaders());
-            restTemplate.exchange(
-                    lakePayUrl + "/update_user/" + userId,
-                    HttpMethod.PATCH,
-                    entity,
-                    String.class
-            );
+            producer.updateUserData(userId, newBalance);
+            Thread.sleep(1000);
             log.info("Баланс обновлён: userId={}, operation={}, amount={}, newBalance={}", userId, operation, amount, newBalance);
         } catch (Exception e) {
             log.error("Ошибка обновления баланса: userId={}, operation={}, error={}", userId, operation, e.getMessage(), e);
@@ -318,15 +333,8 @@ public class PaymentService implements IPaymentService {
 
     public void updateAdStatus(Long adId) {
         try {
-            HttpHeaders httpHeaders = new HttpHeaders();
-            Map<String, Object> request = Map.of("sold", true);
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, httpHeaders);
-            restTemplate.exchange(
-                    lakePayUrl + "/update_ad/" + adId,
-                    HttpMethod.PATCH,
-                    entity,
-                    String.class
-            );
+            producer.updateAdData(adId);
+            Thread.sleep(1000);
             log.info("Изменен статус объявления = {}", true);
         } catch (Exception e) {
             log.error("Ошибка обновления статуса объявления: {}", e.getMessage());

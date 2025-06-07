@@ -2,6 +2,7 @@ package com.lakepayProj.userService.application.kafka;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lakepayProj.userService.api.DTOs.UserUpdateDTO;
 import com.lakepayProj.userService.application.interfaces.repos.IUserRepository;
 import com.lakepayProj.userService.application.services.UserService;
 import com.lakepayProj.userService.domain.model.User;
@@ -13,6 +14,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -25,7 +27,7 @@ public class UserConsumer {
     private final KafkaTemplate<String, String> template;
     private final ObjectMapper objectMapper;
 
-    @KafkaListener(topics = "get_user_data_by_id", groupId = "userData")
+    @KafkaListener(topics = "get_user_data_by_id_request", groupId = "userData")
     public void handleUserId(ConsumerRecord<String, String> record) {
         try {
             Long userId = Long.parseLong(record.value());
@@ -36,7 +38,7 @@ public class UserConsumer {
                         "tgId", user.getTgId(),
                         "balance", user.getBalance()
                 ));
-                template.send("responseToUserData", user.getId().toString(), response);
+                template.send("get_user_data_by_id_response", user.getId().toString(), response);
                 log.info("Отправлен ответ в responseToUserData для userId={}: {}", userId, response);
             } else {
                 log.warn("Пользователь с userId={} не найден", userId);
@@ -72,5 +74,16 @@ public class UserConsumer {
         } catch (JsonProcessingException e) {
             log.error(e.getMessage());
         }
+    }
+
+    @KafkaListener(topics = "update_user_data", groupId = "update_user")
+    public void updateUser(ConsumerRecord<String, String> record) {
+        log.info("Новое сообщение в update_user_data. Key = {}. Value = {}", record.key(), record.value());
+        Long userId = Long.parseLong(record.key());
+        BigDecimal newBalance = new BigDecimal(record.value());
+        UserUpdateDTO userUpdateDTO = new UserUpdateDTO();
+        userUpdateDTO.setBalance(newBalance);
+        userService.updateUser(userId, userUpdateDTO);
+        log.info("Обновлён пользователь id = {}, new balance = {}", userId, newBalance);
     }
 }
