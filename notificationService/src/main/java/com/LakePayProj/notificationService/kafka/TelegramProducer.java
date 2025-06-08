@@ -55,4 +55,9 @@ public class TelegramProducer {
             log.error("Ошибка при отправке запроса категорий для tgId {}: {}", tgId, e.getMessage());
         }
     }
+
+    public void getUserData(Long id) {
+        template.send("get_user_data_by_id_telegram_request", id.toString(), id.toString());
+        log.info("Отправлено сообщение в get_user_data_by_id_request userId = {}", id);
+    }
 }

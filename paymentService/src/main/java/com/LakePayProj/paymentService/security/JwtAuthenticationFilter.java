@@ -1,6 +1,5 @@
-package com.lakepayProj.userService.auth;
+package com.LakePayProj.paymentService.security;
 
-import com.lakepayProj.userService.application.services.JwtService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.SignatureException;
 import jakarta.servlet.FilterChain;

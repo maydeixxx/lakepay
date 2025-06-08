@@ -50,6 +50,15 @@ public class UserConsumer {
         }
     }
 
+    @KafkaListener(topics = "get_user_data_by_id_telegram_request", groupId = "userDataTelegram")
+    public void handleUserIdTelegram(ConsumerRecord<String, String> record) {
+        log.info("Получено сообщение в get_user_data_by_id_telegram_request");
+        Long userId = Long.parseLong(record.value());
+        Long tgId = userService.findUserById(userId).getTgId();
+        template.send("get_user_data_by_id_telegram_response", userId.toString(), tgId.toString());
+        log.info("Отправлено сообщение в get_user_data_by_id_telegram_response для user = {}. TgId = {}", userId, tgId);
+    }
+
     @KafkaListener(topics = "get_sub_users", groupId = "subscribed_users")
     public void handleSubscribedUsersRequest(ConsumerRecord<String, String> record) {
         String category = record.value();

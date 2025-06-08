@@ -6,7 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -111,14 +113,22 @@ public class TelegramService extends TelegramLongPollingBot {
 
     public void sendPaymentLink(Long userId, String payUrl) {
         try {
-            String response = restTemplate.getForObject(lakePayUrl + "/user_id/" + userId, String.class);
-            Map<String, Object> userData = objectMapper.readValue(response, Map.class);
-            Long chatId = Long.valueOf(userData.get("chatId").toString());
-
+            producer.getUserData(userId);
+            Thread.sleep(2000);
             sendMessage(chatIdHash, "Ссылка на оплату: " + payUrl);
-            log.info("Отправлена ссылка на оплату: userId={}, chatId={}, payUrl={}", userId, chatId, payUrl);
+            log.info("Отправлена ссылка на оплату: userId={}, chatId={}, payUrl={}", userId, chatIdHash, payUrl);
         } catch (Exception e) {
             log.error("Ошибка отправки ссылки на оплату: userId={}, error={}", userId, e.getMessage(), e);
+        }
+    }
+
+    @KafkaListener(topics = "get_user_data_by_id_telegram_response", groupId = "userData")
+    public void getUserDataResponse(ConsumerRecord<String, String> record) {
+        try {
+            chatIdHash = record.value();
+            log.info("Записан chatId = {}", chatIdHash);
+        } catch (Exception e) {
+            log.error("Ошибка при получении сообщения в get_user_data_by_id_telegram_response. {}", e.getMessage());
         }
     }
 

@@ -34,5 +34,9 @@ crypto-bot:
   api: https://testnet-pay.crypt.bot/api
   token: 36875:AAS1Wn7fEsFVdceQiM0buxOkHHCra0cOrnE
 
+token:
+  signing:
+    key: q1o7M1V+7R1Qyx4e0y1m8qLC+xRP0U8UwK0QH5Xt7lQ=
+
 server:
   port: 8083

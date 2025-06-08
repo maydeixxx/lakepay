@@ -1,13 +1,10 @@
 package com.LakePayProj.adService.application.services.kafka;
 
-import com.LakePayProj.adService.application.interfaces.mappers.IAdMapper;
 import com.LakePayProj.adService.application.interfaces.repositories.IAdRepository;
 import com.LakePayProj.adService.application.services.AdService;
-import com.LakePayProj.adService.domain.Ad;
 import com.LakePayProj.adService.infrastructure.AdEntity;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
