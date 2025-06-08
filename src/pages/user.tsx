@@ -11,10 +11,12 @@ export default function UserPage() {
 
   useEffect(() => {
     if (userId != null) {
+      // TODO: Abort previous request before new one
       dispatch(fetchUser(userId));
     }
   }, [dispatch, userId]);
 
+  // TODO: Loading spinner
   return (
     <>
       <section className="container mx-auto py-16 flex flex-col-reverse items-center gap-16 sm:flex-row sm:gap-4">
