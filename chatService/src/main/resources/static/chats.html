@@ -83,7 +83,7 @@
                         </a>
                     </li>
                     <li class="header__item">
-                        <a href="#">
+                        <a href="userPage.html">
                             <img src="images/user.svg" alt="">
                         </a>
                     </li>
@@ -97,7 +97,7 @@
                 <aside class="chats__section chats__sidebar">
                     <h3 class="chats__heading">Чаты:</h3>
                     <ul class="chats__list">
-                        <li class="message message_preview message_new">
+                        <!-- <li class="message message_preview message_new">
                             <img src="images/user.svg" alt="" class="message__avatar">
                             <div class="message__body">
                                 <span class="message__author">Username</span>
@@ -117,14 +117,14 @@
                                 <span class="message__author">Username</span>
                                 <p class="message__content">Lorem ipsum, dolor sit amet consectetur adipisicing elit. Dolores, perferendis. Accusamus quaerat ab tempore voluptatum eum! Quia quisquam placeat, nam dicta quis error inventore cupiditate dolor ab distinctio unde est.</p>
                             </div>
-                        </li>
+                        </li> -->
                     </ul>
                 </aside>
                 <main class="chats__section">
                     <div class="chats__meta">
-                        <img src="images/user.svg" alt="" class="message__avatar">
+                        <img src="images/user.svg" alt="" class="meta__avatar message_avatar">
                         <div class="meta__inner">
-                            <span>Username</span>
+                            <span class="meta__username">Username</span>
                             <p class="meta__status">Оффлайн</p>
                         </div>
                     </div>
@@ -209,31 +209,58 @@
             - id
         */
 
-        const serverURL = "";
-        const authPageURL = `${serverURL}/tgAuth`;
-        const userInfoURL = `${serverURL}/user/info`;
+
+        /* Constants */
+        const serverURL = "http://localhost:8082";
+        const chatInfoURL = `${serverURL}/chat/info`;
         const chatListURL = `${serverURL}/chat/list`;
         const chatHistoryURL = `${serverURL}/chat/history`;
-        const websocketsURL = `ws://localhost:15674/ws`;
+        const websocketsURL = `ws://localhost:8082/ws`;
 
         const messagesSubscription = '/user/queue/messages';
         const notificationSubscription = '/user/queue/notification';
         const sendMessageDestination = '/chat/send';
 
-
+        const metaAvatar = document.querySelector(".meta__avatar");
+        const metaUsername = document.querySelector(".meta__username");
+        const metaUserStatus = document.querySelector(".meta__status");
 
         const messageList = document.querySelector(".chats__history");
         const chatListElement = document.querySelector(".chats__list");
         const formElement = document.querySelector(".chat-form");
         const messageInput = document.querySelector("#message");
 
-        const user = await loadUserInfo();
-        const chatList = await loadChatList();
-        let currentChat = null;
+        /* Authentication */
+        const parseJwt = () => {
+            try {
+                const token = localStorage.getItem("token")
+                const jwt = {}
+                jwt.raw = token;
+                jwt.header = JSON.parse(window.atob(token.split('.')[0]));
+                jwt.payload = JSON.parse(window.atob(token.split('.')[1]));
+                return jwt
+            } catch (e) {
+                return null
+            }
+        }
+
+        const jwt = parseJwt()
+
+        if (!jwt) {
+            window.location.href = "/authPage.html"
+        }
+
+        const authHeader = {
+            "Authorization": `Bearer ${jwt.raw}`
+        }
 
         const parseCurrentChat = async () => {
             const urlParts = window.location.href.split("/");
             const chat = urlParts[urlParts.length - 1];
+
+            if (Number.isInteger(chat)) {
+                selectChat(chat);
+            }
         }
 
         // Returns user data
@@ -242,6 +269,21 @@
         //     const data = res.json();
         //     return data;
         // }
+
+        const selectChat = async (id) => {
+            const infoRes = await fetch(`${chatInfoURL}/${id}`, {
+                method: "GET",
+                headers: authHeader
+            });
+
+            if (infoRes.ok) {
+                const data = await res.json();
+                metaAvatar.src = data.recipient.photoUrl;
+                metaUsername.textContent = data.recipient.username;
+                metaUserStatus.textContent = "Онлайн"
+                console.log(data);
+            }
+        }
 
         const loadUserInfo = async () => {
             const res = await fetch(userInfoURL);
@@ -254,22 +296,28 @@
             // Unathorized
             // Redirect to authentication page, redirect to home
             if (res.status == 403) {
-                window.location.replace(authPageURL)
+                window.location.replace("/")
             }
         }
 
         const loadChatList = async () => {
-            const res = await fetch(chatListURL);
-            const data = await res.json();
-            const chats = [];
+            const res = await fetch(chatListURL, {
+                method: "GET",
+                headers: authHeader
+            });
+            // const data = await res.json();
+            // const chats = [];
 
-            for (let chat of data) {
-                const chatElem = createChat(chat);
-                chats.push(chat);
-                chatListElement.appendChild(chatElem);
-            }
+            // console.log(chats);
+            
 
-            return chats;
+            // for (let chat of data) {
+            //     const chatElem = createChat(chat);
+            //     chats.push(chat);
+            //     chatListElement.appendChild(chatElem);
+            // }
+
+            // return chats;
         }
 
         const createChat = (chat) => {
@@ -296,7 +344,7 @@
             itemPreview.classList.add("message__content");
             itemBody.appendChild(itemPreview);
 
-            item.addEventListener("click", async () => await loadChatHistory(chat.id));
+            item.addEventListener("click", async () => await selectChat(chat.id));
 
             return item;
         }
@@ -341,26 +389,9 @@
             }
         }
 
-        const client = new Client({
-            brokerURL: websocketsURL,
-            onConnect: () => {
-                client.subscribe(messagesSubscription, message => {
-                    if (!chats.some((c) => c.id == message.chat.id)) {
-                        const chatElem = createChat(message.chat);
-                        chats.push(message.chat);
-                        chatList.appendChild(chatElem);
-                    }
+        
 
-                    const messageElem = createMessage(message);
-                    messageList.appendChild(messageElem);
-                });
-
-                // TODO: Notifications 
-            },
-        });
-
-        client.activate();
-
+        /* Event listeners */
         formElement.addEventListener("submit", e => {
             const message = {
                 content: messageInput.value.trim(),
@@ -380,7 +411,40 @@
             e.preventDefault();
         });
 
+        /* Client configuration, subscriptions */
+        const client = new Client({
+            brokerURL: `${websocketsURL}`,
+            connectHeaders: authHeader,
+            debug: function (str) {
+                console.log(str);
+            },
+            reconnectDelay: 5000,
+            heartbeatIncoming: 4000,
+            heartbeatOutgoing: 4000,
+            onConnect: () => {                
+                client.subscribe(messagesSubscription, message => {
+                    if (!chats.some((c) => c.id == message.chat.id)) {
+                        const chatElem = createChat(message.chat);
+                        chats.push(message.chat);
+                        chatList.appendChild(chatElem);
+                    }
+
+                    const messageElem = createMessage(message);
+                    messageList.appendChild(messageElem);
+                });
+
+                // TODO: Notifications 
+            },
+        });
+
         
+        
+        
+        // const user = await loadUserInfo();
+        const chatList = await loadChatList();
+        let currentChat = null;
+        parseCurrentChat();
+        // client.activate();
     </script>
 </body>
 

@@ -9,6 +9,7 @@ import com.lakepayProj.userService.domain.model.User;
 import com.lakepayProj.userService.domain.valueObject.Role;
 import com.lakepayProj.userService.infrastructure.UserEntity;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.security.core.Authentication;
@@ -37,6 +38,42 @@ public class AuthenticationService {
     }
 
     /**
+     * Аутентификация пользователя через аккаунт Telegram для тестирования
+     * Не проверяет hash на валидность
+     *
+     * @param request данные возвращаемые Telegram
+     * @return токен
+     */
+    public JwtAuthenticationResponse authenticateTelegramMock(Map<String, String> request) {
+        Long tgId = Long.parseLong(request.get("id"));
+        User user = userService.findUserByTgId(tgId);
+
+        if (user != null) {
+            var jwt = jwtService.generateToken(user);
+            return new JwtAuthenticationResponse("Logged in", jwt);
+        } else {
+            var userEntity = UserEntity.builder()
+                    .tgId(Long.parseLong(request.get("id")))
+                    .username(request.get("username"))
+                    .urlPhoto(request.get("photo_url"))
+                    .dateOfReg(LocalDate.now())
+                    .balance(new BigDecimal(0))
+                    .subscriptions(List.of())
+                    .role(Role.User)
+                    .build();
+
+            user = mapper.userEntityToUser(userEntity);
+            userService.saveUser(user);
+
+            user = userService.findUserByTgId(tgId);
+            producer.sendUser(user);
+
+            var jwt = jwtService.generateToken(user);
+            return new JwtAuthenticationResponse("Logged in", jwt);
+        }
+    }
+
+    /**
      * Аутентификация пользователя через аккаунт Telegram
      *
      * @param request данные возвращаемые Telegram
@@ -49,10 +86,10 @@ public class AuthenticationService {
         Long tgId = Long.parseLong(request.get("id"));
         User user = userService.findUserByTgId(tgId);
 
-        Long chatId = chats.get(tgId);
-        if (chatId == null) {
-            return new JwtAuthenticationResponse("Chat id is null", null);
-        }
+//        Long chatId = chats.get(tgId);
+//        if (chatId == null) {
+//            return new JwtAuthenticationResponse("Chat id is null", null);
+//        }
 
         if (user != null) {
             var jwt = jwtService.generateToken(user);

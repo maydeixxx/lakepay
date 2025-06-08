@@ -26,7 +26,8 @@ public class UserService {
         try {
             // TODO: update to use gateway api
             String url = "http://user-service:8081/user_id/";
-            String userResponse = restTemplate.getForObject(url, String.class);
+            String userResponse = restTemplate.getForObject(url + id, String.class);
+            if (userResponse == null) return null;
             return objectMapper.readValue(userResponse, User.class);
         } catch (JsonProcessingException e) {
             log.error("Error parsing user response: {}", e.getMessage());

@@ -15,6 +15,7 @@ services:
     ports:
       - "8081:8081"
     depends_on:
+      - postgres-db
       - eureka-service
       - kafka
 
@@ -26,6 +27,7 @@ services:
     ports:
       - "8082:8082"
     depends_on:
+      - postgres-db
       - eureka-service
       - kafka
 
@@ -60,8 +62,8 @@ services:
     restart: unless-stopped
     ports:
       - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+#    volumes:
+#      - postgres_data:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: admin

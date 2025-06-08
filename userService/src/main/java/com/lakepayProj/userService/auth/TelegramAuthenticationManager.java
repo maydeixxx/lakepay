@@ -1,6 +1,7 @@
 package com.lakepayProj.userService.auth;
 
 import com.lakepayProj.userService.domain.model.TelegramAuthenticationToken;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -10,11 +11,14 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import java.security.InvalidKeyException;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+@Slf4j
 @Component
 public class TelegramAuthenticationManager implements AuthenticationManager {
 
@@ -55,11 +59,13 @@ public class TelegramAuthenticationManager implements AuthenticationManager {
             byte[] hmacBytes = hmac.doFinal(dataCheckString.getBytes(UTF_8));
             String expectedHash = bytesToHex(hmacBytes);
 
-            if (!expectedHash.equalsIgnoreCase(hash)) {
+            if (!expectedHash.equals(hash)) {
                 throw new BadCredentialsException("Invalid Telegram hash");
             }
-        } catch (Exception e) {
+        } catch (NoSuchAlgorithmException e) {
             throw new BadCredentialsException("Telegram authentication failed", e);
+        } catch (InvalidKeyException e) {
+            throw new BadCredentialsException("Invalid secret key", e);
         }
 
         // Проверка не истек ли срок годности токена

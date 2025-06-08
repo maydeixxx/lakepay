@@ -16,6 +16,7 @@ import com.lakepayProj.chatService.services.UserService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -69,6 +70,7 @@ public class ChatController {
 
     @GetMapping(path = "/list", produces = "application/json")
     public @ResponseBody ResponseEntity<List<String>> getAvailableChats() {
+        log.info("hello");
         User sender = userService.getCurrentUser();
 
         List<String> data = chatRoomService.getChatList(sender.getUsername());
@@ -79,6 +81,10 @@ public class ChatController {
     public @ResponseBody ResponseEntity<ChatRoomDTO> getChatInfo(@PathVariable Long id) {
         User sender = userService.getCurrentUser();
         User recipient = userService.getById(id);
+
+        if (recipient == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
 
         return ResponseEntity.ok(new ChatRoomDTO(
                 id,

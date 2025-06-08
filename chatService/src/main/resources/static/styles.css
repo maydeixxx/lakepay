@@ -453,7 +453,7 @@ li .new__card-descr{
     margin-top: 75px;
     color: #9BDE00;
 }
-.userInfo__balance-btns-item{
+.userInfo__balance-btns-item, .userInfo__btn-message {
     margin-top: 20px;
     background-color: #9BDE00;
     width: 170px;
@@ -554,6 +554,7 @@ li .new__card-descr{
 
 .chats__sidebar {
     max-width: 300px;
+    width: 100%;
 }
 
 .chats__list {
@@ -758,3 +759,59 @@ li .new__card-descr{
     line-height: 35px;
 }
 /* ad-page-end */
+
+/* login-page start */
+.login__inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 0;
+    margin-inline: auto;
+
+    background-color: #D9D9D9;
+    padding: 2rem;
+    border-radius: 20px;
+}
+
+.login__title {
+    font-size: 40px;
+    text-transform: uppercase;
+    margin-bottom: 75px;
+    margin-top: 50px;
+    color: #ECA100;
+}
+
+.login__label {
+    font-size: 24px;
+    color: #000000;
+    margin-right: 20px;
+}
+
+.login__inner form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.login__inner input {
+    padding: 20px;
+    border-radius: 20px;
+    width: 200px;
+    font-size: 16px;
+    width: 100%;
+}
+
+.login__inner label {
+    font-size: 16px;
+}
+
+.login__inner button {
+    padding: 20px;
+    border-radius: 20px;
+    width: 200px;
+    font-family: inherit;
+    background-color: #F6BB3D;
+    color: #996900;
+    cursor: pointer;
+}

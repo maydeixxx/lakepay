@@ -1,7 +1,5 @@
 server:
   port: 8081
-
-
 spring:
   datasource:
     url: jdbc:postgresql://postgres-db:5432/lakepay_db
@@ -22,7 +20,7 @@ spring:
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
   application:
-    name: userService
+    name: user-service
 
 eureka:
   client:
@@ -35,6 +33,9 @@ crypto-bot:
 
 token:
   signing:
-    key: * # JWT signing key
+    key: DajeRi8ErJlN9EjIfgr8PJwkagj8j4XI3ePoANmysKL # JWT signing key
   telegram:
-    bot: * # Authentication Telegram bot token
+    bot: test # Authentication Telegram bot token
+
+#TODO: Disable on prod
+debug: true

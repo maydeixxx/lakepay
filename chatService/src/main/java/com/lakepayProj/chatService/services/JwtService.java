@@ -7,6 +7,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.impl.lang.Function;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
+@Slf4j
 public class JwtService {
     @Value("${token.signing.key}")
     private String jwtSigningKey;
@@ -49,8 +51,8 @@ public class JwtService {
         return generateToken(claims, userDetails);
     }
 
-    public Long extractUserId(String token) {
-        return extractClaim(token, c -> c.get("id", Long.class));
+    public String extractUserId(String token) {
+        return extractClaim(token, c -> c.get("id")).toString();
     }
 
     /**
@@ -119,8 +121,12 @@ public class JwtService {
      * @return данные
      */
     private Claims extractAllClaims(String token) {
-        return Jwts.parser().setSigningKey(getSigningKey()).build().parseClaimsJws(token)
+        Claims claims = Jwts.parser().setSigningKey(getSigningKey()).build().parseClaimsJws(token)
                 .getBody();
+        for (Map.Entry<?, ?> entry : claims.entrySet()) {
+            log.info("Claims entry: {} : {}", entry.getKey(), entry.getValue());
+        }
+        return claims;
     }
 
     /**
