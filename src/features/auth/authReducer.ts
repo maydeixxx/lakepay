@@ -23,7 +23,11 @@ export interface AuthState {
 }
 
 const initialState: AuthState = {
-  status: "idle"
+  status: "idle",
+  token: localStorage.getItem("token") || undefined,
+  user: localStorage.getItem("token")
+    ? parseJwt(localStorage.getItem("token")!)
+    : undefined
 };
 
 export default function authReducer(
@@ -33,6 +37,7 @@ export default function authReducer(
   switch (action?.type) {
     case "auth/login": {
       console.log(parseJwt(action.payload!));
+      localStorage.setItem("token", action.payload!);
 
       return {
         status: "succeeded",
@@ -80,6 +85,9 @@ export const login =
     try {
       const response = await fetch(AUTH_URL, {
         method: "post",
+        headers: {
+          "Content-Type": "application/json"
+        },
         body: JSON.stringify(telegramData)
       });
       const data: AuthResponse = await response.json();

@@ -1,10 +1,20 @@
 import { LoginButton } from "@/components/LoginButton";
 import { login } from "@/features/auth/authReducer";
-import { useAppDispatch } from "@/redux/store";
+import { useAppDispatch, useAppSelector } from "@/redux/store";
 import type { TelegramAuthData } from "@/types";
+import { useEffect } from "react";
+import { useNavigate } from "react-router";
 
 export default function LoginPage() {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const { token, user, status } = useAppSelector((state) => state.auth);
+
+  useEffect(() => {
+    if (token && status == "succeeded") {
+      navigate("/profile");
+    }
+  }, [token]);
 
   const onAuthHandler = (user: TelegramAuthData) => {
     console.log(user);

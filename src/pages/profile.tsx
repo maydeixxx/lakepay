@@ -15,7 +15,7 @@ export default function ProfilePage() {
   // TODO: Loading spinner
   return (
     <>
-      {user && <UserView type="public" user={user} />}
+      {user && <UserView type="personal" user={user} />}
       {status == "loading" && <h1>Загрузка...</h1>}
     </>
   );

@@ -88,7 +88,7 @@ h6 {
 
   --color-background: oklch(0.8853 0 0);
   --color-foreground: #000000;
-  --color-destructive: #cb0052;
+  --color-destructive: oklch(0.5385 0.2154 9.6);
 
   --color-input: oklch(1 0 0 / 0.15);
 
