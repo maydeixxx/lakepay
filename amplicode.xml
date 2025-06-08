@@ -9,7 +9,7 @@
       </persistence-unit>
       <persistence-unit moduleName="userService" name="Default">
         <packages>
-          <package value="com.lakepayProj.userService" />
+          <package value="com.LakePayProj.userService" />
         </packages>
       </persistence-unit>
     </persistence-units>

@@ -1,17 +1,16 @@
 services:
   eureka-service:
     build:
-      context: eurekaService
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: eurekaService/Dockerfile
     restart: unless-stopped
     ports:
       - "8761:8761"
 
   ad-service:
-    image: ad-service:latest
     build:
       context: .
-      dockerfile: adService/src/main/resources/Dockerfile
+      dockerfile: adService/Dockerfile
     restart: unless-stopped
     ports:
       - "8780:8780"
@@ -23,8 +22,8 @@ services:
 
   user-service:
     build:
-      context: userService
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: userService/Dockerfile
     restart: unless-stopped
     ports:
       - "8081:8081"
@@ -35,10 +34,9 @@ services:
       - kafka
 
   gateway-api:
-    image: gateway-api:latest
     build:
       context: .
-      dockerfile: gatewayApi/src/main/resources/Dockerfile
+      dockerfile: gatewayApi/Dockerfile
     restart: unless-stopped
     ports:
       - "8990:8990"
@@ -47,8 +45,8 @@ services:
 
   chat-service:
     build:
-      context: chatService
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: chatService/Dockerfile
     restart: unless-stopped
     ports:
       - "8082:8082"
@@ -57,15 +55,30 @@ services:
       - eureka-service
 
   notification-service:
-    image: notification-service:latest
     build:
       context: .
-      dockerfile: notificationService/src/main/resources/Dockerfile
+      dockerfile: notificationService/Dockerfile
     restart: unless-stopped
     ports:
       - "9090:9090"
     depends_on:
       - kafka
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: paymentService/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8083:8083"
+    depends_on:
+      - eureka-service
+      - gateway-api
+      - zookeeper
+      - lakePayPostgres
+      - kafka
+    labels:
+      amplicode.image: springboot
 
   zookeeper:
     image: zookeeper:3.9.3
@@ -104,23 +117,6 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: lakepay_db
-
-  payment-service:
-    image: payment-service:latest
-    build:
-      context: .
-      dockerfile: paymentService/src/main/resources/Dockerfile
-    restart: unless-stopped
-    ports:
-      - "8083:8083"
-    depends_on:
-      - eureka-service
-      - gateway-api
-      - zookeeper
-      - lakePayPostgres
-      - kafka
-    labels:
-      amplicode.image: springboot
 
 volumes:
   userPostgres_data:

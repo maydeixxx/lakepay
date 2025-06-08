@@ -16,7 +16,10 @@ spring:
           uri: lb://paymentService
           predicates:
             - Path=/pay/webhook, /buy, /withdraw, /deposit
-
+        - id: chatService
+          uri: lb://chatService
+          predicates:
+            - Path=/chat/**
 server:
   port: 8990
   tomcat:

@@ -3,23 +3,23 @@ server:
 
 spring:
   datasource:
-    # Change db credentials before merging to dev
-    url: jdbc:postgresql://postgres-db:5432/lakepay_db
+    url: jdbc:postgresql://lakePayPostgres:5432/lakepay_db
+    driver-class-name: org.postgresql.Driver
     username: postgres
     password: admin
-    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: update
-      database: postgresql
-      database-platform: org.hibernate.dialect.PostgreSQLDialect
+      ddl-auto: create
   application:
-    name: chat-service
+    name: chatService
 
 eureka:
   client:
     service-url:
       defaultZone: http://eureka-service:8761/eureka/
+  instance:
+    prefer-ip-address: true
+    hostname: chat-service
 
 token:
   signing:

@@ -11,9 +11,9 @@
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>PaymentService</artifactId>
+	<artifactId>paymentService</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>PaymentService</name>
+	<name>paymentService</name>
 	<description>Payment Service for LakePay</description>
 
 	<dependencies>

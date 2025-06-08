@@ -1,11 +1,15 @@
-#FROM maven:3.9.6-eclipse-temurin-21 AS builder
-#WORKDIR /app
-#COPY src src
-#COPY pom.xml pom.xml
-#RUN mvn clean package -DskipTests
+# Build stage
+FROM maven:3.9.6-eclipse-temurin-21 AS build
+WORKDIR /app
+COPY pom.xml parent-pom.xml
+COPY userService/pom.xml pom.xml
+COPY userService/src src
+RUN mvn install -N -f parent-pom.xml -DskipTests
+RUN mvn clean package -f pom.xml -DskipTests
 
+# Run stage
 FROM openjdk:21
 WORKDIR /app
-COPY target/userService-0.0.1-SNAPSHOT.jar app.jar
+COPY --from=build /app/target/userService-0.0.1-SNAPSHOT.jar app.jar
 EXPOSE 8081
 ENTRYPOINT ["java", "-jar", "app.jar"]

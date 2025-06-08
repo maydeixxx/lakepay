@@ -1,0 +1,76 @@
+package com.LakePayProj.chatService.auth;
+
+
+import com.LakePayProj.chatService.models.User;
+import com.LakePayProj.chatService.services.JwtService;
+import com.LakePayProj.chatService.services.UserService;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.lang.NonNull;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class JwtAuthenticationFilter extends OncePerRequestFilter{
+    public static final String BEARER_PREFIX = "Bearer ";
+    public static final String HEADER_NAME = "Authorization";
+    private final JwtService jwtService;
+    private final UserService userService;
+
+    @Override
+    protected void doFilterInternal(
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain
+    ) throws ServletException, IOException {
+        // Получаем токен из заголовка
+        var authHeader = request.getHeader(HEADER_NAME);
+
+        if (!StringUtils.hasText(authHeader) || !StringUtils.startsWithIgnoreCase(authHeader, BEARER_PREFIX)) {
+            log.debug("No valid Authorization header found.");
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        var jwt = authHeader.substring(BEARER_PREFIX.length());
+
+        // Если токен валиден, то аутентифицируем пользователя
+        log.debug("JWT received: {}", jwt);
+        var id = jwtService.extractUserId(jwt);
+
+        if (id != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            User user = userService.getById(Long.valueOf(id));
+            if (user == null) {
+                log.error("Couldn't find user with ID {}", id);
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            if (jwtService.isTokenValid(jwt, user)) {
+                SecurityContext context = SecurityContextHolder.createEmptyContext();
+
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(user,null, user.getAuthorities());
+
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                context.setAuthentication(authToken);
+                SecurityContextHolder.setContext(context);
+            }
+        }
+
+        filterChain.doFilter(request, response);
+    }
+}
+
