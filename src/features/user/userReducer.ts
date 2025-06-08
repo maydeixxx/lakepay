@@ -13,7 +13,7 @@ export type User = {
   id: number;
   username: string;
   urlPhoto: string;
-  dateOfReg: Date;
+  dateOfReg: string;
   // For personal profile
   tgId?: number;
   balance?: number;
