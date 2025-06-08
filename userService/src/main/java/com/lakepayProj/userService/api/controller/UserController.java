@@ -1,6 +1,5 @@
 package com.lakepayProj.userService.api.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lakepayProj.userService.api.DTOs.UserDTO;
 import com.lakepayProj.userService.api.DTOs.UserUpdateDTO;
 import com.lakepayProj.userService.application.interfaces.mappers.IUserMapper;
@@ -28,7 +27,6 @@ public class UserController {
     private final IUserMapper mapper;
     private final UserService userService;
     private final UserProducer producer;
-    private final ObjectMapper objectMapper;
     private final IRoleRepository roleRepository;
 
     @PostMapping("/add_role")

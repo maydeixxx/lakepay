@@ -1,8 +1,6 @@
 package com.LakePayProj.notificationService.tgBot;
 
 import com.LakePayProj.notificationService.kafka.TelegramProducer;
-import com.LakePayProj.notificationService.configs.WebClientConfig;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,7 +8,6 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -20,15 +17,12 @@ import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScope
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class TelegramService extends TelegramLongPollingBot {
     private final TelegramProducer producer;
-    private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper;
     private final List<String> categories = List.of("PUBG", "CS2", "FORTNITE", "DEADLOCK", "DOTA2");
     private String chatIdHash;
 
@@ -36,8 +30,6 @@ public class TelegramService extends TelegramLongPollingBot {
     public String getBotUsername() {
         return "@lakePayBot";
     }
-
-    private final String lakePayUrl = "https://lakepay.ru";
 
     @Value("${tgBot.token}")
     private String token;

@@ -45,6 +45,7 @@ public class AdConsumer {
             log.info("Получено сообщение в get_ad_data_request partition=1: key={}, value={}", record.key(), record.value());
             Long adId = Long.parseLong(record.value());
             AdEntity adEntity = adRepository.findAdById(adId);
+            log.info(adEntity.toString());
             BigDecimal price = adEntity.getPrice();
             String login = adEntity.getLogin();
             String password = adEntity.getPassword();

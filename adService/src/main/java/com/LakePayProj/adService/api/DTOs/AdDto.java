@@ -19,7 +19,6 @@ public class AdDto {
     BigDecimal price;
     String login;
     String password;
-    Integer countOfViews;
     Integer quantity;
     LocalDate dateOfPush;
     Boolean sold;

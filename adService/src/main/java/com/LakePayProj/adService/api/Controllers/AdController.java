@@ -79,20 +79,6 @@ public class AdController {
         }
     }
 
-    @GetMapping("/ad_credentials/{id}")
-    public ResponseEntity<?> getAdCredentials(@PathVariable Long id) {
-        try {
-            Ad ad = service.findAdById(id);
-            Map<String, String> credentials = mapper.getDataFromAd(ad);
-            if (credentials.isEmpty()) {
-                return ResponseEntity.badRequest().body("Credentials are empty :(");
-            }
-            return ResponseEntity.ok(credentials);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
-        }
-    }
-
     @GetMapping("/ad_id/{id}")
     public ResponseEntity<?> findAdById(@PathVariable Long id) {
         try {

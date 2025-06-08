@@ -6,7 +6,6 @@ import com.LakePayProj.adService.infrastructure.AdEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import java.util.Map;
 
 @Mapper(componentModel = "spring")
 public interface IAdMapper {
@@ -19,11 +18,4 @@ public interface IAdMapper {
     @Mapping(target = "login", ignore = true)
     @Mapping(target = "password", ignore = true)
     AdDto adDomainToDto(Ad ad);
-
-    default Map<String, String> getDataFromAd(Ad ad) {
-        return Map.of(
-                "login", ad.getLogin(),
-                "password", ad.getPassword()
-        );
-    }
 }

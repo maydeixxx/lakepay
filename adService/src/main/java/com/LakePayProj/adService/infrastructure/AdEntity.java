@@ -19,7 +19,6 @@ public class AdEntity {
     private BigDecimal price;
     private String login;
     private String password;
-    private Integer countOfViews;
     private Integer quantity;
     private LocalDate dateOfPush;
     private Boolean sold;

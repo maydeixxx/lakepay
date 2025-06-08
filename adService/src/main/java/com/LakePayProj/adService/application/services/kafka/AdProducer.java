@@ -13,23 +13,21 @@ public class AdProducer {
     private final KafkaTemplate<String, String> template;
 
     private String formatAdForTelegram(AdDto ad) {
-        String price = ad.getPrice() != null ? ad.getPrice() + "USDT" : "уточните у продавца";
+        String price = ad.getPrice() != null ? ad.getPrice() + " USDT" : "уточните у продавца";
         String status = ad.getSold() ? "🔴 Продано" : "🟢 В продаже";
 
         return String.format("""
                         🎮 *Продаётся аккаунт*
                         💬 *Заголовок:* %s
                         🕒 *Информация:* %s
-                        👁  *Просмотров:* %s
                         📅 *Дата публикации:* %s
                         📦 *В наличии:* %s шт.
-                        💰 *Цена:* %s 
+                        💰 *Цена:* %s
                         📌 *Категория:* %s
                         %s
                         """,
                 ad.getTitle(),
                 ad.getBody(),
-                ad.getCountOfViews(),
                 ad.getDateOfPush(),
                 ad.getQuantity(),
                 price,

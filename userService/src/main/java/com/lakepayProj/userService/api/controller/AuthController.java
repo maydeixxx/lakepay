@@ -2,7 +2,6 @@ package com.lakepayProj.userService.api.controller;
 
 import com.lakepayProj.userService.api.DTOs.JwtAuthenticationResponse;
 import com.lakepayProj.userService.application.services.AuthenticationService;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
