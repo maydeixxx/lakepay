@@ -1,4 +1,4 @@
-import game from "@/assets/cs2-category.jpg";
+import game from "@/assets/cs2.webp";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { FavouriteIcon } from "@/icons/FavouriteIcon";

@@ -1,30 +1,10 @@
 // TODO: Fetch popular categories from server
-import game from "@/assets/cs2-category.jpg";
+import game from "@/assets/cs2.webp";
 import { Card } from "@/components/Card";
 import { Button } from "@/components/Button";
 import { FavouriteIcon } from "@/icons/FavouriteIcon";
-const categories = [
-  {
-    title: "CS2",
-    url: "http://test1.com",
-    photo: game
-  },
-  {
-    title: "Fortnite",
-    url: "http://test2.com",
-    photo: game
-  },
-  {
-    title: "Dota 2",
-    url: "http://test3.com",
-    photo: game
-  },
-  {
-    title: "Valorant",
-    url: "http://test4.com",
-    photo: game
-  }
-];
+import { NavLink } from "react-router";
+import { categories } from "@/config";
 
 // TODO: Fetch new ads from server
 const ads = [
@@ -64,12 +44,12 @@ export default function Home() {
       <section className="container mx-auto py-16">
         <h1 className="text-secondary text-4xl mb-8">Популярные категории</h1>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-          {categories.concat(categories).map((category) => (
+          {categories.map((category) => (
             <Card className="bg-background py-0 overflow-hidden">
-              <a href={category.url}>
+              <NavLink to={`/category/${category.name}`}>
                 <img src={category.photo} alt={`Photo of ${category.title}`} />
                 <h4 className="text-center py-2 font-bold">{category.title}</h4>
-              </a>
+              </NavLink>
             </Card>
           ))}
         </div>

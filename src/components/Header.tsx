@@ -2,32 +2,7 @@ import { Button, type ButtonProps } from "@/components/Button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/Popover";
 import { Card } from "@/components/Card";
 import logo from "@/assets/Lake-Pay-end.png";
-
-// TODO: Load categories from server
-import game from "@/assets/cs2-category.jpg";
 import { Input } from "@/components/Input";
-const categories = [
-  {
-    title: "CS2",
-    url: "http://test1.com",
-    photo: game
-  },
-  {
-    title: "Fortnite",
-    url: "http://test2.com",
-    photo: game
-  },
-  {
-    title: "Dota 2",
-    url: "http://test3.com",
-    photo: game
-  },
-  {
-    title: "Valorant",
-    url: "http://test4.com",
-    photo: game
-  }
-];
 
 function HeaderCatalog({
   align,
@@ -46,12 +21,12 @@ function HeaderCatalog({
         className="bg-primary rounded-3xl border-none max-w-xl w-screen"
       >
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 overflow-y-auto max-h-96 md:max-h-64 pr-2">
-          {categories.concat(categories).map((category, index) => (
+          {categories.map((category, index) => (
             <Card className="bg-background py-0 overflow-hidden" key={index}>
-              <a href={category.url}>
+              <NavLink to={`/category/${category.name}`}>
                 <img src={category.photo} alt={`Photo of ${category.title}`} />
                 <h4 className="text-center py-2 font-bold">{category.title}</h4>
-              </a>
+              </NavLink>
             </Card>
           ))}
         </div>
@@ -77,6 +52,7 @@ import chatIcon from "@/assets/chat.svg";
 import userIcon from "@/assets/user.svg";
 import { NavLink } from "react-router";
 import { MenuIcon } from "@/icons/MenuIcon";
+import { categories } from "@/config";
 
 const destinations = [
   {
