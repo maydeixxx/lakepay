@@ -56,22 +56,22 @@ import { categories } from "@/config";
 
 const destinations = [
   {
-    title: "Cart",
+    title: "Корзина",
     url: "/cart",
     icon: cartIcon
   },
   {
-    title: "Favourite",
+    title: "Изранное",
     url: "/favourite",
     icon: favouriteIcon
   },
   {
-    title: "Chat",
+    title: "Чат",
     url: "/chat",
     icon: chatIcon
   },
   {
-    title: "Profile",
+    title: "Профиль",
     url: "/profile",
     icon: userIcon
   }
