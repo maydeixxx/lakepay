@@ -23,7 +23,8 @@ eureka:
 
 token:
   signing:
-    key: DajeRi8ErJlN9EjIfgr8PJwkagj8j4XI3ePoANmysKL
+    key: q1o7M1V+7R1Qyx4e0y1m8qLC+xRP0U8UwK0QH5Xt7lQ= # JWT signing key
+    lifetime: 1h
 
 #TODO: Disable on prod
 debug: true

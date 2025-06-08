@@ -1,12 +1,13 @@
 package com.LakePayProj.chatService.services;
 
-import com.LakePayProj.userService.domain.model.User;
-import com.LakePayProj.userService.domain.valueObject.Role;
+import com.LakePayProj.chatService.models.Role;
+import com.LakePayProj.chatService.models.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
@@ -48,6 +49,10 @@ public class JwtService {
         return getFromToken(token).getSubject();
     }
 
+    public String getUserId(String token) {
+        return getFromToken(token).get("id").toString();
+    }
+
     public List<String> getRoles(String token) {
         return getFromToken(token).get("roles", List.class);
     }
@@ -58,4 +63,14 @@ public class JwtService {
                 .parseClaimsJws(token)
                 .getBody();
     }
+
+    public boolean isTokenValid(String token, UserDetails userDetails) {
+        final String userName = getUsername(token);
+        return (userName.equals(userDetails.getUsername())) && !isTokenExpired(token);
+    }
+
+    private boolean isTokenExpired(String token) {
+        return getFromToken(token).getExpiration().before(new Date());
+    }
+
 }

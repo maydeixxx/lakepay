@@ -49,7 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 
         // Если токен валиден, то аутентифицируем пользователя
         log.debug("JWT received: {}", jwt);
-        var id = jwtService.extractUserId(jwt);
+        var id = jwtService.getUserId(jwt);
 
         if (id != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             User user = userService.getById(Long.valueOf(id));
@@ -60,12 +60,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
             }
 
             if (jwtService.isTokenValid(jwt, user)) {
-                SecurityContext context = SecurityContextHolder.createEmptyContext();
-
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(user,null, user.getAuthorities());
-
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                // Reset user context
+                SecurityContext context = SecurityContextHolder.createEmptyContext();
                 context.setAuthentication(authToken);
+
                 SecurityContextHolder.setContext(context);
             }
         }
