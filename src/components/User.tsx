@@ -13,6 +13,8 @@ export interface UserViewProps {
 function UserView({ user, type }: UserViewProps) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+
+  // TODO: Confirmation dialog before logout
   const onLogoutHandler = () => {
     localStorage.removeItem("token");
     dispatch(authLogout());
@@ -32,7 +34,7 @@ function UserView({ user, type }: UserViewProps) {
           )}
         </div>
         <img
-          src={"https://placehold.co/600x400"}
+          src={user.urlPhoto}
           alt="User profile photo"
           className="aspect-square object-cover w-auto h-auto sm:flex-1/4 sm:w-full"
         />
