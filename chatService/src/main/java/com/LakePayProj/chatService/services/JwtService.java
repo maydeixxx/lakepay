@@ -1,20 +1,19 @@
 package com.LakePayProj.chatService.services;
 
-import com.LakePayProj.chatService.models.User;
+import com.LakePayProj.userService.domain.model.User;
+import com.LakePayProj.userService.domain.valueObject.Role;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.impl.lang.Function;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
+import java.time.Duration;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -23,120 +22,40 @@ public class JwtService {
     @Value("${token.signing.key}")
     private String jwtSigningKey;
 
-    /**
-     * Извлечение имени пользователя из токена
-     *
-     * @param token токен
-     * @return имя пользователя
-     */
-    public String extractUserName(String token) {
-        return extractClaim(token, Claims::getSubject);
-    }
+    @Value("${token.signing.lifetime}")
+    private Duration lifetime;
 
-    /**
-     * Генерация токена
-     *
-     * @param userDetails данные пользователя
-     * @return токен
-     */
-    public String generateToken(UserDetails userDetails) {
+    public String generateToken(User user) {
         Map<String, Object> claims = new HashMap<>();
-        if (userDetails instanceof User customUserDetails) {
-            claims.put("id", customUserDetails.getId());
-            claims.put("username", customUserDetails.getUsername());
-            claims.put("urlPhoto", customUserDetails.getUrlPhoto());
-            claims.put("tgId", customUserDetails.getTgId());
-            claims.put("role", customUserDetails.getRole());
-        }
-        return generateToken(claims, userDetails);
+        List<String> roles = user.getRoles().stream().map(Role::getName).toList();
+        claims.put("id", user.getId());
+        claims.put("tgId", user.getTgId());
+        claims.put("roles", roles);
+        claims.put("urlPhoto", user.getUrlPhoto());
+
+        Date issuedDate = new Date();
+        Date expiredDate = new Date(issuedDate.getTime() + lifetime.toMillis());
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(user.getUsername())
+                .setIssuedAt(issuedDate)
+                .setExpiration(expiredDate)
+                .signWith(SignatureAlgorithm.HS256, jwtSigningKey)
+                .compact();
     }
 
-    public String extractUserId(String token) {
-        return extractClaim(token, c -> c.get("id")).toString();
+    public String getUsername(String token) {
+        return getFromToken(token).getSubject();
     }
 
-    /**
-     * Проверка токена на валидность
-     *
-     * @param token       токен
-     * @param userDetails данные пользователя
-     * @return true, если токен валиден
-     */
-    public boolean isTokenValid(String token, UserDetails userDetails) {
-        final String userName = extractUserName(token);
-        return (userName.equals(userDetails.getUsername())) && !isTokenExpired(token);
+    public List<String> getRoles(String token) {
+        return getFromToken(token).get("roles", List.class);
     }
 
-    /**
-     * Извлечение данных из токена
-     *
-     * @param token           токен
-     * @param claimsResolvers функция извлечения данных
-     * @param <T>             тип данных
-     * @return данные
-     */
-    private <T> T extractClaim(String token, Function<Claims, T> claimsResolvers) {
-        final Claims claims = extractAllClaims(token);
-        return claimsResolvers.apply(claims);
-    }
-
-    /**
-     * Генерация токена
-     *
-     * @param extraClaims дополнительные данные
-     * @param userDetails данные пользователя
-     * @return токен
-     */
-    private String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
-        return Jwts.builder().setClaims(extraClaims).setSubject(userDetails.getUsername())
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 100000 * 60 * 24))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256).compact();
-    }
-
-    /**
-     * Проверка токена на просроченность
-     *
-     * @param token токен
-     * @return true, если токен просрочен
-     */
-    private boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
-    }
-
-    /**
-     * Извлечение даты истечения токена
-     *
-     * @param token токен
-     * @return дата истечения
-     */
-    private Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
-    }
-
-    /**
-     * Извлечение всех данных из токена
-     *
-     * @param token токен
-     * @return данные
-     */
-    private Claims extractAllClaims(String token) {
-        Claims claims = Jwts.parser().setSigningKey(getSigningKey()).build().parseClaimsJws(token)
+    public Claims getFromToken(String token) {
+        return Jwts.parser()
+                .setSigningKey(jwtSigningKey)
+                .parseClaimsJws(token)
                 .getBody();
-        for (Map.Entry<?, ?> entry : claims.entrySet()) {
-            log.info("Claims entry: {} : {}", entry.getKey(), entry.getValue());
-        }
-        return claims;
-    }
-
-    /**
-     * Получение ключа для подписи токена
-     *
-     * @return ключ
-     */
-    private Key getSigningKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(jwtSigningKey);
-        return Keys.hmacShaKeyFor(keyBytes);
     }
 }
-
