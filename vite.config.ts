@@ -13,6 +13,6 @@ export default defineConfig({
   },
   server: {
     host: "127.0.0.1",
-    allowedHosts: ["secure-kindly-polecat.ngrok-free.app"]
+    allowedHosts: ["frontend.lakepay.ru"]
   }
 });

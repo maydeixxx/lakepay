@@ -12,6 +12,7 @@ import { store } from "@/redux/store.ts";
 import UserPage from "@/pages/user.tsx";
 import LoginPage from "@/pages/login.tsx";
 import ProfilePage from "@/pages/profile";
+import ProductPage from "./pages/product";
 
 const router = createBrowserRouter([
   {
@@ -23,6 +24,7 @@ const router = createBrowserRouter([
       { path: "/profile", Component: ProfilePage },
       { path: "/login", Component: LoginPage },
       { path: "/user/:userId", Component: UserPage },
+      { path: "/product/:productId", Component: ProductPage },
       { path: "*", Component: NotFoundPage }
     ]
   }
