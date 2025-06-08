@@ -1,22 +1,13 @@
-networks:
-  myNetwork:
-    driver: bridge
-
 services:
   eureka-service:
-    networks:
-      - myNetwork
-    image: eureka-service:latest
     build:
-      context: .
-      dockerfile: eureka-service/Dockerfile
+      context: eurekaService
+      dockerfile: Dockerfile
     restart: unless-stopped
     ports:
       - "8761:8761"
 
   ad-service:
-    networks:
-      - myNetwork
     image: ad-service:latest
     build:
       context: .
@@ -31,12 +22,9 @@ services:
       - kafka
 
   user-service:
-    networks:
-      - myNetwork
-    image: user-service:latest
     build:
-      context: .
-      dockerfile: userService/src/main/resources/Dockerfile
+      context: userService
+      dockerfile: Dockerfile
     restart: unless-stopped
     ports:
       - "8081:8081"
@@ -47,8 +35,6 @@ services:
       - kafka
 
   gateway-api:
-    networks:
-      - myNetwork
     image: gateway-api:latest
     build:
       context: .
@@ -59,9 +45,18 @@ services:
     depends_on:
       - eureka-service
 
+  chat-service:
+    build:
+      context: chatService
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8082:8082"
+    depends_on:
+      - lakePayPostgres
+      - eureka-service
+
   notification-service:
-    networks:
-      - myNetwork
     image: notification-service:latest
     build:
       context: .
@@ -73,16 +68,12 @@ services:
       - kafka
 
   zookeeper:
-    networks:
-      - myNetwork
     image: zookeeper:3.9.3
     restart: unless-stopped
     ports:
       - "2181:2181"
 
   kafka:
-    networks:
-      - myNetwork
     image: confluentinc/cp-kafka:7.9.0
     restart: unless-stopped
     ports:
@@ -105,8 +96,6 @@ services:
   lakePayPostgres:
     image: postgres:17.4
     restart: unless-stopped
-    networks:
-      - myNetwork
     ports:
       - "5432:5432"
     volumes:
@@ -117,8 +106,6 @@ services:
       POSTGRES_DB: lakepay_db
 
   payment-service:
-    networks:
-      - myNetwork
     image: payment-service:latest
     build:
       context: .

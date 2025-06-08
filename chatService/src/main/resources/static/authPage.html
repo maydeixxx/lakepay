@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LakePay - Профиль</title>
+    <link rel="stylesheet" href="css-nullifier.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header__inner">
+                <div class="header__logo">
+                    <a href="#" class="header__logo"><img src="images/Lake-Pay-end.png" alt=""></a>
+                </div>
+                <div class="header__catalog">
+                    <button>
+                        <img src="images/tri-rectangles.svg" alt="">
+                        <div class="header__catalog-text">Каталог</div>
+                    </button>
+                    <div class="header__catalog__panel">
+                        <div class="header__catalog__panel-categories">
+                            <ul>
+                                <li class="header__catalog__item">
+                                    <a href="#">
+                                        <div class="header__catalog__item-img">
+                                            <img src="images/cs2-category.jpg" alt="">
+                                        </div>
+                                        <div class="header__catalog__item-title">Заголовок 1</div>
+                                    </a>
+                                </li>
+                                <li class="header__catalog__item">
+                                    <a href="#">
+                                        <div class="header__catalog__item-img">
+                                            <img src="images/cs2-category.jpg" alt="">
+                                        </div>
+                                        <div class="header__catalog__item-title">Заголовок 1</div>
+                                    </a>
+                                </li>
+                                <li class="header__catalog__item">
+                                    <a href="#">
+                                        <div class="header__catalog__item-img">
+                                            <img src="images/cs2-category.jpg" alt="">
+                                        </div>
+                                        <div class="header__catalog__item-title">Заголовок 1</div>
+                                    </a>
+                                </li>
+                                <li class="header__catalog__item">
+                                    <a href="#">
+                                        <div class="header__catalog__item-img">
+                                            <img src="images/cs2-category.jpg" alt="">
+                                        </div>
+                                        <div class="header__catalog__item-title">Заголовок 1</div>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="header__input">
+                    <input name="text" placeholder=" Поиск" id=""></input>
+                </div>
+                <div class="header__btns">
+                    <li class="header__item">
+                        <a href="#">
+                            <img src="images/cart.svg" alt="">
+                        </a>
+                    </li>
+                    <li class="header__item">
+                        <a href="#">
+                            <img src="images/favorite.svg" alt="">
+                        </a>
+                    </li>
+                    <li class="header__item new-message">
+                        <a href="#">
+                            <img src="images/chat.svg" alt="">
+                        </a>
+                    </li>
+                    <li class="header__item">
+                        <a href="#">
+                            <img src="images/user.svg" alt="">
+                        </a>
+                    </li>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="login">
+        <div class="container">
+            <h2 class="login__title">Войти в аккаунт</h2>
+            <div class="login__inner">
+                <p class="login__label">Вход через Telegram:</p>
+                <!-- <script async src="https://telegram.org/js/telegram-widget.js?22"
+                        data-telegram-login="lakePayBot"
+                        data-size="large"
+                        data-onauth="onTelegramAuth(user)">
+                </script> -->
+                <form id="mock-form">
+                    <div><label for="form-id">TG Id: </label><input required type="text" name="id" id="form-id" placeholder="123456..."></div>
+                    <div><label for="form-username">Username: </label><input required type="text" name="username" placeholder="John..." id="form-username"></div>
+                    <div><label for="form-photoUrl">Photo URL: </label><input required type="text" name="photo_url" placeholder="http://picture..." id="form-photoUrl"></div>
+                    
+                    
+                    <input type="submit" value="Login"/>
+                </form>
+                
+            </div>
+            
+        </div>
+    </section>
+    <script type="text/javascript">
+        function onTelegramAuth(user) {
+            console.log("Telegram user data:", user);
+
+            fetch("https://lakepay.ru/auth/telegram/token", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(user)
+            })
+            .then(response => response.text())
+            .then(body => {
+                console.log("Ответ сервера:", body);
+                alert("Сервер ответил: " + body);
+            })
+            .catch(error => {
+                console.error("Ошибка при отправке запроса:", error);
+                alert("Ошибка: " + error.message);
+            });
+        }
+
+        const form = document.querySelector("#mock-form");
+
+        const login = async (e) => {
+            e.preventDefault(); // Prevent default form submission
+
+            // Collect form data
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData); // Convert FormData to object
+            console.log(data);
+            
+            try {
+                const response = await fetch('http://localhost:8081/auth/telegram/mock', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const result = await response.json();
+                console.log('Success:', result);
+                if (result.message == "Logged in") {
+                    localStorage.setItem("token", result.token)
+                    window.location.href = "/userPage.html"
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        form.addEventListener("submit", login)
+    </script>
+
+</body>
+
+</html>

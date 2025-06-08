@@ -15,9 +15,10 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/auth/telegram")
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class AuthController {
     private final AuthenticationService authService;
+
 
     @GetMapping
     public ResponseEntity<Resource> getAuthScript() {
@@ -26,6 +27,15 @@ public class AuthController {
         headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=telegramAuth.html");
         return ResponseEntity.ok().headers(headers).body(resource);
     }
+
+//    @PostMapping("/mock")
+//    public ResponseEntity<JwtAuthenticationResponse> authenticateMock(
+//            @RequestBody Map<String, String> telegramData,
+//            HttpServletResponse response
+//    ) {
+//        JwtAuthenticationResponse result = authService.authenticateTelegramMock(telegramData);
+//        return ResponseEntity.ok(result);
+//    }
 
     @PostMapping("/token")
     public ResponseEntity<JwtAuthenticationResponse> authenticate(@RequestBody Map<String, String> telegramData) {

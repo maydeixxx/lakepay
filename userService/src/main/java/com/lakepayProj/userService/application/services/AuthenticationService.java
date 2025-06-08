@@ -49,7 +49,7 @@ public class AuthenticationService {
     /**
      * Аутентификация пользователя через аккаунт Telegram
      *
-     * @param request данные, возвращаемые Telegram
+     * @param request данные возвращаемые Telegram
      * @return токен
      */
     public JwtAuthenticationResponse authenticateTelegram(Map<String, String> request) {
@@ -69,11 +69,12 @@ public class AuthenticationService {
             User user = userService.findUserByTgId(tgId);
 
             Long chatId = chats.get(tgId);
-            logger.info(chatId.toString());
+            logger.info("Chat ID: {}", chatId.toString());
             if (chatId == null) {
                 logger.warn("Chat ID для tgId {} не найден", tgId);
                 return new JwtAuthenticationResponse("Chat id is null", null);
             }
+
 
             String jwt = null;
             if (user != null) {
@@ -94,6 +95,8 @@ public class AuthenticationService {
 
                 user = mapper.userEntityToUser(userEntity);
                 userService.saveUser(user);
+
+                user = userService.findUserByTgId(tgId);
                 logger.info("Создан новый пользователь: {}", user.getUsername());
 
                 producer.sendUser(user);

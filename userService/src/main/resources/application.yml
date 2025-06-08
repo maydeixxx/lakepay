@@ -1,6 +1,7 @@
 server:
   port: 8081
 
+
 spring:
   datasource:
     url: jdbc:postgresql://lakePayPostgres:5432/lakepay_db
@@ -34,8 +35,11 @@ crypto-bot:
 
 token:
   signing:
-    key: q1o7M1V+7R1Qyx4e0y1m8qLC+xRP0U8UwK0QH5Xt7lQ=
+    key: q1o7M1V+7R1Qyx4e0y1m8qLC+xRP0U8UwK0QH5Xt7lQ= # JWT signing key
     lifetime: 1h
 
   telegram:
-    bot:
+    bot: test # Authentication Telegram bot token
+
+#TODO: Disable on prod
+debug: true

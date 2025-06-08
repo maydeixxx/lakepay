@@ -14,6 +14,8 @@
     <packaging>pom</packaging>
     <modules>
         <module>userService</module>
+        <module>eurekaService</module>
+        <module>chatService</module>
         <module>eureka-service</module>
         <module>paymentService</module>
         <module>gatewayApi</module>
