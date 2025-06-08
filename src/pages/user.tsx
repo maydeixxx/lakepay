@@ -10,7 +10,11 @@ export default function UserPage() {
 
   useEffect(() => {
     if (userId != null) {
-      dispatch(fetchUser(userId)); // Fetch user with ID 1
+      dispatch(fetchUser(userId));
     }
   }, [dispatch, userId]);
+
+  console.log(user);
+
+  return <h1>hello</h1>;
 }

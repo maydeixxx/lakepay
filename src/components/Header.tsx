@@ -2,7 +2,6 @@ import { Button, type ButtonProps } from "@/components/Button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/Popover";
 import { Card } from "@/components/Card";
 import logo from "@/assets/Lake-Pay-end.png";
-import menu from "@/assets/menu.svg";
 
 // TODO: Load categories from server
 import game from "@/assets/cs2-category.jpg";
@@ -47,8 +46,8 @@ function HeaderCatalog({
         className="bg-primary rounded-3xl border-none max-w-xl w-screen"
       >
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 overflow-y-auto max-h-96 md:max-h-64 pr-2">
-          {categories.concat(categories).map((category) => (
-            <Card className="bg-background py-0 overflow-hidden">
+          {categories.concat(categories).map((category, index) => (
+            <Card className="bg-background py-0 overflow-hidden" key={index}>
               <a href={category.url}>
                 <img src={category.photo} alt={`Photo of ${category.title}`} />
                 <h4 className="text-center py-2 font-bold">{category.title}</h4>
@@ -107,7 +106,7 @@ function HeaderNavBar() {
     <nav className="shrink-0">
       <ul className="gap-6 hidden xl:flex">
         {destinations.map((dest) => (
-          <NavLink to={dest.url} end>
+          <NavLink to={dest.url} key={JSON.stringify(dest)} end>
             <Button variant="secondary">
               <img src={dest.icon} alt={dest.title} className="size-8" />
             </Button>
@@ -123,7 +122,7 @@ function HeaderNavBar() {
         <PopoverContent className="bg-card border-none">
           <div className="flex flex-col gap-4">
             {destinations.map((dest) => (
-              <NavLink to={dest.url} end>
+              <NavLink to={dest.url} key={JSON.stringify(dest)} end>
                 <Button
                   variant="secondary"
                   className="gap-4 w-full justify-start"

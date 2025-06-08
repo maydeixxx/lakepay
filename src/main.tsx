@@ -9,6 +9,7 @@ import Home from "./pages/index.tsx";
 import NotFoundPage from "./pages/not-found.tsx";
 import FavouritesPage from "./pages/favourites.tsx";
 import { store } from "./redux/store.ts";
+import UserPage from "./pages/user.tsx";
 
 const router = createBrowserRouter([
   {
@@ -17,6 +18,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, Component: Home },
       { path: "/favourite", Component: FavouritesPage },
+      { path: "/user/:userId", Component: UserPage },
       { path: "*", Component: NotFoundPage }
     ]
   }

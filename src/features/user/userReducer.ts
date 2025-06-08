@@ -5,9 +5,7 @@ import {
   succeededLoadingUser,
   type UserAction
 } from "./userActions";
-import type { AppDispatch, AppThunk } from "@/redux/store";
-import type { RootState } from "@/redux/reducer";
-import type { ThunkAction } from "redux-thunk";
+import type { AppThunk } from "@/redux/store";
 
 export type status = "idle" | "loading" | "succeeded" | "failed";
 
@@ -32,13 +30,11 @@ const initialState: UserState = {
   status: "idle"
 };
 
-const initialAction: UserAction = { type: "users/reset" };
-
 export default function userReducer(
-  state = initialState,
-  action: UserAction = initialAction
-): UserState {
-  switch (action.type) {
+  state: UserState = initialState,
+  action?: UserAction
+) {
+  switch (action?.type) {
     case "users/loading": {
       return {
         ...state,
@@ -59,7 +55,7 @@ export default function userReducer(
       };
     }
     default:
-      return state;
+      return { ...state };
   }
 }
 

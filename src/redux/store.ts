@@ -1,12 +1,13 @@
 import { applyMiddleware, legacy_createStore as createStore } from "redux";
-import rootReducer, { type RootState } from "@/redux/reducer.ts";
+import rootReducer from "@/redux/reducer.ts";
 import { useDispatch, useSelector, useStore } from "react-redux";
 import { thunk, type ThunkAction } from "redux-thunk";
 import type { UserAction } from "@/features/user/userActions";
 
 const middleware = applyMiddleware(thunk);
-export const store = createStore(rootReducer, middleware);
+export const store = createStore(rootReducer, {}, middleware);
 
+export type RootState = ReturnType<typeof store.getState>;
 export type AppStore = typeof store;
 export type AppDispatch = AppStore["dispatch"];
 export type AppThunk<ReturnType = void> = ThunkAction<
