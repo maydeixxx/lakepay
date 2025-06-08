@@ -6,23 +6,10 @@ import {
   type UserAction
 } from "./userActions";
 import type { AppThunk } from "@/redux/store";
-
-export type status = "idle" | "loading" | "succeeded" | "failed";
-
-export type User = {
-  id: number;
-  username: string;
-  urlPhoto: string;
-  dateOfReg: string;
-  // For personal profile
-  tgId?: number;
-  balance?: number;
-  subscriptions?: string[];
-  role?: string;
-};
+import type { LoadingStatus, User } from "@/features/types";
 
 export interface UserState {
-  status: status;
+  status: LoadingStatus;
   data?: User;
 }
 

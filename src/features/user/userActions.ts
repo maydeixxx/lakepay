@@ -1,4 +1,4 @@
-import type { User } from "./userReducer";
+import type { User } from "@/features/types";
 
 export type UserActionType =
   | "users/reset"

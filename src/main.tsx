@@ -18,6 +18,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, Component: Home },
       { path: "/favourite", Component: FavouritesPage },
+      { path: "/profile", Component: UserPage },
       { path: "/user/:userId", Component: UserPage },
       { path: "*", Component: NotFoundPage }
     ]

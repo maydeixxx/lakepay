@@ -3,6 +3,7 @@ import rootReducer from "@/redux/reducer.ts";
 import { useDispatch, useSelector, useStore } from "react-redux";
 import { thunk, type ThunkAction } from "redux-thunk";
 import type { UserAction } from "@/features/user/userActions";
+import type { AuthAction } from "@/features/auth/authActions";
 
 const middleware = applyMiddleware(thunk);
 export const store = createStore(rootReducer, {}, middleware);
@@ -14,7 +15,7 @@ export type AppThunk<ReturnType = void> = ThunkAction<
   ReturnType,
   RootState,
   unknown,
-  UserAction
+  UserAction | AuthAction
 >;
 
 export const useAppDispatch = useDispatch.withTypes<AppDispatch>();
