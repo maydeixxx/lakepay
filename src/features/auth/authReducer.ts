@@ -1,4 +1,4 @@
-import type { LoadingStatus, User } from "@/features/types";
+import type { LoadingStatus, TelegramAuthData, User } from "@/types";
 import {
   authFailed,
   authLoading,
@@ -74,13 +74,13 @@ type AuthResponse = {
 // Accepts telegram login data
 // TODO: Telegram widget response typing
 export const login =
-  (telegramData: any): AppThunk =>
+  (telegramData: TelegramAuthData): AppThunk =>
   async (dispatch) => {
     dispatch(authLoading());
     try {
       const response = await fetch(AUTH_URL, {
         method: "post",
-        body: telegramData
+        body: JSON.stringify(telegramData)
       });
       const data: AuthResponse = await response.json();
 

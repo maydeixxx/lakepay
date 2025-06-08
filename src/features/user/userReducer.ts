@@ -6,7 +6,7 @@ import {
   type UserAction
 } from "./userActions";
 import type { AppThunk } from "@/redux/store";
-import type { LoadingStatus, User } from "@/features/types";
+import type { LoadingStatus, User } from "@/types";
 
 export interface UserState {
   status: LoadingStatus;
