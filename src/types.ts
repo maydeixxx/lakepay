@@ -12,6 +12,17 @@ export type User = {
   role?: string;
 };
 
+export interface Product {
+  id: number;
+  title: string;
+  body: string;
+  category: string;
+  countOfViews: number;
+  quantity: number;
+  dateOfPush: Date;
+  sold: boolean;
+}
+
 /**
  * The data received from Telegram when the user is authenticated.
  *
