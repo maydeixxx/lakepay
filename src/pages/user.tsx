@@ -1,5 +1,5 @@
-import { Button } from "@/components/Button";
 import { UserView } from "@/components/User";
+import { resetUser } from "@/features/user/userActions";
 import { fetchUser } from "@/features/user/userReducer";
 import { useAppDispatch, useAppSelector } from "@/redux/store";
 import { useEffect } from "react";
@@ -14,6 +14,11 @@ export default function UserPage() {
     if (userId != null) {
       // TODO: Abort previous request before new one
       dispatch(fetchUser(userId));
+
+      // Cleans up user data when unmounting
+      return () => {
+        dispatch(resetUser());
+      };
     }
   }, [dispatch, userId]);
 

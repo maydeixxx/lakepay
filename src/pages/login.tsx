@@ -1,12 +1,14 @@
 import { LoginButton } from "@/components/LoginButton";
+import { login } from "@/features/auth/authReducer";
+import { useAppDispatch } from "@/redux/store";
 import type { TelegramAuthData } from "@/types";
-import { useEffect, useRef } from "react";
 
 export default function LoginPage() {
-  const parent = useRef<HTMLDivElement | null>(null);
+  const dispatch = useAppDispatch();
 
   const onAuthHandler = (user: TelegramAuthData) => {
     console.log(user);
+    dispatch(login(user));
   };
 
   return (

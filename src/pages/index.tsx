@@ -83,7 +83,7 @@ export default function Home() {
               <img
                 src={ad.photo}
                 alt={ad.title}
-                className="h-auto w-auto md:max-h-32"
+                className="h-auto w-auto md:max-h-32 rounded-xl"
               />
               <div className="text-wrap grow">
                 <h4 className="mb-4 font-bold">{ad.title}</h4>

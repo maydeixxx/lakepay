@@ -26,7 +26,7 @@ const initialState: AuthState = {
   status: "idle"
 };
 
-export default function AuthReducer(
+export default function authReducer(
   state: AuthState = initialState,
   action?: AuthAction
 ): AuthState {
