@@ -31,8 +31,10 @@ public class JwtService {
         List<String> roles = user.getRoles().stream().map(Role::getName).toList();
         claims.put("id", user.getId());
         claims.put("tgId", user.getTgId());
+        claims.put("username", user.getUsername());
         claims.put("roles", roles);
         claims.put("urlPhoto", user.getUrlPhoto());
+        claims.put("dateOfReg", user.getDateOfReg().toString());
 
         Date issuedDate = new Date();
         Date expiredDate = new Date(issuedDate.getTime() + lifetime.toMillis());
