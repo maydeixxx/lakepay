@@ -12,12 +12,49 @@ import {
   DialogTitle,
   DialogTrigger
 } from "@/components/Dialog";
-import { ProductForm } from "@/components/ProductForm";
+import { AddProductForm } from "@/components/AddProductForm";
+import game from "@/assets/cs2.webp";
+import { ProductView } from "./ProductView";
 
 export interface UserViewProps {
   user: User;
   type: "personal" | "public";
 }
+
+const products = [
+  {
+    title: "Название товара",
+    description: "Lorem Ipsum is simply dummy text of the...",
+    photo: game,
+    price: 1000,
+    favourite: false,
+    id: 1
+  },
+  {
+    title: "Название товара",
+    description: "Lorem Ipsum is simply dummy text of the...",
+    photo: game,
+    price: 2000,
+    favourite: true,
+    id: 2
+  },
+  {
+    title: "Название товара",
+    description: "Lorem Ipsum is simply dummy text of the...",
+    photo: game,
+    price: 3000,
+    favourite: false,
+    id: 3
+  },
+  {
+    title: "Название товара",
+    description: "Lorem Ipsum is simply dummy text of the...",
+    photo: game,
+    price: 4000,
+    favourite: false,
+    id: 4
+  }
+];
 
 function UserView({ user, type }: UserViewProps) {
   const dispatch = useAppDispatch();
@@ -42,20 +79,27 @@ function UserView({ user, type }: UserViewProps) {
         </div>
       </section>
 
-      <section className="container mx-auto mb-16">
-        <h1 className="text-secondary text-4xl mb-8">Мои объявления:</h1>
+      <section className="container mx-auto mb-16 flex flex-col gap-8">
+        <h1 className="text-secondary text-4xl">Мои объявления:</h1>
 
         <Dialog>
           <DialogTrigger asChild>
-            <Button variant="secondary">Добавить объявление</Button>
+            <Button variant="secondary" className="self-start">
+              Добавить объявление
+            </Button>
           </DialogTrigger>
-          <DialogContent className="gap-8">
+          <DialogContent className="gap-8 w-full sm:max-w-2xl">
             <DialogHeader>
               <DialogTitle>Создать объявление</DialogTitle>
             </DialogHeader>
-            <ProductForm></ProductForm>
+            <AddProductForm></AddProductForm>
           </DialogContent>
         </Dialog>
+
+        {/* TODO: Load users ads */}
+        {products.map((product) => (
+          <ProductView show_favourite={false} product={product} />
+        ))}
       </section>
 
       <section className="container mx-auto mb-16">
@@ -73,6 +117,7 @@ function UserView({ user, type }: UserViewProps) {
           <ChatIcon className="mr-2" /> Написать продавцу
         </Button>
       </section>
+      {/* TODO: User reviews */}
     </>
   );
 
@@ -95,7 +140,6 @@ function UserView({ user, type }: UserViewProps) {
         />
       </section>
       {type === "personal" ? personalProfile() : publicProfile()}
-      {/* TODO: User reviews */}
     </>
   );
 }

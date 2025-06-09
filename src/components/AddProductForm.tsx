@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "./Select";
-import { categories } from "@/config";
+import { ADD_AD_URL, categories } from "@/config";
 import { Textarea } from "./TextArea";
 import { Button } from "./Button";
 import {
@@ -20,14 +20,7 @@ import {
 } from "./Form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-
-type Inputs = {
-  title: string;
-  category: string;
-  description: string;
-  details: string;
-  errorInput: string;
-};
+import { useAppSelector } from "@/redux/store";
 
 const formSchema = z.object({
   title: z.string({ required_error: "Пожалуйста введите название." }),
@@ -39,16 +32,43 @@ const formSchema = z.object({
     .max(150, "Описание не может быть длинее 150 символов."),
   details: z.string({
     required_error: "Пожалуйста введите детали от аккаунта."
-  })
+  }),
+  price: z
+    .number({
+      required_error: "Введите цену.",
+      invalid_type_error: "Введите цену."
+    })
+    .min(1, "Цена не может быть меньше 1 руб."),
+  quantity: z
+    .number({
+      required_error: "Введите кол-во товара.",
+      invalid_type_error: "Введите кол-во товара."
+    })
+    .min(1, "Количество товара не может быть меньше 1.")
 });
 
-export function ProductForm() {
+export function AddProductForm() {
+  const { token } = useAppSelector((state) => state.auth);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema)
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    await fetch(ADD_AD_URL, {
+      method: "post",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        title: values.title,
+        body: values.description,
+        category: values.category,
+        price: values.price,
+        quantity: values.quantity
+      })
+    });
   }
 
   return (
@@ -129,6 +149,45 @@ export function ProductForm() {
             </FormItem>
           )}
         />
+
+        <div className="flex gap-4 flex-col items-stretch md:items-start md:flex-row">
+          <FormField
+            control={form.control}
+            name="price"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-secondary">Цена:</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    placeholder="Цена..."
+                    className="bg-on-card placeholder:text-on-card-foreground"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="quantity"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-secondary">Количество:</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    placeholder="Кол-во..."
+                    className="bg-on-card placeholder:text-on-card-foreground"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <Button variant="secondary" type="submit">
           Опубликовать объявление
