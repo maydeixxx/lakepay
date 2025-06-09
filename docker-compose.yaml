@@ -115,8 +115,8 @@ services:
     ports:
       - "29092:29092"
       - "9092:9092"
-#    volumes:
-#      - kafka_data:/var/lib/kafka/data
+    volumes:
+      - kafka_data:/var/lib/kafka/data
     environment:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
