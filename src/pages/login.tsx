@@ -26,10 +26,17 @@ export default function LoginPage() {
       <section className="container mx-auto py-16 flex flex-col items-center">
         <h1 className="text-secondary text-4xl mb-8">Войдите в аккаунт</h1>
         <LoginButton
-          botUsername="lakePayBot"
+          botUsername="mrayventgauth_bot"
           onAuthCallback={onAuthHandler}
           cornerRadius={10}
         />
+        {status == "failed" && (
+          <p className="text-destructive mt-8 text-center">
+            Что-то пошло не так!
+            <br />
+            Попробуйте снова!
+          </p>
+        )}
       </section>
     </>
   );
