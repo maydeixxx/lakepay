@@ -31,7 +31,7 @@ public class TelegramService extends TelegramLongPollingBot {
         return "@lakePayBot";
     }
 
-    @Value("${tgBot.token}")
+    @Value("${token.telegram.bot}")
     private String token;
 
     @Override

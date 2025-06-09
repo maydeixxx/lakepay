@@ -7,3 +7,5 @@ eureka:
   client:
     fetch-registry: false
     register-with-eureka: false
+
+debug: ${DEBUG_MODE}

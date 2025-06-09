@@ -31,4 +31,4 @@ eureka:
     service-url:
       defaultZone: http://eureka-service:8761/eureka/
 
-debug: true
+debug: ${DEBUG_MODE}

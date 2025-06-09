@@ -1,12 +1,11 @@
 server:
   port: 8081
 
-
 spring:
   datasource:
-    url: jdbc:postgresql://lakePayPostgres:5432/lakepay_db
-    username: postgres
-    password: admin
+    url: ${DB_URL:jdbc:jdbc:postgresql://lakePayPostgres:5432/lakepay_db}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:admin}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -31,14 +30,13 @@ eureka:
 
 crypto-bot:
   api-url: https://testnet-pay.crypt.bot/api/
-  api-token: 377626:AAo0yQy9CN9vOBx6u3phGvrwZlDegfSqBUi
+  api-token: ${CRYPTO_BOT_TOKEN}
 
 token:
   signing:
-    key: q1o7M1V+7R1Qyx4e0y1m8qLC+xRP0U8UwK0QH5Xt7lQ= # JWT signing key
-    lifetime: 1h
+    key: ${JWT_SIGNING_KEY} # JWT signing key
+    lifetime: ${JWT_TOKEN_LIFETIME}
   telegram:
-    bot: 7906616449:AAGLMQphhjOTHCgyAW9d9xlV94vN-Deai54 # Authentication Telegram bot token
+    bot: ${TG_BOT_TOKEN} # Authentication Telegram bot token
 
-#TODO: Disable on prod
-debug: true
+debug: ${DEBUG_MODE}

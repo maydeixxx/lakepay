@@ -3,13 +3,14 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://lakePayPostgres:5432/lakepay_db
+    url: ${DB_URL:jdbc:jdbc:postgresql://lakePayPostgres:5432/lakepay_db}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:admin}
     driver-class-name: org.postgresql.Driver
-    username: postgres
-    password: admin
   jpa:
     hibernate:
       ddl-auto: create
+
   application:
     name: chatService
 
@@ -23,9 +24,8 @@ eureka:
 
 token:
   signing:
-    key: q1o7M1V+7R1Qyx4e0y1m8qLC+xRP0U8UwK0QH5Xt7lQ= # JWT signing key
-    lifetime: 1h
+    key: ${JWT_SIGNING_KEY} # JWT signing key
+    lifetime: ${JWT_TOKEN_LIFETIME}
 
-#TODO: Disable on prod
-debug: true
+debug: ${DEBUG_MODE}
 

@@ -10,6 +10,7 @@ services:
       - "8761:8761"
     volumes:
       - maven-repo:/root/.m2/repository
+    env_file: ".env"
 
   ad-service:
     build:
@@ -26,6 +27,7 @@ services:
       - eureka-service
       - lakePayPostgres
       - kafka
+    env_file: ".env"
 
   user-service:
     build:
@@ -42,6 +44,7 @@ services:
       - eureka-service
       - lakePayPostgres
       - kafka
+    env_file: ".env"
 
   gateway-api:
     build:
@@ -55,6 +58,7 @@ services:
       - maven-repo:/root/.m2/repository
     depends_on:
       - eureka-service
+    env_file: ".env"
 
   chat-service:
     build:
@@ -69,6 +73,7 @@ services:
     depends_on:
       - lakePayPostgres
       - eureka-service
+    env_file: ".env"
 
   notification-service:
     build:
@@ -82,6 +87,7 @@ services:
       - maven-repo:/root/.m2/repository
     depends_on:
       - kafka
+    env_file: ".env"
 
   payment-service:
     build:
@@ -101,6 +107,7 @@ services:
       - kafka
     labels:
       amplicode.image: springboot
+    env_file: ".env"
 
   # External Images
   zookeeper:
