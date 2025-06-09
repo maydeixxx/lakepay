@@ -21,6 +21,8 @@ import {
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAppSelector } from "@/redux/store";
+import { useState } from "react";
+import SpinnerIcon from "@/icons/SpinnerIcon";
 
 const formSchema = z.object({
   title: z.string({ required_error: "Пожалуйста введите название." }),
@@ -33,13 +35,13 @@ const formSchema = z.object({
   details: z.string({
     required_error: "Пожалуйста введите детали от аккаунта."
   }),
-  price: z
+  price: z.coerce
     .number({
       required_error: "Введите цену.",
       invalid_type_error: "Введите цену."
     })
     .min(1, "Цена не может быть меньше 1 руб."),
-  quantity: z
+  quantity: z.coerce
     .number({
       required_error: "Введите кол-во товара.",
       invalid_type_error: "Введите кол-во товара."
@@ -48,14 +50,19 @@ const formSchema = z.object({
 });
 
 export function AddProductForm() {
-  const { token } = useAppSelector((state) => state.auth);
+  const { token, user } = useAppSelector((state) => state.auth);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema)
   });
 
+  const [loading, setLoading] = useState(false);
+  const [succeeded, setSucceeded] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    await fetch(ADD_AD_URL, {
+    setLoading(true);
+    const res = await fetch(ADD_AD_URL, {
       method: "post",
       headers: {
         "Content-Type": "application/json",
@@ -66,133 +73,177 @@ export function AddProductForm() {
         body: values.description,
         category: values.category,
         price: values.price,
-        quantity: values.quantity
+        quantity: values.quantity,
+        sellerId: user?.id.toString(),
+        sold: false
       })
     });
+
+    if (res.ok) {
+      setLoading(false);
+      setSucceeded(true);
+    } else {
+      const error = await res.text();
+      console.error(error);
+      setError(error);
+    }
+  }
+
+  function resetForm() {
+    form.reset();
+    setLoading(false);
+    setSucceeded(false);
+    setError(null);
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <FormField
-          control={form.control}
-          name="title"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-secondary">Название:</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Введите название..."
-                  className="bg-on-card! placeholder:text-on-card-foreground"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="category"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-secondary">Категория:</FormLabel>
-              <FormControl>
-                <Select {...field}>
-                  <SelectTrigger className="w-full bg-secondary! data-[placeholder]:text-secondary-foreground text-secondary-foreground">
-                    <SelectValue placeholder="Выберите категорию..." />
-                  </SelectTrigger>
-                  <SelectContent className="bg-secondary text-secondary-foreground">
-                    {categories.map((category) => (
-                      <SelectItem value={category.name} key={category.name}>
-                        {category.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-secondary">Название:</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Введите описание..."
-                  {...field}
-                  className="resize-none h-32 bg-on-card! placeholder:text-on-card-foreground"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="details"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-secondary">Данные:</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Введите данные..."
-                  className="bg-on-card placeholder:text-on-card-foreground"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="flex gap-4 flex-col items-stretch md:items-start md:flex-row">
-          <FormField
-            control={form.control}
-            name="price"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-secondary">Цена:</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="Цена..."
-                    className="bg-on-card placeholder:text-on-card-foreground"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="quantity"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-secondary">Количество:</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    placeholder="Кол-во..."
-                    className="bg-on-card placeholder:text-on-card-foreground"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+    <>
+      {loading && (
+        <div className="flex w-full items-center justify-center py-16">
+          <SpinnerIcon className="text-primary size-16" />
         </div>
+      )}
 
-        <Button variant="secondary" type="submit">
-          Опубликовать объявление
-        </Button>
-      </form>
-    </Form>
+      {succeeded && (
+        <div className="flex w-full flex-col items-center py-16 gap-8">
+          <h1 className="text-secondary text-4xl text-center">
+            Объявление опубликовано!
+          </h1>
+          <Button variant="secondary" onClick={() => resetForm()}>
+            Добавить объявление
+          </Button>
+        </div>
+      )}
+
+      {!loading && !succeeded && (
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-secondary">Название:</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Введите название..."
+                      className="bg-on-card! placeholder:text-on-card-foreground"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-secondary">Категория:</FormLabel>
+                  <FormControl>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <SelectTrigger className="w-full bg-secondary! data-[placeholder]:text-secondary-foreground text-secondary-foreground">
+                        <SelectValue placeholder="Выберите категорию..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-secondary text-secondary-foreground">
+                        {categories.map((category) => (
+                          <SelectItem value={category.name} key={category.name}>
+                            {category.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-secondary">Описание:</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Введите описание..."
+                      {...field}
+                      className="resize-none h-32 bg-on-card! placeholder:text-on-card-foreground"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="details"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-secondary">Данные:</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Введите данные..."
+                      className="bg-on-card placeholder:text-on-card-foreground"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="flex gap-4 flex-col items-stretch md:items-start md:flex-row">
+              <FormField
+                control={form.control}
+                name="price"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-secondary">Цена:</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="Цена..."
+                        className="bg-on-card placeholder:text-on-card-foreground"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="quantity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-secondary">
+                      Количество:
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="Кол-во..."
+                        className="bg-on-card placeholder:text-on-card-foreground"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <Button variant="secondary" type="submit">
+              Опубликовать объявление
+            </Button>
+          </form>
+        </Form>
+      )}
+    </>
   );
 }
