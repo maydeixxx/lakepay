@@ -10,14 +10,13 @@ export default function ProductPage() {
     <>
       <section className="container mx-auto py-16 flex flex-col">
         <h1 className="text-secondary text-4xl mb-12">Название товара</h1>
-        <div className="flex gap-8 mb-12">
+        <div className="flex gap-8 mb-12 flex-wrap md:flex-nowrap">
           <img
             src="https://placehold.co/600x400"
-            alt=""
-            className="rounded-xl"
+            className="rounded-xl md:basis-1/2 w-full h-full"
           />
-          <div className="flex flex-col gap-4">
-            <h2 className="text-secondary text-3xl">Цена: $100</h2>
+          <div className="flex flex-col gap-4 md:basis-1/2">
+            <h2 className="text-secondary text-3xl w-full">Цена: $100</h2>
             <div className="flex gap-4 py-4">
               <Button variant="secondary">
                 <img src={cartIcon} alt="" />
