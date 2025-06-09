@@ -82,7 +82,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                     assert authorizationHeader != null;
                     String jwt = authorizationHeader.substring(BEARER_PREFIX.length());
 
-                    var id = jwtService.getUserId(jwt);
+                    var id = jwtService.getFromToken(jwt).get("id").toString();
                     if (SecurityContextHolder.getContext().getAuthentication() == null) {
                         User user = userService.getById(Long.valueOf(id));
 

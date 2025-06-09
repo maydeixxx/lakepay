@@ -61,10 +61,10 @@ public class ChatController {
 //    }
 
     @GetMapping(path = "/list", produces = "application/json")
-    public @ResponseBody ResponseEntity<List<String>> getAvailableChats() {
+    public @ResponseBody ResponseEntity<List<ChatRoomDTO>> getAvailableChats() {
         User sender = userService.getCurrentUser();
 
-        List<String> data = chatRoomService.getChatList(sender.getUsername());
+        List<ChatRoomDTO> data = chatRoomService.getChatList(sender.getUsername());
         return ResponseEntity.ok(data);
     }
 

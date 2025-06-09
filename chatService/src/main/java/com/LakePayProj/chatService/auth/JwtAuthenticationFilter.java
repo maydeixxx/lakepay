@@ -49,7 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 
         // Если токен валиден, то аутентифицируем пользователя
         log.debug("JWT received: {}", jwt);
-        var id = jwtService.getUserId(jwt);
+        var id = jwtService.getFromToken(jwt).get("id").toString();
 
         if (id != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             User user = userService.getById(Long.valueOf(id));

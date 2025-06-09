@@ -1,5 +1,7 @@
 package com.LakePayProj.chatService.services;
 
+import com.LakePayProj.chatService.DTOs.ChatRoomDTO;
+import com.LakePayProj.chatService.mappers.IChatRoomMapper;
 import com.LakePayProj.chatService.models.ChatRoom;
 import com.LakePayProj.chatService.models.User;
 import com.LakePayProj.chatService.repository.IChatRoomRepository;
@@ -13,6 +15,7 @@ import java.util.Optional;
 @AllArgsConstructor
 public class ChatRoomService {
     private IChatRoomRepository repository;
+    private IChatRoomMapper chatRoomMapper;
 
     public Optional<String> getChatId(User sender, User recipient, boolean createIfNotExist) {
         return repository
@@ -34,10 +37,10 @@ public class ChatRoomService {
                 });
     }
 
-    public List<String> getChatList(String username) {
+    public List<ChatRoomDTO> getChatList(String username) {
         return repository.findByRecipientUsername(username)
                 .stream()
-                .map(room -> room.getRecipient().getUsername())
+                .map(chatRoomMapper::toDTO)
                 .toList();
     }
 
