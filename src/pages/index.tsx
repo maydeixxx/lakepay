@@ -1,49 +1,49 @@
 // TODO: Fetch popular categories from server
-import game from "@/assets/cs2.webp";
 import { Card } from "@/components/Card";
 import { Button } from "@/components/Button";
 import { FavouriteIcon } from "@/icons/FavouriteIcon";
 import { NavLink } from "react-router";
-import { categories } from "@/config";
+import { ALL_ADS_URL, categories } from "@/config";
 import { ProductView } from "@/components/ProductView";
-
-// TODO: Fetch new ads from server
-const products = [
-  {
-    title: "Название товара",
-    description: "Lorem Ipsum is simply dummy text of the...",
-    photo: game,
-    price: 1000,
-    favourite: false,
-    id: 1
-  },
-  {
-    title: "Название товара",
-    description: "Lorem Ipsum is simply dummy text of the...",
-    photo: game,
-    price: 2000,
-    favourite: true,
-    id: 2
-  },
-  {
-    title: "Название товара",
-    description: "Lorem Ipsum is simply dummy text of the...",
-    photo: game,
-    price: 3000,
-    favourite: false,
-    id: 3
-  },
-  {
-    title: "Название товара",
-    description: "Lorem Ipsum is simply dummy text of the...",
-    photo: game,
-    price: 4000,
-    favourite: false,
-    id: 4
-  }
-];
+import { useEffect, useRef, useState } from "react";
+import type { Product } from "@/types";
+import { photoFromCategory } from "@/utils";
 
 export default function Home() {
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [products, setProducts] = useState<Product[] | null>(null);
+
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      abortControllerRef.current?.abort();
+      abortControllerRef.current = new AbortController();
+
+      setIsLoading(true);
+
+      try {
+        const response = await fetch(ALL_ADS_URL, {
+          signal: abortControllerRef.current?.signal
+        });
+        const products = (await response.json()) as Product[];
+        setProducts(products);
+      } catch (e: any) {
+        if (e.name === "AbortError") {
+          console.log("Aborted");
+          return;
+        }
+
+        setError(e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
   return (
     <>
       <section className="container mx-auto py-16">
@@ -63,9 +63,20 @@ export default function Home() {
       <section className="container mx-auto py-16">
         <h1 className="text-secondary text-4xl mb-8">Новые объявления</h1>
         <div className="flex flex-col gap-8">
-          {products.map((product) => (
-            <ProductView product={product} />
-          ))}
+          {products &&
+            products.slice(0, 5).map((product) => (
+              <ProductView
+                show_favourite={true}
+                product={{
+                  id: product.id,
+                  title: product.title,
+                  description: product.body,
+                  price: product.price,
+                  photo: photoFromCategory(product.category),
+                  favourite: false
+                }}
+              />
+            ))}
           <Card className="p-4 gap-0 min-h-32 justify-center">
             <h4 className="mb-4 font-bold">
               Хотите посмотреть больше аккаунтов?

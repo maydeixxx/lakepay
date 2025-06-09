@@ -2,9 +2,33 @@ import { Button } from "@/components/Button";
 import { NavLink, useParams } from "react-router";
 import cartIcon from "@/assets/cart.svg";
 import userIcon from "@/assets/user.svg";
+import { useEffect, useState } from "react";
+import type { Product } from "@/types";
+import { GET_AD_URL } from "@/config";
 
 export default function ProductPage() {
   let { productId } = useParams<{ productId?: string }>();
+  const [loading, setLoading] = useState(false);
+  const [product, setProduct] = useState<Product | null>(null);
+
+  // Load users ads
+  useEffect(() => {
+    setLoading(true);
+    fetch(GET_AD_URL + productId)
+      .then((res) => {
+        if (res.ok) {
+          return res.json();
+        } else {
+          return null;
+        }
+      })
+      .then((data) => {
+        if (data) {
+          setProduct(data);
+        }
+        setLoading(false);
+      });
+  }, [productId]);
 
   return (
     <>

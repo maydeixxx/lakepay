@@ -1,5 +1,13 @@
 export type LoadingStatus = "idle" | "loading" | "succeeded" | "failed";
 
+export type GameCategories = "pubg" | "cs2" | "fortnite" | "deadlock" | "dota2";
+
+export type GameCategory = {
+  title: string;
+  name: GameCategories;
+  photo: string;
+};
+
 export type User = {
   id: number;
   username: string;
@@ -16,11 +24,12 @@ export interface Product {
   id: number;
   title: string;
   body: string;
-  category: string;
-  countOfViews: number;
+  category: GameCategories;
+  price: number;
   quantity: number;
   dateOfPush: Date;
   sold: boolean;
+  sellerId: number;
 }
 
 /**

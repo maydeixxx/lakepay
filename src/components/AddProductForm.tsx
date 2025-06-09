@@ -21,7 +21,7 @@ import {
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAppSelector } from "@/redux/store";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import SpinnerIcon from "@/icons/SpinnerIcon";
 
 const formSchema = z.object({
@@ -51,54 +51,64 @@ const formSchema = z.object({
 
 export function AddProductForm() {
   const { token, user } = useAppSelector((state) => state.auth);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [succeeded, setSucceeded] = useState(false);
+
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = new AbortController();
+
+    setIsLoading(true);
+    try {
+      const response = await fetch(ADD_AD_URL, {
+        method: "post",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          title: values.title,
+          body: values.description,
+          category: values.category,
+          price: values.price,
+          quantity: values.quantity,
+          sellerId: user?.id.toString(),
+          sold: false
+        })
+      });
+
+      if (response.ok) {
+        setSucceeded(true);
+      }
+    } catch (e: any) {
+      if (e.name === "AbortError") {
+        console.log("Aborted");
+        return;
+      }
+
+      setError(e);
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema)
   });
 
-  const [loading, setLoading] = useState(false);
-  const [succeeded, setSucceeded] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    setLoading(true);
-    const res = await fetch(ADD_AD_URL, {
-      method: "post",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        title: values.title,
-        body: values.description,
-        category: values.category,
-        price: values.price,
-        quantity: values.quantity,
-        sellerId: user?.id.toString(),
-        sold: false
-      })
-    });
-
-    if (res.ok) {
-      setLoading(false);
-      setSucceeded(true);
-    } else {
-      const error = await res.text();
-      console.error(error);
-      setError(error);
-    }
-  }
-
   function resetForm() {
     form.reset();
-    setLoading(false);
+    setIsLoading(false);
     setSucceeded(false);
     setError(null);
   }
 
   return (
     <>
-      {loading && (
+      {isLoading && (
         <div className="flex w-full items-center justify-center py-16">
           <SpinnerIcon className="text-primary size-16" />
         </div>
@@ -115,7 +125,7 @@ export function AddProductForm() {
         </div>
       )}
 
-      {!loading && !succeeded && (
+      {!isLoading && !succeeded && (
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <FormField

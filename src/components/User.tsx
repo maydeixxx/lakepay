@@ -1,7 +1,7 @@
-import type { User } from "@/types";
+import type { Product, User } from "@/types";
 import { Button } from "@/components/Button";
 import { ChatIcon } from "@/icons/ChatIcon";
-import { useAppDispatch } from "@/redux/store";
+import { useAppDispatch, useAppSelector } from "@/redux/store";
 import { authLogout } from "@/features/auth/authActions";
 import { useNavigate } from "react-router";
 import {
@@ -13,52 +13,57 @@ import {
   DialogTrigger
 } from "@/components/Dialog";
 import { AddProductForm } from "@/components/AddProductForm";
-import game from "@/assets/cs2.webp";
 import { ProductView } from "./ProductView";
+import { useEffect, useRef, useState } from "react";
+import { PERSONAL_ADS_URL } from "@/config";
+import { photoFromCategory } from "@/utils";
 
 export interface UserViewProps {
   user: User;
   type: "personal" | "public";
 }
 
-const products = [
-  {
-    title: "Название товара",
-    description: "Lorem Ipsum is simply dummy text of the...",
-    photo: game,
-    price: 1000,
-    favourite: false,
-    id: 1
-  },
-  {
-    title: "Название товара",
-    description: "Lorem Ipsum is simply dummy text of the...",
-    photo: game,
-    price: 2000,
-    favourite: true,
-    id: 2
-  },
-  {
-    title: "Название товара",
-    description: "Lorem Ipsum is simply dummy text of the...",
-    photo: game,
-    price: 3000,
-    favourite: false,
-    id: 3
-  },
-  {
-    title: "Название товара",
-    description: "Lorem Ipsum is simply dummy text of the...",
-    photo: game,
-    price: 4000,
-    favourite: false,
-    id: 4
-  }
-];
-
 function UserView({ user, type }: UserViewProps) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const { token } = useAppSelector((state) => state.auth);
+
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [products, setProducts] = useState<Product[] | null>(null);
+
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      abortControllerRef.current?.abort();
+      abortControllerRef.current = new AbortController();
+
+      setIsLoading(true);
+
+      try {
+        const response = await fetch(PERSONAL_ADS_URL, {
+          signal: abortControllerRef.current?.signal,
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        const products = (await response.json()) as Product[];
+        setProducts(products);
+      } catch (e: any) {
+        if (e.name === "AbortError") {
+          console.log("Aborted");
+          return;
+        }
+
+        setError(e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   // TODO: Confirmation dialog before logout
   const onLogoutHandler = () => {
@@ -96,10 +101,20 @@ function UserView({ user, type }: UserViewProps) {
           </DialogContent>
         </Dialog>
 
-        {/* TODO: Load users ads */}
-        {products.map((product) => (
-          <ProductView show_favourite={false} product={product} />
-        ))}
+        {products &&
+          products.map((product) => (
+            <ProductView
+              show_favourite={false}
+              product={{
+                id: product.id,
+                title: product.title,
+                description: product.body,
+                price: product.price,
+                photo: photoFromCategory(product.category),
+                favourite: false
+              }}
+            />
+          ))}
       </section>
 
       <section className="container mx-auto mb-16">
