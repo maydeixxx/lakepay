@@ -9,7 +9,7 @@ export type User = {
   tgId?: number;
   balance?: number;
   subscriptions?: string[];
-  role?: string;
+  roles?: string[];
 };
 
 export interface Product {

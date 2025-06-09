@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 /* 1. Use a more-intuitive box-sizing model */
 *,
