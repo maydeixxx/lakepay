@@ -1,78 +1,129 @@
 import { Button } from "@/components/Button";
 import { NavLink, useParams } from "react-router";
 import cartIcon from "@/assets/cart.svg";
-import userIcon from "@/assets/user.svg";
-import { useEffect, useState } from "react";
-import type { Product } from "@/types";
-import { GET_AD_URL } from "@/config";
+import { useEffect, useRef, useState } from "react";
+import type { Product, User } from "@/types";
+import { GET_AD_URL, USERS_URL } from "@/config";
+import UserIcon from "@/icons/UserIcon";
+import { photoFromCategory } from "@/utils";
+import SpinnerIcon from "@/icons/SpinnerIcon";
 
 export default function ProductPage() {
   let { productId } = useParams<{ productId?: string }>();
-  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [product, setProduct] = useState<Product | null>(null);
+  const [seller, setSeller] = useState<User | null>(null);
 
-  // Load users ads
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   useEffect(() => {
-    setLoading(true);
-    fetch(GET_AD_URL + productId)
-      .then((res) => {
-        if (res.ok) {
-          return res.json();
-        } else {
-          return null;
+    const fetchProducts = async () => {
+      abortControllerRef.current?.abort();
+      abortControllerRef.current = new AbortController();
+
+      setIsLoading(true);
+
+      try {
+        const response = await fetch(`${GET_AD_URL}/${productId}`, {
+          signal: abortControllerRef.current?.signal
+        });
+        const product = (await response.json()) as Product;
+        setProduct(product);
+      } catch (e: any) {
+        if (e.name === "AbortError") {
+          console.log("Aborted");
+          return;
         }
-      })
-      .then((data) => {
-        if (data) {
-          setProduct(data);
+
+        setError(e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  useEffect(() => {
+    const fetchSeller = async () => {
+      abortControllerRef.current?.abort();
+      abortControllerRef.current = new AbortController();
+
+      setIsLoading(true);
+
+      try {
+        const response = await fetch(`${USERS_URL}/${product?.id}`, {
+          signal: abortControllerRef.current?.signal
+        });
+        const seller = (await response.json()) as User;
+        setSeller(seller);
+      } catch (e: any) {
+        if (e.name === "AbortError") {
+          console.log("Aborted");
+          return;
         }
-        setLoading(false);
-      });
-  }, [productId]);
+
+        setError(e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (product) {
+      fetchSeller();
+    }
+  }, [product]);
+
+  if (isLoading) {
+    return (
+      <>
+        <section className="container mx-auto flex w-full justify-center h-96 items-center">
+          <SpinnerIcon className="text-primary size-16" />
+        </section>
+      </>
+    );
+  }
 
   return (
     <>
       <section className="container mx-auto py-16 flex flex-col">
-        <h1 className="text-secondary text-4xl mb-12">Название товара</h1>
+        <h1 className="text-secondary text-4xl mb-12">{product?.title}</h1>
         <div className="flex gap-8 mb-12 flex-wrap md:flex-nowrap">
           <img
-            src="https://placehold.co/600x400"
+            src={photoFromCategory(product?.category || "cs2")}
             className="rounded-xl md:basis-1/2 w-full h-full"
           />
           <div className="flex flex-col gap-4 md:basis-1/2">
-            <h2 className="text-secondary text-3xl w-full">Цена: $100</h2>
+            <h2 className="text-secondary text-3xl w-full">
+              Цена: {product?.price}Р
+            </h2>
             <div className="flex gap-4 py-4">
               <Button variant="secondary">
                 <img src={cartIcon} alt="" />
               </Button>
               <Button variant="secondary">Купить сейчас</Button>
             </div>
-            <NavLink to={`/user/1`} className="flex items-center gap-4">
-              <img src={userIcon} alt="" />
-              <p className="text-secondary">SellerName</p>
+            <NavLink
+              to={`/user/${seller?.id}`}
+              className="flex items-center gap-4"
+            >
+              {seller?.urlPhoto ? (
+                <img
+                  className="size-16 rounded-xl border-secondary border-2"
+                  src={seller.urlPhoto}
+                />
+              ) : (
+                <UserIcon className="text-secondary" />
+              )}
+              <p className="text-secondary">@{seller?.username}</p>
             </NavLink>
-            <p className="text-secondary">Продаж: 123</p>
+            <p className="text-secondary">В наличии: {product?.quantity}</p>
+            <p className="text-secondary">Опубликован: {product?.dateOfPush}</p>
           </div>
         </div>
         <h2 className="text-secondary text-3xl mb-12">Описание:</h2>
-        <p className="text-secondary text-justify">
-          Многие думают, что Lorem Ipsum - взятый с потолка псевдо-латинский
-          набор слов, но это не совсем так. Его корни уходят в один фрагмент
-          классической латыни 45 года н.э., то есть более двух тысячелетий
-          назад. Ричард МакКлинток, профессор латыни из колледжа Hampden-Sydney,
-          штат Вирджиния, взял одно из самых странных слов в Lorem Ipsum,
-          "consectetur", и занялся его поисками в классической латинской
-          литературе. В результате он нашёл неоспоримый первоисточник Lorem
-          Ipsum в разделах 1.10.32 и 1.10.33 книги "de Finibus Bonorum et
-          Malorum" ("О пределах добра и зла"), написанной Цицероном в 45 году
-          н.э. Этот трактат по теории этики был очень популярен в эпоху
-          Возрождения. Первая строка Lorem Ipsum, "Lorem ipsum dolor sit
-          amet..", происходит от одной из строк в разделе 1.10.32 Классический
-          текст Lorem Ipsum, используемый с XVI века, приведён ниже. Также даны
-          разделы 1.10.32 и 1.10.33 "de Finibus Bonorum et Malorum" Цицерона и
-          их английский перевод, сделанный H. Rackham, 1914 год.
-        </p>
-        {productId}
+        <p className="text-secondary text-justify">{product?.body}</p>
       </section>
     </>
   );

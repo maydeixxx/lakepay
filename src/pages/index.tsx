@@ -50,7 +50,10 @@ export default function Home() {
         <h1 className="text-secondary text-4xl mb-8">Популярные категории</h1>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {categories.map((category) => (
-            <Card className="bg-background py-0 overflow-hidden">
+            <Card
+              key={category.name}
+              className="bg-background py-0 overflow-hidden"
+            >
               <NavLink to={`/category/${category.name}`}>
                 <img src={category.photo} alt={`Photo of ${category.title}`} />
                 <h4 className="text-center py-2 font-bold">{category.title}</h4>
@@ -66,6 +69,7 @@ export default function Home() {
           {products &&
             products.slice(0, 5).map((product) => (
               <ProductView
+                key={product.id}
                 show_favourite={true}
                 product={{
                   id: product.id,

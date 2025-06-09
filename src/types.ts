@@ -27,7 +27,7 @@ export interface Product {
   category: GameCategories;
   price: number;
   quantity: number;
-  dateOfPush: Date;
+  dateOfPush: string;
   sold: boolean;
   sellerId: number;
 }

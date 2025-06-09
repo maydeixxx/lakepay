@@ -1,8 +1,8 @@
 export const SERVER_URL = "http://localhost:8990/";
-export const USERS_URL = SERVER_URL + "user_id/";
+export const USERS_URL = SERVER_URL + "user_id";
 export const PROFILE_URL = SERVER_URL + "user_info";
 export const ADD_AD_URL = SERVER_URL + "save_ad";
-export const GET_AD_URL = SERVER_URL + "ad_id/";
+export const GET_AD_URL = SERVER_URL + "ad_id";
 export const PERSONAL_ADS_URL = SERVER_URL + "personal_ads";
 export const ALL_ADS_URL = SERVER_URL + "all_ads";
 export const AUTH_URL = SERVER_URL + "auth/telegram/token";

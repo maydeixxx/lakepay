@@ -51,7 +51,7 @@ export const fetchUser =
   async (dispatch) => {
     dispatch(loadingUser());
     try {
-      const response = await fetch(USERS_URL + userId);
+      const response = await fetch(`${USERS_URL}/${userId}`);
       const data: User = await response.json();
       dispatch(succeededLoadingUser(data));
     } catch (e) {
