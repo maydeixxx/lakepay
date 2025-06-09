@@ -9,6 +9,7 @@ import com.LakePayProj.adService.infrastructure.AdEntity;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -41,6 +42,23 @@ public class AdController {
     public ResponseEntity<?> findAllAds() {
         try {
             List<AdDto> ads = service.findAllAds()
+                    .stream()
+                    .map(mapper::adDomainToDto)
+                    .toList();
+            if (ads.isEmpty()) {
+                return ResponseEntity.badRequest().body("There are no ads :(");
+            }
+            return ResponseEntity.ok(ads);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/personal_ads")
+    public ResponseEntity<?> findPersonalAds() {
+        String sellerId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        try {
+            List<AdDto> ads = service.findAdsBySellerId(Long.valueOf(sellerId))
                     .stream()
                     .map(mapper::adDomainToDto)
                     .toList();

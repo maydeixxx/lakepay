@@ -8,4 +8,5 @@ import java.util.List;
 public interface IAdRepository extends JpaRepository<AdEntity, Long> {
     AdEntity findAdById(Long id);
     List<AdEntity> findAdsByCategory(String category);
+    List<AdEntity> findAdsBySellerId(Long sellerId);
 }

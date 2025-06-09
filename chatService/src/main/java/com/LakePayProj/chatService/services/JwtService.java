@@ -31,8 +31,10 @@ public class JwtService {
         List<String> roles = user.getRoles().stream().map(Role::getName).toList();
         claims.put("id", user.getId());
         claims.put("tgId", user.getTgId());
+        claims.put("username", user.getUsername());
         claims.put("roles", roles);
         claims.put("urlPhoto", user.getUrlPhoto());
+        claims.put("dateOfReg", user.getDateOfReg().toString());
 
         Date issuedDate = new Date();
         Date expiredDate = new Date(issuedDate.getTime() + lifetime.toMillis());
@@ -47,10 +49,6 @@ public class JwtService {
 
     public String getUsername(String token) {
         return getFromToken(token).getSubject();
-    }
-
-    public String getUserId(String token) {
-        return getFromToken(token).get("id").toString();
     }
 
     public List<String> getRoles(String token) {
@@ -72,5 +70,4 @@ public class JwtService {
     private boolean isTokenExpired(String token) {
         return getFromToken(token).getExpiration().before(new Date());
     }
-
 }

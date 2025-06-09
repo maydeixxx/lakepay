@@ -1,6 +1,5 @@
 package com.LakePayProj.chatService.models;
 
-import com.LakePayProj.chatService.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,6 +8,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 
@@ -20,10 +21,13 @@ import java.util.List;
 public class User implements UserDetails {
     @Id
     private Long id;
-    private Long tgId;
     private String username;
+    private List<String> subscriptions;
+    private Long tgId;
+    private Long chatId;
     private String urlPhoto;
-
+    private LocalDate dateOfReg;
+    private BigDecimal balance;
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "users_roles",

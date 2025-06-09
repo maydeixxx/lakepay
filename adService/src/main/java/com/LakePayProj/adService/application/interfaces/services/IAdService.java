@@ -12,6 +12,7 @@ public interface IAdService {
     void deleteAdById(Long id);
     Ad findAdById(Long id);
     List<Ad> findAllAds();
+    List<Ad> findAdsBySellerId(Long sellerId);
     List<Ad> findAdsByCategory(String category);
     void updateAd(Long id, Map<String, Object> updates);
 }

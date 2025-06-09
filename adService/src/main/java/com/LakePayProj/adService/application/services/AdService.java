@@ -66,4 +66,12 @@ public class AdService implements IAdService {
                 .map(mapper::adEntityToAdDomain)
                 .toList();
     }
+
+    @Override
+    public List<Ad> findAdsBySellerId(Long sellerId) {
+        List<AdEntity> ads = repository.findAdsBySellerId(sellerId);
+        return ads.stream()
+                .map(mapper::adEntityToAdDomain)
+                .toList();
+    }
 }

@@ -33,13 +33,9 @@ public class SecurityConfiguration {
                 .cors(AbstractHttpConfigurer::disable)
                 // Настройка доступа к конечным точкам
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("/delete_user/").hasRole("ADMIN")
-                        .requestMatchers("/save_user").hasRole("ADMIN")
-                        .requestMatchers("/add_role").permitAll()
-                        //auth
-                        .requestMatchers("/auth/").permitAll()
-                        .requestMatchers("/auth/telegram").permitAll()
-                        .requestMatchers("/auth/telegram/token").permitAll()
+                        .requestMatchers("/save_user", "/delete_user/*").hasRole("ADMIN")
+                        .requestMatchers("/add_role", "/get_roles").permitAll()
+                        .requestMatchers("/auth/**", "/user_id/*").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
