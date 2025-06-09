@@ -1,4 +1,4 @@
-import { useForm, type SubmitHandler } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { Input } from "./Input";
 import {
   Select,
@@ -8,55 +8,132 @@ import {
   SelectValue
 } from "./Select";
 import { categories } from "@/config";
+import { Textarea } from "./TextArea";
+import { Button } from "./Button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from "./Form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 type Inputs = {
   title: string;
   category: string;
-
-  exampleRequired: string;
+  description: string;
+  details: string;
+  errorInput: string;
 };
 
+const formSchema = z.object({
+  title: z.string({ required_error: "Пожалуйста введите название." }),
+  category: z.string({
+    required_error: "Пожалуйста выберите категорию товара."
+  }),
+  description: z
+    .string({ required_error: "Пожалуйста введите описание товара." })
+    .max(150, "Описание не может быть длинее 150 символов."),
+  details: z.string({
+    required_error: "Пожалуйста введите детали от аккаунта."
+  })
+});
+
 export function ProductForm() {
-  const {
-    register,
-    handleSubmit,
-    watch,
-    formState: { errors }
-  } = useForm<Inputs>();
-  const onSubmit: SubmitHandler<Inputs> = (data) => console.log(data);
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema)
+  });
+
+  function onSubmit(values: z.infer<typeof formSchema>) {
+    console.log(values);
+  }
 
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="flex flex-col gap-4 py-8"
-    >
-      <label htmlFor="title" className="text-secondary">
-        Название:
-      </label>
-      <Input
-        placeholder="Введите название..."
-        {...register("title", { required: true })}
-        className="bg-input"
-      />
-      <Select {...register("category", { required: true })}>
-        <SelectTrigger className="border-primary w-full">
-          <SelectValue placeholder="Выберите категорию..." />
-        </SelectTrigger>
-        <SelectContent>
-          {categories.map((category) => (
-            <SelectItem value={category.name} key={category.name}>
-              {category.title}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Input {...register("exampleRequired", { required: true })} />
-      {/* errors will return when field validation fails  */}
-      {errors.exampleRequired && (
-        <span className="text-destructive">Пожалуйста заполните все поля.</span>
-      )}
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-secondary">Название:</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Введите название..."
+                  className="bg-on-card! placeholder:text-on-card-foreground"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="category"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-secondary">Категория:</FormLabel>
+              <FormControl>
+                <Select {...field}>
+                  <SelectTrigger className="w-full bg-secondary! data-[placeholder]:text-secondary-foreground text-secondary-foreground">
+                    <SelectValue placeholder="Выберите категорию..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-secondary text-secondary-foreground">
+                    {categories.map((category) => (
+                      <SelectItem value={category.name} key={category.name}>
+                        {category.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-secondary">Название:</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Введите описание..."
+                  {...field}
+                  className="resize-none h-32 bg-on-card! placeholder:text-on-card-foreground"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="details"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-secondary">Данные:</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Введите данные..."
+                  className="bg-on-card placeholder:text-on-card-foreground"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-      <Input type="submit" />
-    </form>
+        <Button variant="secondary" type="submit">
+          Опубликовать объявление
+        </Button>
+      </form>
+    </Form>
   );
 }

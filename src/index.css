@@ -93,6 +93,9 @@ h6 {
 
   --color-input: oklch(1 0 0 / 0.15);
 
+  --color-on-card: oklch(0.82 0 none);
+  --color-on-card-foreground: oklch(0.53 0 none);
+
   --color-muted: oklch(0.269 0 0);
   --color-muted-foreground: oklch(0.708 0 0);
 }

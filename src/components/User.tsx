@@ -49,7 +49,7 @@ function UserView({ user, type }: UserViewProps) {
           <DialogTrigger asChild>
             <Button variant="secondary">Добавить объявление</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="gap-8">
             <DialogHeader>
               <DialogTitle>Создать объявление</DialogTitle>
             </DialogHeader>
