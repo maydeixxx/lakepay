@@ -5,6 +5,7 @@ import { thunk, type ThunkAction } from "redux-thunk";
 import type { UserAction } from "@/features/user/userActions";
 import type { AuthAction } from "@/features/auth/authActions";
 import type { CartAction } from "@/features/cart/cartActions";
+import type { ChatRoomAction } from "@/features/chat/chatRoomActions";
 
 const middleware = applyMiddleware(thunk);
 export const store = createStore(rootReducer, {}, middleware);
@@ -16,7 +17,7 @@ export type AppThunk<ReturnType = void> = ThunkAction<
   ReturnType,
   RootState,
   unknown,
-  UserAction | AuthAction | CartAction
+  UserAction | AuthAction | CartAction | ChatRoomAction
 >;
 
 export const useAppDispatch = useDispatch.withTypes<AppDispatch>();

@@ -1,6 +1,6 @@
 import { CHAT_INFO } from "@/config";
 import { useAppSelector } from "@/redux/store";
-import type { ChatRoom } from "@/types";
+import type { ChatMessage, ChatRoom } from "@/types";
 import { useEffect, useRef, useState } from "react";
 import { Card } from "./Card";
 import { ChatHistory } from "./ChatHistory";
@@ -17,75 +17,56 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Input } from "./Input";
 import { Button } from "./Button";
+import { useStompClient } from "react-stomp-hooks";
+import { useChatRoom } from "@/hooks/useChatRoom";
 
 export interface ChatViewProps extends React.ComponentProps<"div"> {
   chatId: string;
 }
 
-const formSchema = z.object({
-  message: z.string({ required_error: "" })
-});
-
 export function ChatView({ chatId, className, ...props }: ChatViewProps) {
-  const { token } = useAppSelector((state) => state.auth);
+  const stompClient = useStompClient();
+  const { info, pushMessage } = useChatRoom(chatId);
 
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [chatRoom, setChatRoom] = useState<ChatRoom | null>(null);
-
-  const abortControllerRef = useRef<AbortController | null>(null);
-
-  useEffect(() => {
-    const fetchChats = async () => {
-      abortControllerRef.current?.abort();
-      abortControllerRef.current = new AbortController();
-
-      setIsLoading(true);
-
-      try {
-        const response = await fetch(`${CHAT_INFO}/${chatId}`, {
-          signal: abortControllerRef.current?.signal,
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-        const chatRoom = (await response.json()) as ChatRoom;
-        setChatRoom(chatRoom);
-      } catch (e: any) {
-        if (e.name === "AbortError") {
-          console.log("Aborted");
-          return;
-        }
-
-        setError(e);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchChats();
-  }, []);
+  const formSchema = z.object({
+    message: z.string({ required_error: "" })
+  });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema)
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+    const newMessage = {
+      sender: info?.sender,
+      recipient: info?.recipient,
+      content: values.message,
+      date: new Date().toISOString()
+    } as ChatMessage;
+    console.log(newMessage);
+
+    if (stompClient) {
+      stompClient.publish({
+        destination: "/chat/send",
+        body: JSON.stringify(newMessage)
+      });
+      pushMessage(newMessage);
+      form.setValue("message", "");
+    }
   }
 
   return (
     <>
-      <section className="h-full flex flex-col gap-4">
+      <section className="h-full flex flex-col gap-4  max-h-[calc(100vh-16rem)]">
         <Card className="w-full bg-on-card-dark p-4 flex-row items-center gap-4 text-on-card-dark-foreground">
           <img
-            src={chatRoom?.recipient.urlPhoto}
+            src={info?.recipient.urlPhoto}
             alt=""
             className="size-12 rounded-full"
           />
-          <span>{chatRoom?.recipient.username}</span>
+          <span>{info?.recipient.username}</span>
         </Card>
-        <ChatHistory chatId={chatId} />
+        <ChatHistory className="overflow-y-auto" chatId={chatId} />
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex gap-4">
             <FormField

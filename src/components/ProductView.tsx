@@ -7,7 +7,6 @@ import { useAppDispatch, useAppSelector } from "@/redux/store";
 import { addToCart, removeFromCart } from "@/features/cart/cartActions";
 import type { Product } from "@/types";
 import { TrashIcon } from "@/icons/TrashIcon";
-import { AddIcon } from "@/icons/AddIcon";
 import { CartIcon } from "@/icons/CartIcon";
 import XIcon from "@/icons/XIcon";
 import { ADS_DELETE } from "@/config";

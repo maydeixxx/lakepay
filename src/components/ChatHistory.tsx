@@ -3,57 +3,62 @@ import { useAppSelector } from "@/redux/store";
 import type { ChatMessage } from "@/types";
 import { cn } from "@/utils";
 import { useEffect, useRef, useState } from "react";
+import { useStompClient, useSubscription } from "react-stomp-hooks";
+import { Card } from "./Card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from "./Form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Input } from "./Input";
+import { Button } from "./Button";
+import { useChatRoom } from "@/hooks/useChatRoom";
 
 export interface ChatHistoryProps extends React.ComponentProps<"div"> {
   chatId: string;
 }
 
 export function ChatHistory({ chatId, className, ...props }: ChatHistoryProps) {
-  const { token } = useAppSelector((state) => state.auth);
+  const { user } = useAppSelector((state) => state.auth);
+  const { history, info, pushMessage } = useChatRoom(chatId);
 
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[] | null>(null);
-
-  const abortControllerRef = useRef<AbortController | null>(null);
-
-  useEffect(() => {
-    const fetchChats = async () => {
-      abortControllerRef.current?.abort();
-      abortControllerRef.current = new AbortController();
-
-      setIsLoading(true);
-
-      try {
-        const response = await fetch(`${CHAT_HISTORY}/${chatId}`, {
-          signal: abortControllerRef.current?.signal,
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-        const chatMessages = (await response.json()) as ChatMessage[];
-        setChatMessages(chatMessages);
-      } catch (e: any) {
-        if (e.name === "AbortError") {
-          console.log("Aborted");
-          return;
-        }
-
-        setError(e);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchChats();
-  }, []);
+  useSubscription("/user/queue/messages", (message) =>
+    pushMessage(JSON.parse(message.body))
+  );
 
   return (
     <>
-      <section className={cn("w-full flex-col justify-end h-full", className)}>
-        {chatMessages &&
-          chatMessages.map((msg) => (
-            <span key={JSON.stringify(msg)}>{msg.content}</span>
+      <section className={cn("w-full h-full flex flex-col gap-4", className)}>
+        {history &&
+          history.map((msg) => (
+            <Card
+              className={cn(
+                "bg-on-card-dark flex flex-col gap-2 p-4 w-fit",
+                msg.sender.id == user?.id ? "ml-auto" : ""
+              )}
+              key={JSON.stringify(msg)}
+            >
+              <div
+                className={cn(
+                  "flex flex-row items-center gap-4",
+                  msg.sender.id == user?.id ? "flex-row-reverse" : ""
+                )}
+              >
+                <img
+                  src={msg.sender.urlPhoto}
+                  alt=""
+                  className="rounded-full size-12"
+                />
+                <span>{msg.sender.username}</span>
+              </div>
+              <span>{msg.content}</span>
+            </Card>
           ))}
       </section>
     </>

@@ -21,6 +21,8 @@ export const WITHDRAW_URL = SERVER_URL + "withdraw";
 export const SUBSCRIBE_URL = SERVER_URL + "subscribe";
 export const UNSUBSCRIBE_URL = SERVER_URL + "unsubscribe";
 
+export const WS_URL = SERVER_URL + "ws";
+
 import cs2 from "@/assets/cs2.webp";
 import dota2 from "@/assets/dota2.jpg";
 import deadlock from "@/assets/deadlock.jpg";

@@ -1,6 +1,7 @@
 import {
   ADS_ALL_URL,
   ADS_CATEGORY_URL,
+  ADS_DELETE,
   ADS_PERSONAL_URL,
   USERS_URL
 } from "@/config";
@@ -65,10 +66,24 @@ export function useProducts({ category, personal }: ProductHookProps) {
     fetchProducts();
   }, [category, personal]);
 
+  const deleteProduct = async (productId: string, userId: string) => {
+    const response = await fetch(`${ADS_DELETE}/${productId}`, {
+      method: "delete",
+      body: JSON.stringify({
+        userId: userId
+      }),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      }
+    });
+  };
+
   return {
     products,
     error,
     isLoading,
+    deleteProduct,
     invalidate: fetchProducts
   };
 }

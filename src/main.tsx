@@ -17,6 +17,9 @@ import CategoryPage from "./pages/category";
 import ChatsPage from "./pages/chat";
 import CartPage from "./pages/cart";
 
+import { StompSessionProvider, useSubscription } from "react-stomp-hooks";
+import { WS_URL } from "./config";
+
 const router = createBrowserRouter([
   {
     path: "/",
