@@ -47,6 +47,7 @@ public class AdController {
             List<AdDto> ads = service.findAllAds()
                     .stream()
                     .map(mapper::adDomainToDto)
+                    .filter(adDto -> adDto.getSold().equals(false))
                     .toList();
             if (ads.isEmpty()) {
                 return ResponseEntity.badRequest().body("There are no ads :(");

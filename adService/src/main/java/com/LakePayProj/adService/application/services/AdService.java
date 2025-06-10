@@ -3,7 +3,6 @@ package com.LakePayProj.adService.application.services;
 import com.LakePayProj.adService.application.interfaces.mappers.IAdMapper;
 import com.LakePayProj.adService.application.interfaces.repositories.IAdRepository;
 import com.LakePayProj.adService.application.interfaces.services.IAdService;
-import com.LakePayProj.adService.application.services.kafka.AdProducer;
 import com.LakePayProj.adService.domain.Ad;
 import com.LakePayProj.adService.infrastructure.AdEntity;
 import lombok.AllArgsConstructor;
