@@ -13,6 +13,8 @@ import UserPage from "@/pages/user.tsx";
 import LoginPage from "@/pages/login.tsx";
 import ProfilePage from "@/pages/profile";
 import ProductPage from "./pages/product";
+import CategoryPage from "./pages/category";
+import ChatsPage from "./pages/chat";
 
 const router = createBrowserRouter([
   {
@@ -25,6 +27,14 @@ const router = createBrowserRouter([
       { path: "/login", Component: LoginPage },
       { path: "/user/:userId", Component: UserPage },
       { path: "/product/:productId", Component: ProductPage },
+      { path: "/category/:categoryId", Component: CategoryPage },
+      {
+        path: "/chat",
+        children: [
+          { index: true, Component: ChatsPage },
+          { path: ":chatId", Component: ChatsPage }
+        ]
+      },
       { path: "*", Component: NotFoundPage }
     ]
   }

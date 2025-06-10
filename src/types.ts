@@ -32,6 +32,25 @@ export interface Product {
   sellerId: number;
 }
 
+export interface ChatRoomUser {
+  id: number;
+  username: string;
+  urlPhoto: string;
+}
+
+export interface ChatRoom {
+  id: number;
+  sender: ChatRoomUser;
+  recipient: ChatRoomUser;
+}
+
+export interface ChatMessage {
+  sender: ChatRoomUser;
+  recipient: ChatRoomUser;
+  content: string;
+  date: string;
+}
+
 /**
  * The data received from Telegram when the user is authenticated.
  *

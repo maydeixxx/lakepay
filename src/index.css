@@ -78,7 +78,7 @@ h6 {
   --color-gradient-top: #1a1c2a;
   --color-gradient-bottom: #2d1e3a;
 
-  --color-popover: #ffffff;
+  --color-popover: oklch(1 0 0);
   --color-popover-foreground: #010101;
   --color-primary: oklch(0.8242 0.2164 128.31);
   --color-primary-foreground: oklch(0.4 0.156 127.71);
@@ -88,7 +88,7 @@ h6 {
   --color-card-foreground: oklch(0 0 0);
 
   --color-background: oklch(0.8853 0 0);
-  --color-foreground: #000000;
+  --color-foreground: oklch(0 0 0);
   --color-destructive: oklch(0.5385 0.2154 9.6);
 
   --color-input: oklch(1 0 0 / 0.15);
@@ -98,6 +98,12 @@ h6 {
 
   --color-muted: oklch(0.269 0 0);
   --color-muted-foreground: oklch(0.708 0 0);
+
+  --color-card-dark: oklch(0.3794 0.0363 309.55);
+  --color-card-dark-foreground: oklch(1 0 0);
+
+  --color-on-card-dark: oklch(0.6862 0 0);
+  --color-on-card-dark-foreground: oklch(1 0 0);
 }
 
 @layer utilities {

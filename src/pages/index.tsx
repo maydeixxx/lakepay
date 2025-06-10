@@ -3,7 +3,7 @@ import { Card } from "@/components/Card";
 import { Button } from "@/components/Button";
 import { FavouriteIcon } from "@/icons/FavouriteIcon";
 import { NavLink } from "react-router";
-import { ALL_ADS_URL, categories } from "@/config";
+import { ADS_ALL_URL, categories } from "@/config";
 import { ProductView } from "@/components/ProductView";
 import { useEffect, useRef, useState } from "react";
 import type { Product } from "@/types";
@@ -24,7 +24,7 @@ export default function Home() {
       setIsLoading(true);
 
       try {
-        const response = await fetch(ALL_ADS_URL, {
+        const response = await fetch(ADS_ALL_URL, {
           signal: abortControllerRef.current?.signal
         });
         const products = (await response.json()) as Product[];

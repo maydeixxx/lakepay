@@ -1,4 +1,4 @@
-import { UserView } from "@/components/User";
+import { UserView } from "@/components/UserView";
 import { resetUser } from "@/features/user/userActions";
 import { fetchUser } from "@/features/user/userReducer";
 import { useAppDispatch, useAppSelector } from "@/redux/store";

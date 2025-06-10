@@ -3,7 +3,7 @@ import { NavLink, useParams } from "react-router";
 import cartIcon from "@/assets/cart.svg";
 import { useEffect, useRef, useState } from "react";
 import type { Product, User } from "@/types";
-import { GET_AD_URL, USERS_URL } from "@/config";
+import { ADS_URL, USERS_URL } from "@/config";
 import UserIcon from "@/icons/UserIcon";
 import { photoFromCategory } from "@/utils";
 import SpinnerIcon from "@/icons/SpinnerIcon";
@@ -25,7 +25,7 @@ export default function ProductPage() {
       setIsLoading(true);
 
       try {
-        const response = await fetch(`${GET_AD_URL}/${productId}`, {
+        const response = await fetch(`${ADS_URL}/${productId}`, {
           signal: abortControllerRef.current?.signal
         });
         const product = (await response.json()) as Product;
@@ -53,7 +53,7 @@ export default function ProductPage() {
       setIsLoading(true);
 
       try {
-        const response = await fetch(`${USERS_URL}/${product?.id}`, {
+        const response = await fetch(`${USERS_URL}/${product?.sellerId}`, {
           signal: abortControllerRef.current?.signal
         });
         const seller = (await response.json()) as User;

@@ -3,7 +3,7 @@ import { Button } from "@/components/Button";
 import { ChatIcon } from "@/icons/ChatIcon";
 import { useAppDispatch, useAppSelector } from "@/redux/store";
 import { authLogout } from "@/features/auth/authActions";
-import { useNavigate } from "react-router";
+import { NavLink, useNavigate } from "react-router";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +15,7 @@ import {
 import { AddProductForm } from "@/components/AddProductForm";
 import { ProductView } from "./ProductView";
 import { useEffect, useRef, useState } from "react";
-import { PERSONAL_ADS_URL } from "@/config";
+import { ADS_PERSONAL_URL } from "@/config";
 import { photoFromCategory } from "@/utils";
 
 export interface UserViewProps {
@@ -26,7 +26,7 @@ export interface UserViewProps {
 function UserView({ user, type }: UserViewProps) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { token } = useAppSelector((state) => state.auth);
+  const { token, user: authUser } = useAppSelector((state) => state.auth);
 
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -42,7 +42,7 @@ function UserView({ user, type }: UserViewProps) {
       setIsLoading(true);
 
       try {
-        const response = await fetch(PERSONAL_ADS_URL, {
+        const response = await fetch(ADS_PERSONAL_URL, {
           signal: abortControllerRef.current?.signal,
           headers: {
             Authorization: `Bearer ${token}`
@@ -128,9 +128,11 @@ function UserView({ user, type }: UserViewProps) {
   const publicProfile = () => (
     <>
       <section className="container mx-auto mb-8">
-        <Button variant="secondary" size="lg">
-          <ChatIcon className="mr-2" /> Написать продавцу
-        </Button>
+        <NavLink to={`/chat/${user.id}`}>
+          <Button variant="secondary" size="lg">
+            <ChatIcon className="mr-2" /> Написать продавцу
+          </Button>
+        </NavLink>
       </section>
       {/* TODO: User reviews */}
     </>
@@ -154,7 +156,7 @@ function UserView({ user, type }: UserViewProps) {
           className="aspect-square object-cover w-auto h-auto sm:flex-1/4 sm:w-full"
         />
       </section>
-      {type === "personal" ? personalProfile() : publicProfile()}
+      {user.id == authUser?.id ? personalProfile() : publicProfile()}
     </>
   );
 }
