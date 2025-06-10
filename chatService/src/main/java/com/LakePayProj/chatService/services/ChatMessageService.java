@@ -36,4 +36,8 @@ public class ChatMessageService {
         repository.save(chatMessage);
         return chatMessage;
     }
+
+    public List<ChatMessage> findAllMessages() {
+        return repository.findAllMessages();
+    }
 }

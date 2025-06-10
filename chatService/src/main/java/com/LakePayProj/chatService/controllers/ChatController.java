@@ -18,12 +18,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.security.Principal;
 import java.util.Date;
 import java.util.List;
 
@@ -39,9 +41,17 @@ public class ChatController {
     private ChatRoomService chatRoomService;
     private UserService userService;
 
+    @GetMapping("/all")
+    public @ResponseBody ResponseEntity<List<ChatMessage>> getAllMessages() {
+        return ResponseEntity.ok(chatMessageService.findAllMessages());
+    }
+
     @MessageMapping("/send")
-    public void processMessage(@Payload ChatMessageDTO chatMessage) {
-        User user = userService.getCurrentUser();
+    public void processMessage(Principal principal, @Payload ChatMessageDTO chatMessage) {
+        User user = null;
+        if (principal instanceof UsernamePasswordAuthenticationToken auth) {
+            user = (User) auth.getPrincipal();
+        }
         log.info("Received websocket message from {}", user.getUsername());
 
         User sender = userMapper.toUser(chatMessage.sender());
@@ -67,6 +77,8 @@ public class ChatController {
                         sender.getUsername())
         );
     }
+
+
 
     @GetMapping(path = "/list", produces = "application/json")
     public @ResponseBody ResponseEntity<List<ChatRoomDTO>> getAvailableChats() {
