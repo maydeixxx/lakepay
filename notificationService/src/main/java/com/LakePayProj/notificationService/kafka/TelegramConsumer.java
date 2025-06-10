@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -143,7 +144,7 @@ public class TelegramConsumer {
     @KafkaListener(topics = "response_sub_users", groupId = "subscribed_users")
     public void getSubScribedUsers(ConsumerRecord<String, String> record) {
         try {
-            List<Integer> chatIds = objectMapper.readValue(record.value(), List.class);
+            List<Long> chatIds = objectMapper.readValue(record.value(), List.class);
             cacheSubscribedUsers.clear();
             cacheSubscribedUsers.addAll(chatIds.stream().map(String::valueOf).toList());
             log.info("Получены подписчики: {}", cacheSubscribedUsers);
@@ -176,21 +177,10 @@ public class TelegramConsumer {
 
         try {
             List<Map<String, Object>> ads = objectMapper.readValue(rawMessage, new TypeReference<>() {});
-            String category = ads.isEmpty() ? "unknown" : ads.get(0).get("category").toString();
-
-            StringBuilder adBuilder = new StringBuilder();
-            adBuilder.append("\n*Объявление в категории:* ").append(category).append("\n");
-
-            boolean hasActive = false;
-            for (Map<String, Object> ad : ads) {
-                Boolean isSold = (Boolean) ad.getOrDefault("sold", false);
-                if (!isSold) {
-                    adBuilder.append(formatAdForTelegram(ad)).append("\n");
-                    hasActive = true;
-                }
-            }
-            if (!hasActive) {
-                adBuilder.append("Нет активных объявлений\n");
+            if (ads.isEmpty()) {
+                service.sendMessage(tgId, "Нет объявлений для категории.");
+                log.info("Нет объявлений для tgId {}", tgId);
+                return;
             }
 
             UserAdResponse response = responseStore.get(tgId);
@@ -199,17 +189,47 @@ public class TelegramConsumer {
                 return;
             }
 
-            response.getCategoryMessages().put(category, adBuilder.toString());
+            // Группируем объявления по категориям
+            Map<String, List<Map<String, Object>>> adsByCategory = ads.stream()
+                    .collect(Collectors.groupingBy(ad -> ad.getOrDefault("category", "unknown").toString()));
+
+            // Обрабатываем каждую категорию
+            for (String category : adsByCategory.keySet()) {
+                StringBuilder adBuilder = new StringBuilder();
+                adBuilder.append("*Объявление в категории:* ").append(category).append("\n");
+
+                boolean hasActive = false;
+                for (Map<String, Object> ad : adsByCategory.get(category)) {
+                    Boolean isSold = (Boolean) ad.getOrDefault("sold", false);
+                    if (!isSold) {
+                        adBuilder.append(formatAdForTelegram(ad)).append("\n");
+                        hasActive = true;
+                    }
+                }
+                if (!hasActive) {
+                    adBuilder.append("Нет активных объявлений\n");
+                }
+
+                // Отправляем сообщение для текущей категории
+                String categoryMessage = adBuilder.toString().trim();
+                if (!categoryMessage.isEmpty()) {
+                    service.sendMessage(tgId, categoryMessage);
+                    log.info("Отправлено сообщение для tgId {} в категории {}:\n{}", tgId, category, categoryMessage);
+                }
+
+                // Сохраняем сообщение в response для отслеживания
+                response.getCategoryMessages().put(category, categoryMessage);
+            }
 
             List<String> expected = response.getExpectedCategories();
             Set<String> received = response.getCategoryMessages().keySet();
 
             log.debug("Получено {} / {} категорий для tgId {}", received.size(), expected.size(), tgId);
 
+            // Если все категории обработаны, вызываем sendFinalAdMessage
             if (received.containsAll(expected)) {
                 sendFinalAdMessage(tgId, response);
             }
-
         } catch (Exception e) {
             log.error("Ошибка обработки объявления для tgId {}: {}", tgId, e.getMessage());
             service.sendMessage(tgId, "Произошла ошибка при обработке объявлений.");
@@ -228,7 +248,6 @@ public class TelegramConsumer {
                         💬 *Заголовок:* %s
                         🕒 *Информация:* %s
                         📅 *Дата публикации:* %s
-                        📦 *В наличии:* %s шт.
                         💰 *Цена:* %s
                         📌 *Категория:* %s
                         %s
@@ -237,7 +256,6 @@ public class TelegramConsumer {
                 ad.getOrDefault("title", "не указан"),
                 ad.getOrDefault("body", "нет описания"),
                 ad.getOrDefault("dateOfPush", "не указана"),
-                ad.getOrDefault("quantity", 0),
                 price,
                 ad.getOrDefault("category", "не указана"),
                 status
@@ -245,21 +263,11 @@ public class TelegramConsumer {
     }
 
     private void sendFinalAdMessage(String tgId, UserAdResponse response) {
-        StringBuilder message = new StringBuilder();
-        for (String category : response.getExpectedCategories()) {
-            String msg = response.getCategoryMessages().getOrDefault(category, null);
-            if (msg != null) {
-                message.append(msg);
-            }
-        }
-
-        String finalMessage = message.toString().trim();
-        if (finalMessage.isEmpty()) {
+        if (response.getCategoryMessages().isEmpty() || response.getCategoryMessages().values().stream().allMatch(String::isEmpty)) {
             service.sendMessage(tgId, "В ваших подписках пока что нет доступных объявлений");
-        } else {
-            service.sendMessage(tgId, finalMessage);
+            log.info("Отправлено сообщение об отсутствии объявлений для tgId {}", tgId);
         }
-        log.info("Отправлено сообщение для tgId {}:\n{}", tgId, finalMessage);
         responseStore.remove(tgId);
+        log.info("Очищен responseStore для tgId {}", tgId);
     }
 }

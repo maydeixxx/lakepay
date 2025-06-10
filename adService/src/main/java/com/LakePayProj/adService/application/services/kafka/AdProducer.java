@@ -21,7 +21,6 @@ public class AdProducer {
                         💬 *Заголовок:* %s
                         🕒 *Информация:* %s
                         📅 *Дата публикации:* %s
-                        📦 *В наличии:* %s шт.
                         💰 *Цена:* %s
                         📌 *Категория:* %s
                         %s
@@ -29,7 +28,6 @@ public class AdProducer {
                 ad.getTitle(),
                 ad.getBody(),
                 ad.getDateOfPush(),
-                ad.getQuantity(),
                 price,
                 ad.getCategory(),
                 status

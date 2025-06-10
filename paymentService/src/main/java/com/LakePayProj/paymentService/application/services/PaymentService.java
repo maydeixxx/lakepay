@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -126,13 +125,7 @@ public class PaymentService implements IPaymentService {
                 log.warn("Недостаточно средств: userId={}, balance={}, price={}", userId, balance, price);
                 return;
             }
-
-            BigDecimal priceToTrx = price.divide(getExchangeCourse("TRX", "USD"), 8, RoundingMode.HALF_UP);
-            boolean transferSuccess = transferFunds(sellerId, priceToTrx, "TRX");
-            if (!transferSuccess) {
-                log.error("Не удалось перевести средства продавцу: sellerId={}, amount={}", sellerId, price);
-                return;
-            }
+            updateUserBalance(sellerId, price, "sellerUpdate", "TRX");
 
             String message = objectMapper.writeValueAsString(Map.of(
                     "tgId", buyTgId,
@@ -317,6 +310,7 @@ public class PaymentService implements IPaymentService {
                 case "buy", "withdraw" -> {
                     newBalance = balance.subtract(amount);
                 }
+                case "sellerUpdate" -> newBalance = balance.add(amount);
                 default -> {
                     log.error("Недопустимая операция: userId={}, operation={}", userId, operation);
                     return null;

@@ -48,7 +48,7 @@ public class UserController {
         }
     }
 
-    @PatchMapping( "/subscribe")
+    @PutMapping( "/subscribe")
     public ResponseEntity<?> subscribe(@RequestBody Map<String, Object> data) {
         try {
             Long id = Long.valueOf(data.get("id").toString());
@@ -57,6 +57,21 @@ public class UserController {
             Long chatId = userById.getChatId();
             userService.subscribe(id, category);
             producer.sendInfoAboutSub(chatId, category);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Не удалось подписаться" + e.getMessage());
+        }
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/unsubscribe")
+    public ResponseEntity<?> unsubscribe(@RequestBody Map<String, Object> data) {
+        try {
+            Long id = Long.valueOf(data.get("id").toString());
+            String category = data.get("category").toString();
+            User userById = userService.findUserById(id);
+            Long chatId = userById.getChatId();
+            userService.unSubscribe(id, category);
+            producer.sendInfoAboutUnSub(chatId, category);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Не удалось подписаться" + e.getMessage());
         }
@@ -90,7 +105,7 @@ public class UserController {
         }
     }
 
-    @PatchMapping("/update_user/{id}")
+    @PutMapping("/update_user/{id}")
     public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody UserUpdateDTO updates) {
         try {
             userService.updateUser(id, updates);

@@ -11,7 +11,7 @@ spring:
         - id: adService
           uri: lb://adService
           predicates:
-            - Path=/all_ads, /save_ad, /ad_delete/**, /ad_category/**, /ad_id/**, /update_ad/**, /ad_credentials/**, /personal_ads
+            - Path=/all_ads, /save_ad, /ad_delete/**, /ad_category/**, /ad_id/**, /update_ad/**, /ad_credentials/**, /personal_ads, /delete_my_ad/**
         - id: paymentService
           uri: lb://paymentService
           predicates:
@@ -21,7 +21,8 @@ spring:
           predicates:
             - Path=/chat/list, /chat/info/**, /chat/history/**
   security:
-    enabled: false
+    enabled: true
+
 server:
   port: 8990
   tomcat:

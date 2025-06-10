@@ -16,7 +16,6 @@ public class Ad {
     private BigDecimal price;
     private String login;
     private String password;
-    private Integer quantity;
     private LocalDate dateOfPush;
     private Boolean sold;
     private Long sellerId;

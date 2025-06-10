@@ -12,7 +12,7 @@ public class UserProducer {
 
     public void sendUser(User user) {
         String message = user.getUsername() + ", вы успешно зарегистрировались!";
-        template.send("usersLog", String.valueOf(user.getChatId()), message);
+        template.send("usersLog", String.valueOf(user.getTgId()), message);
     }
 
     public void sendInfoAboutSub(Long chatId, String category) {

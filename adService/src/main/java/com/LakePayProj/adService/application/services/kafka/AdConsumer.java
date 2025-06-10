@@ -100,7 +100,6 @@ public class AdConsumer {
         adMap.put("price", ad.getPrice());
         adMap.put("body", ad.getBody());
         adMap.put("dateOfPush", ad.getDateOfPush());
-        adMap.put("quantity", ad.getQuantity());
         adMap.put("sold", ad.getSold());
         return adMap;
     }

@@ -34,7 +34,6 @@ public class AdService implements IAdService {
                     case "title" -> adById.setTitle(String.valueOf(value));
                     case "body" -> adById.setBody(String.valueOf(value));
                     case "category" -> adById.setCategory(String.valueOf(value));
-                    case "quantity" -> adById.setQuantity((Integer) value);
                     case "sold" -> adById.setSold((Boolean) value);
                 }
         });

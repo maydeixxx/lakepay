@@ -33,6 +33,7 @@ public class SecurityConfig {
                 // Настройка доступа к конечным точкам
                 .authorizeHttpRequests(request -> request
                         .requestMatchers("/all_ads", "/ad_category/*", "/ad_id/*").permitAll()
+                        .requestMatchers("/delete_my_ad/*").authenticated()
                         .requestMatchers("/ad_credentials/").hasRole("ADMIN")
                         .requestMatchers("/ad_delete/").hasAnyRole("MODERATOR", "ADMIN")
                         .requestMatchers("/update_ad/").hasAnyRole("MODERATOR", "ADMIN")

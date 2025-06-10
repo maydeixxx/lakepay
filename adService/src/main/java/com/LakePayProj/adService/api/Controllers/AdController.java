@@ -5,7 +5,6 @@ import com.LakePayProj.adService.application.interfaces.mappers.IAdMapper;
 import com.LakePayProj.adService.application.services.AdService;
 import com.LakePayProj.adService.application.services.kafka.AdProducer;
 import com.LakePayProj.adService.domain.Ad;
-import com.LakePayProj.adService.infrastructure.AdEntity;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,6 +40,19 @@ public class AdController {
         }
     }
 
+    @DeleteMapping("/delete_my_ad/{id}")
+    public ResponseEntity<?> deleteMyAd(@PathVariable Long id, @RequestBody Map<String, Object> userId) {
+        Ad adById = service.findAdById(id);
+        Long sellerId = adById.getSellerId();
+        Long userid = Long.parseLong(userId.get("userId").toString());
+        if (sellerId.equals(userid)) {
+            service.deleteAdById(id);
+            return ResponseEntity.ok().body(String.format("Объявление %s успешно удалено", id));
+        } else {
+            return ResponseEntity.badRequest().body("Это не ваше объявление");
+        }
+    }
+
     @GetMapping("/all_ads")
     public ResponseEntity<?> findAllAds() {
         try {
@@ -65,6 +77,7 @@ public class AdController {
             List<AdDto> ads = service.findAdsBySellerId(Long.valueOf(sellerId))
                     .stream()
                     .map(mapper::adDomainToDto)
+                    .filter(adDto -> adDto.getSold().equals(false))
                     .toList();
             if (ads.isEmpty()) {
                 return ResponseEntity.badRequest().body("There are no ads :(");
@@ -91,6 +104,7 @@ public class AdController {
             List<AdDto> ads = service.findAdsByCategory(category)
                     .stream()
                     .map(mapper::adDomainToDto)
+                    .filter(adDto -> adDto.getSold().equals(false))
                     .toList();
             if (ads.isEmpty()) {
                 return ResponseEntity.badRequest().body("There are no ads :(");

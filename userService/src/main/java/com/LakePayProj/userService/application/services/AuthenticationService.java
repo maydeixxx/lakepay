@@ -34,18 +34,6 @@ public class AuthenticationService {
     private final IRoleRepository roleRepository;
     private static final Logger logger = LoggerFactory.getLogger(AuthenticationService.class);
 
-    @KafkaListener(topics = "userTgChatId", groupId = "user-notifications")
-    public void getTgChatId(ConsumerRecord<String, String> record) {
-        try {
-            Long key = Long.valueOf(record.key());
-            Long value = Long.valueOf(record.value());
-            chats.put(key, value);
-            logger.debug("Получен chatId: {} для tgId: {}", value, key);
-        } catch (NumberFormatException e) {
-            logger.error("Ошибка при парсинге Kafka-записи: key={}, value={}", record.key(), record.value(), e);
-        }
-    }
-
     /**
      * Аутентификация пользователя через аккаунт Telegram
      *
@@ -68,14 +56,6 @@ public class AuthenticationService {
             Long tgId = Long.parseLong(request.get("id"));
             User user = userService.findUserByTgId(tgId);
 
-            Long chatId = chats.get(tgId);
-            logger.info("Chat ID: {}", chatId.toString());
-            if (chatId == null) {
-                logger.warn("Chat ID для tgId {} не найден", tgId);
-                return new JwtAuthenticationResponse("Chat id is null", null);
-            }
-
-
             String jwt = null;
             if (user != null) {
                 jwt = jwtService.generateToken(user);
@@ -83,7 +63,7 @@ public class AuthenticationService {
             } else {
                 UserEntity userEntity = UserEntity.builder()
                         .tgId(tgId)
-                        .chatId(chatId)
+                        .chatId(tgId)
                         .username(request.get("username"))
                         .urlPhoto(request.get("photo_url"))
                         .dateOfReg(LocalDate.now())
