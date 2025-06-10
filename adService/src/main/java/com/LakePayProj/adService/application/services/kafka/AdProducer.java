@@ -1,6 +1,6 @@
 package com.LakePayProj.adService.application.services.kafka;
 
-import com.LakePayProj.adService.api.DTOs.AdDto;
+import com.LakePayProj.adService.domain.Ad;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 public class AdProducer {
     private final KafkaTemplate<String, String> template;
 
-    private String formatAdForTelegram(AdDto ad) {
+    private String formatAdForTelegram(Ad ad) {
         String price = ad.getPrice() != null ? ad.getPrice() + " USDT" : "уточните у продавца";
         String status = ad.getSold() ? "🔴 Продано" : "🟢 В продаже";
 
@@ -36,7 +36,7 @@ public class AdProducer {
         );
     }
 
-    public void sendNewAd(String category, AdDto ad) {
+    public void sendNewAd(String category, Ad ad) {
         String info = formatAdForTelegram(ad);
         template.send("ads", category, info);
     }

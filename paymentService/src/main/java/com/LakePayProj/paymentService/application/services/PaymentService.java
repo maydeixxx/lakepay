@@ -45,7 +45,7 @@ public class PaymentService implements IPaymentService {
     public String createInvoice(BigDecimal amount, String asset, String description) {
         try {
             HttpHeaders headers = new HttpHeaders();
-            headers.set("Crypto-Pay-API-Token", apiToken);
+            headers.set("Crypto-Pay-API-Token", "36875:AAS1Wn7fEsFVdceQiM0buxOkHHCra0cOrnE");
             Map<String, Object> request = Map.of(
                     "amount", amount,
                     "asset", asset,
@@ -220,7 +220,7 @@ public class PaymentService implements IPaymentService {
     public boolean transferFunds(Long userId, BigDecimal amount, String currency) {
         try {
             HttpHeaders headers = new HttpHeaders();
-            headers.set("Crypto-Pay-API-Token", apiToken);
+            headers.set("Crypto-Pay-API-Token", "36875:AAS1Wn7fEsFVdceQiM0buxOkHHCra0cOrnE");
             String spendId = "withdraw-" + userId + "-" + System.currentTimeMillis();
             Map<String, Object> request = Map.of(
                     "user_id", userId,
@@ -253,7 +253,7 @@ public class PaymentService implements IPaymentService {
     public BigDecimal getExchangeCourse(String sourceAsset, String targetAsset) {
         try {
             HttpHeaders httpHeaders = new HttpHeaders();
-            httpHeaders.set("Crypto-Pay-Api-Token", apiToken);
+            httpHeaders.set("Crypto-Pay-Api-Token", "36875:AAS1Wn7fEsFVdceQiM0buxOkHHCra0cOrnE");
             HttpEntity<String> request = new HttpEntity<>(httpHeaders);
 
             ResponseEntity<String> response = restTemplate.exchange(

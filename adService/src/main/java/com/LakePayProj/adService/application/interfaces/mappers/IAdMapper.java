@@ -18,4 +18,6 @@ public interface IAdMapper {
     @Mapping(target = "login", ignore = true)
     @Mapping(target = "password", ignore = true)
     AdDto adDomainToDto(Ad ad);
+
+    AdEntity adDtoToEntity(AdDto adDto);
 }

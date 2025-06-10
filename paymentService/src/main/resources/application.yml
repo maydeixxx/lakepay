@@ -41,5 +41,3 @@ token:
 
 server:
   port: 8083
-
-debug: ${DEBUG_MODE}

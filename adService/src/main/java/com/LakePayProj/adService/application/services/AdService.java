@@ -64,6 +64,7 @@ public class AdService implements IAdService {
         List<AdEntity> all = repository.findAll();
         return all.stream()
                 .map(mapper::adEntityToAdDomain)
+                .sorted((ad1, ad2) -> ad2.getDateOfPush().compareTo(ad1.getDateOfPush()))
                 .toList();
     }
 

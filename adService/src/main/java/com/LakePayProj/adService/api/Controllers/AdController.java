@@ -13,6 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -27,11 +28,13 @@ public class AdController {
     @PostMapping("/save_ad")
     public ResponseEntity<?> saveAd(@RequestBody AdDto adDto) {
         try {
-            service.saveAd(mapper.adDtoToDomain(adDto));
-            producer.sendNewAd(adDto.getCategory(), adDto);
+            Ad ad = mapper.adDtoToDomain(adDto);
+            ad.setDateOfPush(LocalDate.now());
+            service.saveAd(ad);
             if (adDto.getPrice() == null || adDto.getPrice().compareTo(BigDecimal.ZERO) < 0) {
                 return ResponseEntity.badRequest().body("Price cannot be null or negative");
             }
+            producer.sendNewAd(adDto.getCategory(), ad);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
