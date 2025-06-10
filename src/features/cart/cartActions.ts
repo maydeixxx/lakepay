@@ -1,10 +1,6 @@
-import type { Product, User } from "@/types";
+import type { Product } from "@/types";
 
-export type CartActionTypes =
-  | "cart/empty"
-  | "cart/add"
-  | "cart/remove"
-  | "cart/buy";
+export type CartActionTypes = "cart/empty" | "cart/add" | "cart/remove";
 
 export type CartAction = {
   type: CartActionTypes;
@@ -28,11 +24,5 @@ export const removeFromCart = (product: Product): CartAction => {
   return {
     type: "cart/remove",
     payload: product
-  };
-};
-
-export const buyCart = (): CartAction => {
-  return {
-    type: "cart/buy"
   };
 };
