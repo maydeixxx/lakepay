@@ -71,20 +71,15 @@ export default function Home() {
         <h1 className="text-secondary text-4xl mb-8">Новые объявления</h1>
         <div className="flex flex-col gap-8">
           {products &&
-            products.slice(0, 5).map((product) => (
-              <ProductView
-                key={product.id}
-                personal={user?.id == product.sellerId}
-                product={{
-                  id: product.id,
-                  title: product.title,
-                  description: product.body,
-                  price: product.price,
-                  photo: photoFromCategory(product.category),
-                  favourite: false
-                }}
-              />
-            ))}
+            products
+              .slice(0, 5)
+              .map((product) => (
+                <ProductView
+                  key={product.id}
+                  personal={user?.id == product.sellerId}
+                  product={product}
+                />
+              ))}
           <Card className="p-4 gap-0 min-h-32 justify-center">
             <h4 className="mb-4 font-bold">
               Хотите посмотреть больше аккаунтов?

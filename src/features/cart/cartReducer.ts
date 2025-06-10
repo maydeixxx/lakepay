@@ -2,30 +2,46 @@ import { type CartAction } from "./cartActions";
 import type { Product } from "@/types";
 
 export interface CartState {
-  items: Product[];
+  items: {
+    [id: number]: Product;
+  };
 }
 
-const initialState: CartState = {
-  items: []
-};
+const initialState: CartState = localStorage.getItem("cart")
+  ? (JSON.parse(localStorage.getItem("cart")!) as CartState)
+  : { items: {} };
 
 export default function cartReducer(
   state: CartState = initialState,
   action?: CartAction
-) {
+): CartState {
   switch (action?.type) {
     case "cart/empty": {
-      return { items: [] };
+      const newItems = { items: {} };
+      localStorage.setItem("cart", JSON.stringify(newItems));
+      return newItems;
     }
     case "cart/add": {
-      return {
-        items: [...state.items, action.payload]
+      const newItems = {
+        items: {
+          ...state.items,
+          [action.payload!.id]: action.payload!
+        }
       };
+      localStorage.setItem("cart", JSON.stringify(newItems));
+      return newItems;
     }
     case "cart/remove": {
-      return {
-        items: state.items.filter((item) => item.id != action.payload?.id)
+      const {
+        items: { [action.payload!.id]: removed, ...rest }
+      } = state;
+      const newItems = {
+        items: {
+          ...rest
+        }
       };
+      localStorage.setItem("cart", JSON.stringify(newItems));
+      return newItems;
     }
     default:
       return { ...state };

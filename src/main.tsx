@@ -15,6 +15,7 @@ import ProfilePage from "@/pages/profile";
 import ProductPage from "./pages/product";
 import CategoryPage from "./pages/category";
 import ChatsPage from "./pages/chat";
+import CartPage from "./pages/cart";
 
 const router = createBrowserRouter([
   {
@@ -35,6 +36,7 @@ const router = createBrowserRouter([
           { path: ":chatId", Component: ChatsPage }
         ]
       },
+      { path: "/cart", Component: CartPage },
       { path: "*", Component: NotFoundPage }
     ]
   }

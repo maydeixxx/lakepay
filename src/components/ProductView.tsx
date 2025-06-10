@@ -2,19 +2,18 @@ import { FavouriteIcon } from "@/icons/FavouriteIcon";
 import { Button } from "./Button";
 import { NavLink } from "react-router";
 import { Card } from "./Card";
-import { cn } from "@/utils";
+import { cn, photoFromCategory } from "@/utils";
+import { useAppDispatch, useAppSelector } from "@/redux/store";
+import { addToCart, removeFromCart } from "@/features/cart/cartActions";
+import type { Product } from "@/types";
+import { TrashIcon } from "@/icons/TrashIcon";
+import { AddIcon } from "@/icons/AddIcon";
+import { CartIcon } from "@/icons/CartIcon";
 
 export interface ProductViewProps extends React.ComponentProps<"div"> {
-  product: {
-    id: number;
-    photo: string;
-    title: string;
-    description: string;
-    price: number;
-    favourite: boolean;
-  };
+  product: Product;
   personal?: boolean;
-  in_cart?: boolean;
+  inCart?: boolean;
 }
 
 export function ProductView({
@@ -23,6 +22,9 @@ export function ProductView({
   className,
   ...props
 }: ProductViewProps) {
+  const dispatch = useAppDispatch();
+  const cart = useAppSelector((state) => state.cart);
+
   return (
     <Card
       className={cn("p-4 md:flex-row md:items-center justify-start", className)}
@@ -30,25 +32,36 @@ export function ProductView({
     >
       <NavLink to={`/product/${product.id}`}>
         <img
-          src={product.photo}
+          src={photoFromCategory(product.category)}
           alt={product.title}
           className="h-auto w-auto md:max-h-32 rounded-xl"
         />
       </NavLink>
       <div className="text-wrap grow">
         <h4 className="mb-4 font-bold">{product.title}</h4>
-        <p className="text-xs md:text-sm">{product.description}</p>
+        <p className="text-xs md:text-sm">{product.body}</p>
       </div>
       <div className="flex gap-4 items-center">
         {/* Add on click listener add/remove from favourites */}
-        {!personal && (
+        {personal && (
           <>
-            <Button variant="secondary">{`${product.price} Р`}</Button>
-            <Button size="icon" variant="secondary" className="p-2">
-              <FavouriteIcon
-                className={`${product.favourite ? "text-destructive" : "text-secondary-foreground"}`}
-              />
-            </Button>
+            {cart.items[product.id] ? (
+              <Button
+                onClick={() => dispatch(removeFromCart(product))}
+                variant="secondary"
+              >
+                {`${product.price}Р`}
+                <TrashIcon className="text-secondary-foreground" />
+              </Button>
+            ) : (
+              <Button
+                onClick={() => dispatch(addToCart(product))}
+                variant="secondary"
+              >
+                {`${product.price}Р`}
+                <CartIcon className="text-secondary-foreground" />
+              </Button>
+            )}
           </>
         )}
       </div>
