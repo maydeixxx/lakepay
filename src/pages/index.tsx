@@ -1,52 +1,15 @@
 // TODO: Fetch popular categories from server
 import { Card } from "@/components/Card";
-import { Button } from "@/components/Button";
-import { FavouriteIcon } from "@/icons/FavouriteIcon";
 import { NavLink } from "react-router";
-import { ADS_ALL_URL, categories } from "@/config";
 import { ProductView } from "@/components/ProductView";
-import { useEffect, useRef, useState } from "react";
-import type { Product } from "@/types";
-import { photoFromCategory } from "@/utils";
 import { useAppSelector } from "@/redux/store";
+import { useProducts } from "@/hooks/useProducts";
+import { categories } from "@/config";
+import { Loading } from "@/components/Loading";
 
 export default function Home() {
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [products, setProducts] = useState<Product[] | null>(null);
+  const { products, error, isLoading } = useProducts({});
   const { user } = useAppSelector((state) => state.auth);
-
-  const abortControllerRef = useRef<AbortController | null>(null);
-
-  useEffect(() => {
-    const fetchProducts = async () => {
-      abortControllerRef.current?.abort();
-      abortControllerRef.current = new AbortController();
-
-      setIsLoading(true);
-
-      try {
-        const response = await fetch(ADS_ALL_URL, {
-          signal: abortControllerRef.current?.signal
-        });
-        const products = (await response.json()) as Product[];
-        console.log(products);
-
-        setProducts(products);
-      } catch (e: any) {
-        if (e.name === "AbortError") {
-          console.log("Aborted");
-          return;
-        }
-
-        setError(e);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, []);
 
   return (
     <>
@@ -70,6 +33,7 @@ export default function Home() {
       <section className="container mx-auto py-16">
         <h1 className="text-secondary text-4xl mb-8">Новые объявления</h1>
         <div className="flex flex-col gap-8">
+          {isLoading && <Loading />}
           {products &&
             products
               .slice(0, 5)

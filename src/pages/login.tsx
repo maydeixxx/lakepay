@@ -26,7 +26,7 @@ export default function LoginPage() {
       <section className="container mx-auto py-16 flex flex-col items-center">
         <h1 className="text-secondary text-4xl mb-8">Войдите в аккаунт</h1>
         <LoginButton
-          botUsername="mrayventgauth_bot"
+          botUsername="lakePayBot"
           onAuthCallback={onAuthHandler}
           cornerRadius={10}
         />

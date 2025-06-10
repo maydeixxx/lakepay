@@ -8,5 +8,5 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function photoFromCategory(category: GameCategories): string {
-  return categories.find((c) => c.name == category)?.photo || "";
+  return categories.find((c) => c.name == category.toUpperCase())?.photo || "";
 }

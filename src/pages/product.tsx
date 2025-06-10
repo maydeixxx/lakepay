@@ -1,8 +1,8 @@
 import { Button } from "@/components/Button";
-import { NavLink, useParams } from "react-router";
+import { NavLink, useNavigate, useParams } from "react-router";
 import { useEffect, useRef, useState } from "react";
 import type { Product, User } from "@/types";
-import { ADS_URL, USERS_URL } from "@/config";
+import { ADS_URL, BUY_AD_URL, USERS_URL } from "@/config";
 import UserIcon from "@/icons/UserIcon";
 import { photoFromCategory } from "@/utils";
 import SpinnerIcon from "@/icons/SpinnerIcon";
@@ -10,6 +10,15 @@ import { useAppDispatch, useAppSelector } from "@/redux/store";
 import { CartIcon } from "@/icons/CartIcon";
 import { TrashIcon } from "@/icons/TrashIcon";
 import { addToCart, removeFromCart } from "@/features/cart/cartActions";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from "@/components/Dialog";
+import { DialogDescription } from "@radix-ui/react-dialog";
 
 export default function ProductPage() {
   let { productId } = useParams<{ productId?: string }>();
@@ -17,11 +26,13 @@ export default function ProductPage() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [product, setProduct] = useState<Product | null>(null);
   const [seller, setSeller] = useState<User | null>(null);
-  const { user } = useAppSelector((state) => state.auth);
+  const { user, token } = useAppSelector((state) => state.auth);
+  const [confirmationOpen, setConfirmationOpen] = useState<boolean>(false);
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const dispatch = useAppDispatch();
   const cart = useAppSelector((state) => state.cart);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -91,7 +102,39 @@ export default function ProductPage() {
     );
   }
 
-  async function buyProduct() {}
+  async function buyProduct() {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = new AbortController();
+
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${BUY_AD_URL}`, {
+        method: "post",
+        signal: abortControllerRef.current?.signal,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          userId: user?.id,
+          adId: product?.id
+        })
+      });
+
+      if (response.ok) {
+      }
+    } catch (e: any) {
+      if (e.name === "AbortError") {
+        console.log("Aborted");
+        return;
+      }
+      console.error(e);
+    }
+  }
 
   return (
     <>
@@ -104,7 +147,7 @@ export default function ProductPage() {
           />
           <div className="flex flex-col gap-4 md:basis-1/2">
             <h2 className="text-secondary text-3xl w-full">
-              Цена: {product?.price}Р
+              Цена: {product?.price}$
             </h2>
             {user && seller?.id != user.id && (
               <div className="flex gap-4 py-4">
@@ -124,7 +167,34 @@ export default function ProductPage() {
                   </Button>
                 )}
 
-                <Button variant="secondary">Купить сейчас</Button>
+                <Dialog
+                  open={confirmationOpen}
+                  onOpenChange={(open) => {
+                    setConfirmationOpen(open);
+                  }}
+                >
+                  <DialogTrigger asChild>
+                    <Button onClick={buyProduct} variant="secondary">
+                      Купить сейчас
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="gap-8 w-full sm:max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>Подтвердите действие</DialogTitle>
+                      <DialogDescription>
+                        Вы уверены что хотите совершить покупку?
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex gap-4">
+                      <DialogClose asChild>
+                        <Button variant="destructive">Отмена</Button>
+                      </DialogClose>
+                      <Button variant="primary" onClick={buyProduct}>
+                        Подтвердить
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
             )}
             <NavLink

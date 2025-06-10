@@ -17,6 +17,8 @@ import { ProductView } from "./ProductView";
 import { useEffect, useRef, useState } from "react";
 import { ADS_PERSONAL_URL } from "@/config";
 import { photoFromCategory } from "@/utils";
+import { WithdrawForm } from "./WithdrawForm";
+import { DepositForm } from "./DepositForm";
 
 export interface UserViewProps {
   user: User;
@@ -48,8 +50,11 @@ function UserView({ user, type }: UserViewProps) {
             Authorization: `Bearer ${token}`
           }
         });
-        const products = (await response.json()) as Product[];
-        setProducts(products);
+
+        if (response.ok) {
+          const products = (await response.json()) as Product[];
+          setProducts(products);
+        }
       } catch (e: any) {
         if (e.name === "AbortError") {
           console.log("Aborted");
@@ -75,12 +80,37 @@ function UserView({ user, type }: UserViewProps) {
   const personalProfile = () => (
     <>
       <section className="container mx-auto flex flex-col gap-8 items-start mb-16">
-        <h1 className="text-primary text-4xl">
-          Баланс: {`${user?.balance} Р`}
-        </h1>
+        <h1 className="text-primary text-4xl">Баланс: {`${user?.balance}$`}</h1>
         <div className="flex gap-8">
-          <Button>Вывести</Button>
-          <Button>Пополнить</Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button>Вывести</Button>
+            </DialogTrigger>
+            <DialogContent className="gap-8 w-full sm:max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Вывести деньги:</DialogTitle>
+                <DialogDescription className="text-on-card-foreground">
+                  Вывод осущетсвляется в валюте TRX
+                </DialogDescription>
+              </DialogHeader>
+              <WithdrawForm />
+            </DialogContent>
+          </Dialog>
+
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button>Пополнить</Button>
+            </DialogTrigger>
+            <DialogContent className="gap-8 w-full sm:max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Пополнить баланс:</DialogTitle>
+                <DialogDescription className="text-on-card-foreground">
+                  Пополнение осущетсвляется в валюте TRX
+                </DialogDescription>
+              </DialogHeader>
+              <DepositForm />
+            </DialogContent>
+          </Dialog>
         </div>
       </section>
 
@@ -143,7 +173,7 @@ function UserView({ user, type }: UserViewProps) {
         <img
           src={user.urlPhoto}
           alt="User profile photo"
-          className="aspect-square object-cover w-auto h-auto sm:flex-1/4 sm:w-full"
+          className="aspect-square object-cover w-auto h-auto sm:flex-1/4 sm:w-full rounded-2xl"
         />
       </section>
       {user.id == authUser?.id ? personalProfile() : publicProfile()}

@@ -28,6 +28,9 @@ importers:
       "@radix-ui/react-slot":
         specifier: ^1.2.3
         version: 1.2.3(@types/react@19.1.6)(react@19.1.0)
+      "@stomp/stompjs":
+        specifier: ^7.1.1
+        version: 7.1.1
       "@tailwindcss/vite":
         specifier: ^4.1.8
         version: 4.1.8(vite@6.3.5(@types/node@22.15.29)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0))
@@ -52,6 +55,9 @@ importers:
       react-router:
         specifier: ^7.6.1
         version: 7.6.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      react-stomp-hooks:
+        specifier: ^3.0.1
+        version: 3.0.1(react@19.1.0)
       redux:
         specifier: ^5.0.1
         version: 5.0.1
@@ -67,6 +73,9 @@ importers:
       tw-animate-css:
         specifier: ^1.3.4
         version: 1.3.4
+      ws:
+        specifier: ^8.18.2
+        version: 8.18.2
       zod:
         specifier: ^3.25.56
         version: 3.25.56
@@ -1724,6 +1733,12 @@ packages:
         integrity: sha512-e7Mew686owMaPJVNNLs55PUvgz371nKgwsc4vxE49zsODpJEnxgxRo2y/OKrqueavXgZNMDVj3DdHFlaSAeU8g==
       }
 
+  "@stomp/stompjs@7.1.1":
+    resolution:
+      {
+        integrity: sha512-chcDs6YkAnKp1FqzwhGvh3i7v0+/ytzqWdKYw6XzINEKAzke/iD00dNgFPWSZEqktHOK+C1gSzXhLkLbARIaZw==
+      }
+
   "@tailwindcss/node@4.1.8":
     resolution:
       {
@@ -1913,6 +1928,12 @@ packages:
     resolution:
       {
         integrity: sha512-JeG0rEWak0N6Itr6QUx+X60uQmN+5t3j9r/OVDtWzFXKaj6kD1BwJzOksD0FF6iWxZlbE1kB0q9vtnU2ekqa1Q==
+      }
+
+  "@types/sockjs-client@1.5.4":
+    resolution:
+      {
+        integrity: sha512-zk+uFZeWyvJ5ZFkLIwoGA/DfJ+pYzcZ8eH4H/EILCm2OBZyHH6Hkdna1/UWL/CFruh5wj6ES7g75SvUB0VsH5w==
       }
 
   "@types/use-sync-external-store@0.0.6":
@@ -2226,6 +2247,17 @@ packages:
         integrity: sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw==
       }
 
+  debug@3.2.7:
+    resolution:
+      {
+        integrity: sha512-CFjzYYAi4ThfiQvizrFQevTTXHtnCqWfe7x1AhgEscTz6ZbLbfoLRLPugTQyBth6f8ZERVUSyWHFD/7Wu4t1XQ==
+      }
+    peerDependencies:
+      supports-color: "*"
+    peerDependenciesMeta:
+      supports-color:
+        optional: true
+
   debug@4.4.1:
     resolution:
       {
@@ -2397,6 +2429,13 @@ packages:
         integrity: sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA==
       }
 
+  eventsource@2.0.2:
+    resolution:
+      {
+        integrity: sha512-IzUmBGPR3+oUG9dUeXynyNmf91/3zUSJg1lCktzKw47OXuhco54U3r9B7O4XX+Rb1Itm9OZ2b0RkTs10bICOxA==
+      }
+    engines: { node: ">=12.0.0" }
+
   fast-deep-equal@3.1.3:
     resolution:
       {
@@ -2427,6 +2466,13 @@ packages:
       {
         integrity: sha512-GwLTyxkCXjXbxqIhTsMI2Nui8huMPtnxg7krajPJAjnEG/iiOS7i+zCtWGZR9G0NBKbXKh6X9m9UIsYX/N6vvQ==
       }
+
+  faye-websocket@0.11.4:
+    resolution:
+      {
+        integrity: sha512-CzbClwlXAuiRQAlUyfqPgvPoNKTckTPGfwZV4ZdAhVcP2lh9KUxJg2b5GkE7XbjKQ3YJnQ9z6D9ntLAlB+tP8g==
+      }
+    engines: { node: ">=0.8.0" }
 
   fdir@6.4.5:
     resolution:
@@ -2556,6 +2602,12 @@ packages:
       }
     engines: { node: ">=8" }
 
+  http-parser-js@0.5.10:
+    resolution:
+      {
+        integrity: sha512-Pysuw9XpUq5dVc/2SMHpuTY01RFl8fttgcyunjL7eEMhGM3cI4eOmiCycJDVCo/7O7ClfQD3SaI6ftDzqOXYMA==
+      }
+
   husky@9.1.7:
     resolution:
       {
@@ -2591,6 +2643,12 @@ packages:
         integrity: sha512-JmXMZ6wuvDmLiHEml9ykzqO6lwFbof0GG4IkcGaENdCRDDmMVnny7s5HsIgHCbaq0w2MyPhDqkhTUgS2LU2PHA==
       }
     engines: { node: ">=0.8.19" }
+
+  inherits@2.0.4:
+    resolution:
+      {
+        integrity: sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==
+      }
 
   is-extglob@2.1.1:
     resolution:
@@ -3104,6 +3162,12 @@ packages:
       }
     engines: { node: ">=6" }
 
+  querystringify@2.2.0:
+    resolution:
+      {
+        integrity: sha512-FIqgj2EUvTa7R50u0rGsyTftzjYmv/a3hO345bZNrqabNqjtgiDMgmo4mkUjd+nzU5oF3dClKqFIPUKybUyqoQ==
+      }
+
   queue-microtask@1.2.3:
     resolution:
       {
@@ -3204,6 +3268,14 @@ packages:
       react-dom:
         optional: true
 
+  react-stomp-hooks@3.0.1:
+    resolution:
+      {
+        integrity: sha512-/zCEazDQScvIGTbAcREPsHm1HOjY0nH1m2kK/x0xpt+gCDfUrCrhwd1C8NoB87joR0NTOHRp73g5D7NSpx5IWA==
+      }
+    peerDependencies:
+      react: ">16.8.0"
+
   react-style-singleton@2.2.3:
     resolution:
       {
@@ -3236,6 +3308,12 @@ packages:
     resolution:
       {
         integrity: sha512-M9/ELqF6fy8FwmkpnF0S3YKOqMyoWJ4+CS5Efg2ct3oY9daQvd/Pc71FpGZsVsbl3Cpb+IIcjBDUnnyBdQbq4w==
+      }
+
+  requires-port@1.0.0:
+    resolution:
+      {
+        integrity: sha512-KigOCHcocU3XODJxsu8i/j8T9tzT4adHiecwORRQ0ZZFcp7ahwXuRU1m+yuO90C5ZUyGeGfocHDI14M3L3yDAQ==
       }
 
   resolve-from@4.0.0:
@@ -3277,6 +3355,12 @@ packages:
     resolution:
       {
         integrity: sha512-5l4VyZR86LZ/lDxZTR6jqL8AFE2S0IFLMP26AbjsLVADxHdhB/c0GUsH+y39UfCi3dzz8OlQuPmnaJOMoDHQBA==
+      }
+
+  safe-buffer@5.2.1:
+    resolution:
+      {
+        integrity: sha512-rp3So07KcdmmKbGvgaNxQSJr7bGVSVk5S9Eq1F+ppbRo70+YeaDxkw5Dd8NPN+GD6bjnYm2VuPuCXmpuYvmCXQ==
       }
 
   scheduler@0.26.0:
@@ -3340,6 +3424,13 @@ packages:
         integrity: sha512-bSiSngZ/jWeX93BqeIAbImyTbEihizcwNjFoRUIY/T1wWQsfsm2Vw1agPKylXvQTU7iASGdHhyqRlqQzfz+Htg==
       }
     engines: { node: ">=18" }
+
+  sockjs-client@1.6.1:
+    resolution:
+      {
+        integrity: sha512-2g0tjOR+fRs0amxENLi/q5TiJTqY+WXFOzb5UwXndlK6TO3U/mirZznpx6w34HVMoc3g7cY24yC/ZMIYnDlfkw==
+      }
+    engines: { node: ">=12" }
 
   source-map-js@1.2.1:
     resolution:
@@ -3490,6 +3581,12 @@ packages:
         integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==
       }
 
+  url-parse@1.5.10:
+    resolution:
+      {
+        integrity: sha512-WypcfiRhfeUP9vvF0j6rw0J3hrWrw6iZv3+22h6iRMJ/8z1Tj6XfLP4DsUix5MhMPnXpiHDoKyoZ/bdCkwBCiQ==
+      }
+
   use-callback-ref@1.3.3:
     resolution:
       {
@@ -3567,6 +3664,20 @@ packages:
       yaml:
         optional: true
 
+  websocket-driver@0.7.4:
+    resolution:
+      {
+        integrity: sha512-b17KeDIQVjvb0ssuSDF2cYXSg2iztliJ4B9WdsuB6J952qCPKmnVq4DyW5motImXHDC1cBT/1UezrJVsKw5zjg==
+      }
+    engines: { node: ">=0.8.0" }
+
+  websocket-extensions@0.1.4:
+    resolution:
+      {
+        integrity: sha512-OqedPIGOfsDlo31UNwYbCFMSaO9m9G/0faIHj5/dZFDMFqPTcx6UwqyOy3COEaEOg/9VsGIpdqn62W5KhoKSpg==
+      }
+    engines: { node: ">=0.8.0" }
+
   which@2.0.2:
     resolution:
       {
@@ -3588,6 +3699,21 @@ packages:
         integrity: sha512-G8ura3S+3Z2G+mkgNRq8dqaFZAuxfsxpBB8OCTGRTCtp+l/v9nbFNmCUP1BZMts3G1142MsZfn6eeUKrr4PD1Q==
       }
     engines: { node: ">=18" }
+
+  ws@8.18.2:
+    resolution:
+      {
+        integrity: sha512-DMricUmwGZUVr++AEAe2uiVM7UoO9MAVZMDu05UQOaUII0lp+zOzLLU4Xqh/JvTqklB1T4uELaaPBKyjE1r4fQ==
+      }
+    engines: { node: ">=10.0.0" }
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: ">=5.0.2"
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
 
   yallist@3.1.1:
     resolution:
@@ -4737,6 +4863,8 @@ snapshots:
 
   "@standard-schema/utils@0.3.0": {}
 
+  "@stomp/stompjs@7.1.1": {}
+
   "@tailwindcss/node@4.1.8":
     dependencies:
       "@ampproject/remapping": 2.3.0
@@ -4844,6 +4972,8 @@ snapshots:
   "@types/react@19.1.6":
     dependencies:
       csstype: 3.1.3
+
+  "@types/sockjs-client@1.5.4": {}
 
   "@types/use-sync-external-store@0.0.6": {}
 
@@ -5052,6 +5182,10 @@ snapshots:
 
   csstype@3.1.3: {}
 
+  debug@3.2.7:
+    dependencies:
+      ms: 2.1.3
+
   debug@4.4.1:
     dependencies:
       ms: 2.1.3
@@ -5184,6 +5318,8 @@ snapshots:
 
   eventemitter3@5.0.1: {}
 
+  eventsource@2.0.2: {}
+
   fast-deep-equal@3.1.3: {}
 
   fast-glob@3.3.3:
@@ -5201,6 +5337,10 @@ snapshots:
   fastq@1.19.1:
     dependencies:
       reusify: 1.1.0
+
+  faye-websocket@0.11.4:
+    dependencies:
+      websocket-driver: 0.7.4
 
   fdir@6.4.5(picomatch@4.0.2):
     optionalDependencies:
@@ -5255,6 +5395,8 @@ snapshots:
 
   has-flag@4.0.0: {}
 
+  http-parser-js@0.5.10: {}
+
   husky@9.1.7: {}
 
   ignore@5.3.2: {}
@@ -5267,6 +5409,8 @@ snapshots:
       resolve-from: 4.0.0
 
   imurmurhash@0.1.4: {}
+
+  inherits@2.0.4: {}
 
   is-extglob@2.1.1: {}
 
@@ -5492,6 +5636,8 @@ snapshots:
 
   punycode@2.3.1: {}
 
+  querystringify@2.2.0: {}
+
   queue-microtask@1.2.3: {}
 
   radix-ui@1.4.2(@types/react-dom@19.1.5(@types/react@19.1.6))(@types/react@19.1.6)(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
@@ -5604,6 +5750,15 @@ snapshots:
     optionalDependencies:
       react-dom: 19.1.0(react@19.1.0)
 
+  react-stomp-hooks@3.0.1(react@19.1.0):
+    dependencies:
+      "@stomp/stompjs": 7.1.1
+      "@types/sockjs-client": 1.5.4
+      react: 19.1.0
+      sockjs-client: 1.6.1
+    transitivePeerDependencies:
+      - supports-color
+
   react-style-singleton@2.2.3(@types/react@19.1.6)(react@19.1.0):
     dependencies:
       get-nonce: 1.0.1
@@ -5619,6 +5774,8 @@ snapshots:
       redux: 5.0.1
 
   redux@5.0.1: {}
+
+  requires-port@1.0.0: {}
 
   resolve-from@4.0.0: {}
 
@@ -5661,6 +5818,8 @@ snapshots:
     dependencies:
       queue-microtask: 1.2.3
 
+  safe-buffer@5.2.1: {}
+
   scheduler@0.26.0: {}
 
   semver@6.3.1: {}
@@ -5686,6 +5845,16 @@ snapshots:
     dependencies:
       ansi-styles: 6.2.1
       is-fullwidth-code-point: 5.0.0
+
+  sockjs-client@1.6.1:
+    dependencies:
+      debug: 3.2.7
+      eventsource: 2.0.2
+      faye-websocket: 0.11.4
+      inherits: 2.0.4
+      url-parse: 1.5.10
+    transitivePeerDependencies:
+      - supports-color
 
   source-map-js@1.2.1: {}
 
@@ -5767,6 +5936,11 @@ snapshots:
     dependencies:
       punycode: 2.3.1
 
+  url-parse@1.5.10:
+    dependencies:
+      querystringify: 2.2.0
+      requires-port: 1.0.0
+
   use-callback-ref@1.3.3(@types/react@19.1.6)(react@19.1.0):
     dependencies:
       react: 19.1.0
@@ -5801,6 +5975,14 @@ snapshots:
       lightningcss: 1.30.1
       yaml: 2.8.0
 
+  websocket-driver@0.7.4:
+    dependencies:
+      http-parser-js: 0.5.10
+      safe-buffer: 5.2.1
+      websocket-extensions: 0.1.4
+
+  websocket-extensions@0.1.4: {}
+
   which@2.0.2:
     dependencies:
       isexe: 2.0.0
@@ -5812,6 +5994,8 @@ snapshots:
       ansi-styles: 6.2.1
       string-width: 7.2.0
       strip-ansi: 7.1.0
+
+  ws@8.18.2: {}
 
   yallist@3.1.1: {}
 

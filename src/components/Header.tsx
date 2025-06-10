@@ -20,7 +20,7 @@ function HeaderCatalog({
         align={align}
         className="bg-primary rounded-3xl border-none max-w-xl w-screen"
       >
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 overflow-y-auto max-h-96 md:max-h-64 pr-2">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 overflow-y-auto max-h-96 md:max-h-72 pr-2">
           {categories.map((category, index) => (
             <Card className="bg-background py-0 overflow-hidden" key={index}>
               <NavLink to={`/category/${category.name}`}>

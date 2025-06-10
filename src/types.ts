@@ -1,6 +1,6 @@
 export type LoadingStatus = "idle" | "loading" | "succeeded" | "failed";
 
-export type GameCategories = "pubg" | "cs2" | "fortnite" | "deadlock" | "dota2";
+export type GameCategories = "PUBG" | "CS2" | "FORTNITE" | "DEADLOCK" | "DOTA2";
 
 export type GameCategory = {
   title: string;
