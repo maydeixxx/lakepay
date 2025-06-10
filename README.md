@@ -23,28 +23,16 @@ Good luck!
 - [x] Home
 - [x] Not found
 - [x] Favourites
-- [ ] Chats
-- [ ] Login
-- [ ] Product
-- [ ] User
-- [ ] Cart
+- [x] Chats
+- [x] Login
+- [x] Product
+- [x] User
+- [x] Cart
 - [ ] Search
 
 ## Current Tasks
 
 - Add pages
-- - Chats
-- - Login
-- - Product
-- - User
-- - Cart
 - - Search
-- Authentication
-- - Add auth state reducers
-- - Add auth state actions
-- - Attach logic to UI
 - Pulling data
-- - Fetch profuct categories
-- - Fetch favourites
-- - Fetch new ads
 - - Search products
