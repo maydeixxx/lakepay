@@ -19,7 +19,7 @@ spring:
         - id: chatService
           uri: lb://chatService
           predicates:
-            - Path=/chat/list, /chat/info/**, /chat/history/**
+            - Path=/chat/list, /chat/info/**, /chat/history/**, /ws/**
   security:
     enabled: true
 
