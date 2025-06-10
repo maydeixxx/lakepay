@@ -20,8 +20,10 @@ public class ChatRoom {
     private Long id;
     private String chatId;
     @ManyToOne
+    @JoinColumn(name = "sender_id")
     private User sender;
     @ManyToOne
+    @JoinColumn(name = "recipient_id")
     private User recipient;
     @OneToMany(mappedBy = "chatId")
     private List<ChatMessage> messages;

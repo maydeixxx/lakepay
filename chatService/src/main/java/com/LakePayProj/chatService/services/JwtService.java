@@ -1,6 +1,5 @@
 package com.LakePayProj.chatService.services;
 
-import com.LakePayProj.chatService.models.Role;
 import com.LakePayProj.chatService.models.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -10,7 +9,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import java.security.Key;
 import java.time.Duration;
 import java.util.Date;
 import java.util.HashMap;
@@ -25,27 +23,6 @@ public class JwtService {
 
     @Value("${token.signing.lifetime}")
     private Duration lifetime;
-
-    public String generateToken(User user) {
-        Map<String, Object> claims = new HashMap<>();
-        List<String> roles = user.getRoles().stream().map(Role::getName).toList();
-        claims.put("id", user.getId());
-        claims.put("tgId", user.getTgId());
-        claims.put("username", user.getUsername());
-        claims.put("roles", roles);
-        claims.put("urlPhoto", user.getUrlPhoto());
-        claims.put("dateOfReg", user.getDateOfReg().toString());
-
-        Date issuedDate = new Date();
-        Date expiredDate = new Date(issuedDate.getTime() + lifetime.toMillis());
-        return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(user.getUsername())
-                .setIssuedAt(issuedDate)
-                .setExpiration(expiredDate)
-                .signWith(SignatureAlgorithm.HS256, jwtSigningKey)
-                .compact();
-    }
 
     public String getUsername(String token) {
         return getFromToken(token).getSubject();

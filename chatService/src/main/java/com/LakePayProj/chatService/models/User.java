@@ -17,7 +17,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "users")
+@Table(name = "chat_user")
 public class User implements UserDetails {
     @Id
     private Long id;
@@ -28,17 +28,11 @@ public class User implements UserDetails {
     private String urlPhoto;
     private LocalDate dateOfReg;
     private BigDecimal balance;
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-            name = "users_roles",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
-    private Collection<Role> roles;
+    private List<String> roles;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return roles.stream().map(role -> new SimpleGrantedAuthority(role.getName())).toList();
+        return roles.stream().map(SimpleGrantedAuthority::new).toList();
     }
 
     @Override
