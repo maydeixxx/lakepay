@@ -43,13 +43,7 @@ const formSchema = z.object({
       required_error: "Введите цену.",
       invalid_type_error: "Введите цену."
     })
-    .min(1, "Цена не может быть меньше 1 руб."),
-  quantity: z.coerce
-    .number({
-      required_error: "Введите кол-во товара.",
-      invalid_type_error: "Введите кол-во товара."
-    })
-    .min(1, "Количество товара не может быть меньше 1.")
+    .min(1, "Цена не может быть меньше 1 руб.")
 });
 
 export function AddProductForm() {
@@ -77,7 +71,6 @@ export function AddProductForm() {
           body: values.description,
           category: values.category,
           price: values.price,
-          quantity: values.quantity,
           sellerId: user?.id.toString(),
           login: values.login,
           password: values.password,
@@ -231,46 +224,24 @@ export function AddProductForm() {
               />
             </div>
 
-            <div className="flex gap-4 flex-col items-stretch md:items-start md:flex-row">
-              <FormField
-                control={form.control}
-                name="price"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-secondary">Цена:</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="Цена..."
-                        className="bg-on-card placeholder:text-on-card-foreground"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="quantity"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-secondary">
-                      Количество:
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="Кол-во..."
-                        className="bg-on-card placeholder:text-on-card-foreground"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="price"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-secondary">Цена:</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="Цена..."
+                      className="bg-on-card placeholder:text-on-card-foreground"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <Button variant="secondary" type="submit">
               Опубликовать объявление
