@@ -32,8 +32,11 @@ const formSchema = z.object({
   description: z
     .string({ required_error: "Пожалуйста введите описание товара." })
     .max(150, "Описание не может быть длинее 150 символов."),
-  details: z.string({
-    required_error: "Пожалуйста введите детали от аккаунта."
+  login: z.string({
+    required_error: "Пожалуйста введите логин от аккаунта."
+  }),
+  password: z.string({
+    required_error: "Пожалуйста введите пароль от аккаунта."
   }),
   price: z.coerce
     .number({
@@ -76,6 +79,8 @@ export function AddProductForm() {
           price: values.price,
           quantity: values.quantity,
           sellerId: user?.id.toString(),
+          login: values.login,
+          password: values.password,
           sold: false
         })
       });
@@ -189,23 +194,42 @@ export function AddProductForm() {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="details"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-secondary">Данные:</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Введите данные..."
-                      className="bg-on-card placeholder:text-on-card-foreground"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="flex gap-4 flex-col items-stretch md:items-start md:flex-row">
+              <FormField
+                control={form.control}
+                name="login"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-secondary">Логин:</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Введите логин..."
+                        className="bg-on-card placeholder:text-on-card-foreground"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-secondary">Пароль:</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Введите пароль..."
+                        className="bg-on-card placeholder:text-on-card-foreground"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="flex gap-4 flex-col items-stretch md:items-start md:flex-row">
               <FormField
