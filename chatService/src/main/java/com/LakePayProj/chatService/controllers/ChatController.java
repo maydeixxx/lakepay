@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.util.Date;
 import java.util.List;
 
 @Slf4j
@@ -54,7 +55,7 @@ public class ChatController {
                 .recipient(recipient)
                 .content(chatMessage.content())
                 .status(MessageStatus.RECEIVED)
-                .date(chatMessage.date())
+                .date(new Date())
                 .build();
 
         chatMessageService.save(message);
