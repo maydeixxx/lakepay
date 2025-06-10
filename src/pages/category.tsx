@@ -1,6 +1,7 @@
 import { Card } from "@/components/Card";
 import { ProductView } from "@/components/ProductView";
 import { ADS_CATEGORY_URL, categories } from "@/config";
+import { useAppSelector } from "@/redux/store";
 import type { Product } from "@/types";
 import { photoFromCategory } from "@/utils";
 import { useEffect, useRef, useState } from "react";
@@ -9,6 +10,7 @@ import { NavLink, useNavigate, useParams } from "react-router";
 export default function CategoryPage() {
   let { categoryId } = useParams<{ categoryId?: string }>();
   const category = categories.find((c) => c.name == categoryId);
+  const { user } = useAppSelector((state) => state.auth);
 
   const navigate = useNavigate();
   if (!category) {
@@ -22,6 +24,8 @@ export default function CategoryPage() {
   const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
+    setProducts([]);
+
     const fetchProducts = async () => {
       abortControllerRef.current?.abort();
       abortControllerRef.current = new AbortController();
@@ -47,7 +51,7 @@ export default function CategoryPage() {
     };
 
     fetchProducts();
-  }, []);
+  }, [categoryId]);
 
   return (
     <>
@@ -60,7 +64,7 @@ export default function CategoryPage() {
             products.slice(0, 5).map((product) => (
               <ProductView
                 key={product.id}
-                show_favourite={true}
+                personal={user?.id == product.sellerId}
                 product={{
                   id: product.id,
                   title: product.title,

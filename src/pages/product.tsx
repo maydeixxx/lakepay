@@ -7,6 +7,7 @@ import { ADS_URL, USERS_URL } from "@/config";
 import UserIcon from "@/icons/UserIcon";
 import { photoFromCategory } from "@/utils";
 import SpinnerIcon from "@/icons/SpinnerIcon";
+import { useAppSelector } from "@/redux/store";
 
 export default function ProductPage() {
   let { productId } = useParams<{ productId?: string }>();
@@ -14,6 +15,7 @@ export default function ProductPage() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [product, setProduct] = useState<Product | null>(null);
   const [seller, setSeller] = useState<User | null>(null);
+  const { user } = useAppSelector((state) => state.auth);
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -98,12 +100,14 @@ export default function ProductPage() {
             <h2 className="text-secondary text-3xl w-full">
               Цена: {product?.price}Р
             </h2>
-            <div className="flex gap-4 py-4">
-              <Button variant="secondary">
-                <img src={cartIcon} alt="" />
-              </Button>
-              <Button variant="secondary">Купить сейчас</Button>
-            </div>
+            {user && seller?.id != user.id && (
+              <div className="flex gap-4 py-4">
+                <Button variant="secondary">
+                  <img src={cartIcon} alt="" />
+                </Button>
+                <Button variant="secondary">Купить сейчас</Button>
+              </div>
+            )}
             <NavLink
               to={`/user/${seller?.id}`}
               className="flex items-center gap-4"

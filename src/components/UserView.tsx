@@ -104,7 +104,7 @@ function UserView({ user, type }: UserViewProps) {
         {products &&
           products.map((product) => (
             <ProductView
-              show_favourite={false}
+              personal={true}
               product={{
                 id: product.id,
                 title: product.title,

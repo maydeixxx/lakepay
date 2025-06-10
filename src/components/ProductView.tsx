@@ -13,12 +13,13 @@ export interface ProductViewProps extends React.ComponentProps<"div"> {
     price: number;
     favourite: boolean;
   };
-  show_favourite?: boolean;
+  personal?: boolean;
+  in_cart?: boolean;
 }
 
 export function ProductView({
   product,
-  show_favourite = true,
+  personal = true,
   className,
   ...props
 }: ProductViewProps) {
@@ -39,14 +40,16 @@ export function ProductView({
         <p className="text-xs md:text-sm">{product.description}</p>
       </div>
       <div className="flex gap-4 items-center">
-        <Button variant="secondary">{`${product.price} Р`}</Button>
         {/* Add on click listener add/remove from favourites */}
-        {show_favourite && (
-          <Button size="icon" variant="secondary" className="p-2">
-            <FavouriteIcon
-              className={`${product.favourite ? "text-destructive" : "text-secondary-foreground"}`}
-            />
-          </Button>
+        {!personal && (
+          <>
+            <Button variant="secondary">{`${product.price} Р`}</Button>
+            <Button size="icon" variant="secondary" className="p-2">
+              <FavouriteIcon
+                className={`${product.favourite ? "text-destructive" : "text-secondary-foreground"}`}
+              />
+            </Button>
+          </>
         )}
       </div>
     </Card>

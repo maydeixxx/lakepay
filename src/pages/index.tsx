@@ -8,11 +8,13 @@ import { ProductView } from "@/components/ProductView";
 import { useEffect, useRef, useState } from "react";
 import type { Product } from "@/types";
 import { photoFromCategory } from "@/utils";
+import { useAppSelector } from "@/redux/store";
 
 export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [products, setProducts] = useState<Product[] | null>(null);
+  const { user } = useAppSelector((state) => state.auth);
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -28,6 +30,8 @@ export default function Home() {
           signal: abortControllerRef.current?.signal
         });
         const products = (await response.json()) as Product[];
+        console.log(products);
+
         setProducts(products);
       } catch (e: any) {
         if (e.name === "AbortError") {
@@ -70,7 +74,7 @@ export default function Home() {
             products.slice(0, 5).map((product) => (
               <ProductView
                 key={product.id}
-                show_favourite={true}
+                personal={user?.id == product.sellerId}
                 product={{
                   id: product.id,
                   title: product.title,
