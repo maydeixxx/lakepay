@@ -38,8 +38,8 @@ export function ChatHistory({ chatId, className, ...props }: ChatHistoryProps) {
           history.map((msg, i) => (
             <Card
               className={cn(
-                "bg-on-card-dark flex flex-col gap-2 p-4 w-fit",
-                msg.sender.id == user?.id ? "ml-auto" : ""
+                "bg-on-card-dark flex flex-col gap-2 p-4 max-w-xl",
+                msg.sender.id == user?.id ? "ml-auto" : "mr-auto"
               )}
               key={JSON.stringify(msg)}
               ref={i == history.length - 1 ? lastMsgRef : null}
@@ -57,7 +57,7 @@ export function ChatHistory({ chatId, className, ...props }: ChatHistoryProps) {
                 />
                 <span>{msg.sender.username}</span>
               </div>
-              <span>{msg.content}</span>
+              <span className="text-wrap break-words">{msg.content}</span>
             </Card>
           ))}
       </section>

@@ -29,7 +29,9 @@ export function ChatView({ chatId, className, ...props }: ChatViewProps) {
   const { info, pushMessage } = useChatRoom(chatId);
 
   const formSchema = z.object({
-    message: z.string({ required_error: "" })
+    message: z
+      .string({ required_error: "" })
+      .min(1, "Сообщение не может быть короче 1 символа.")
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
