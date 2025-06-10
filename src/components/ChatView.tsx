@@ -66,7 +66,7 @@ export function ChatView({ chatId, className, ...props }: ChatViewProps) {
           />
           <span>{info?.recipient.username}</span>
         </Card>
-        <ChatHistory className="overflow-y-auto" chatId={chatId} />
+        <ChatHistory chatId={chatId} />
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex gap-4">
             <FormField

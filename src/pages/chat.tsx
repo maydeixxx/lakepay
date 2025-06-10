@@ -85,13 +85,6 @@ export default function ChatsPage() {
                   </Card>
                 </NavLink>
               ))}
-
-            <NavLink to={`/chat/${1}`}>
-              <Card className="bg-on-card-dark text-on-card-dark-foreground flex flex-row gap-8 p-4 items-center">
-                <img src={game} alt="" className="rounded-full size-12" />
-                <span>Username</span>
-              </Card>
-            </NavLink>
           </aside>
           <main className="basis-3/4 bg-card-dark rounded-xl p-4">
             {chatId && <ChatView chatId={chatId}></ChatView>}
