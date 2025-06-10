@@ -1,6 +1,5 @@
 package com.LakePayProj.chatService.auth;
 
-
 import com.LakePayProj.chatService.models.User;
 import com.LakePayProj.chatService.services.JwtService;
 import com.LakePayProj.chatService.services.UserService;
@@ -25,7 +24,7 @@ import java.io.IOException;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class JwtAuthenticationFilter extends OncePerRequestFilter{
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
     public static final String BEARER_PREFIX = "Bearer ";
     public static final String HEADER_NAME = "Authorization";
     private final JwtService jwtService;
@@ -61,13 +60,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
             }
 
             if (jwtService.isTokenValid(jwt, user)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(user,null, jwtService.getRoles(jwt).stream().map(SimpleGrantedAuthority::new).toList());
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                        user,
+                        null,
+                        jwtService.getRoles(jwt).stream().map(SimpleGrantedAuthority::new).toList()
+                );
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                // Reset user context
+                // Устанавливаем контекст
                 SecurityContext context = SecurityContextHolder.createEmptyContext();
                 context.setAuthentication(authToken);
-
                 SecurityContextHolder.setContext(context);
             }
         }
@@ -75,4 +77,3 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
         filterChain.doFilter(request, response);
     }
 }
-

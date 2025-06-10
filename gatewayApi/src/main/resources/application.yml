@@ -7,31 +7,34 @@ spring:
         - id: userService
           uri: lb://userService
           predicates:
-            - Path=/auth/telegram, /auth/telegram/token, /all_users, /user_id/**, /user_role/**, /user_category/**, /save_user, /update_user/**, /delete_user/**, /categoriesById/**, /user_tg/**, /unsubscribe, /subscribe, /add_role
+            - Path=/auth/telegram,/auth/telegram/token,/all_users,/user_id/**,/user_role/**,/user_category/**,/save_user,/update_user/**,/delete_user/**,/categoriesById/**,/user_tg/**,/unsubscribe,/subscribe,/add_role
         - id: adService
           uri: lb://adService
           predicates:
-            - Path=/all_ads, /save_ad, /ad_delete/**, /ad_category/**, /ad_id/**, /update_ad/**, /ad_credentials/**, /personal_ads, /delete_my_ad/**
+            - Path=/all_ads,/save_ad,/ad_delete/**,/ad_category/**,/ad_id/**,/update_ad/**,/ad_credentials/**,/personal_ads,/delete_my_ad/**
         - id: paymentService
           uri: lb://paymentService
           predicates:
-            - Path=/pay/webhook, /buy, /withdraw, /deposit
+            - Path=/pay/webhook,/buy,/withdraw,/deposit
         - id: chatService
           uri: lb://chatService
           predicates:
-            - Path=/chat/list, /chat/info/**, /chat/history/**, /ws/**
-  security:
-    enabled: true
+            - Path=/chat/list,/chat/info/**,/chat/history/**,/ws/**,/chat/all
+          filters:
+            - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Methods Access-Control-Allow-Headers Access-Control-Allow-Credentials # Удаляет дублирующиеся CORS-заголовки
+            - PreserveHostHeader # Сохраняет заголовок Host для корректной маршрутизации
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Methods Access-Control-Allow-Headers Access-Control-Allow-Credentials # Применяется ко всем маршрутам
 
 server:
   port: 8990
   tomcat:
     remote-ip-header: X-Forwarded-For
     protocol-header: X-Forwarded-Proto
-    trusted-proxy: "*"
+
 eureka:
   client:
     service-url:
       defaultZone: http://eureka-service:8761/eureka/
 
-debug: ${DEBUG_MODE}
+debug: ${DEBUG_MODE:false} # Установите значение по умолчанию, если переменная не определена

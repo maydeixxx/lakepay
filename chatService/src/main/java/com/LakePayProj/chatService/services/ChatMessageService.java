@@ -38,6 +38,6 @@ public class ChatMessageService {
     }
 
     public List<ChatMessage> findAllMessages() {
-        return repository.findAllMessages();
+        return repository.findAll();
     }
 }
