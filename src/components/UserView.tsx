@@ -103,17 +103,7 @@ function UserView({ user, type }: UserViewProps) {
 
         {products &&
           products.map((product) => (
-            <ProductView
-              personal={true}
-              product={{
-                id: product.id,
-                title: product.title,
-                description: product.body,
-                price: product.price,
-                photo: photoFromCategory(product.category),
-                favourite: false
-              }}
-            />
+            <ProductView personal={true} product={product} />
           ))}
       </section>
 

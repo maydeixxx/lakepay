@@ -61,20 +61,15 @@ export default function CategoryPage() {
         </h1>
         <div className="flex flex-col gap-8">
           {products &&
-            products.slice(0, 5).map((product) => (
-              <ProductView
-                key={product.id}
-                personal={user?.id == product.sellerId}
-                product={{
-                  id: product.id,
-                  title: product.title,
-                  description: product.body,
-                  price: product.price,
-                  photo: photoFromCategory(product.category),
-                  favourite: false
-                }}
-              />
-            ))}
+            products
+              .slice(0, 5)
+              .map((product) => (
+                <ProductView
+                  key={product.id}
+                  personal={user?.id == product.sellerId}
+                  product={product}
+                />
+              ))}
         </div>
       </section>
     </>

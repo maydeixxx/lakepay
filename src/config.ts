@@ -12,6 +12,8 @@ export const CHAT_LIST = SERVER_URL + "chat/list";
 export const CHAT_INFO = SERVER_URL + "chat/info";
 export const CHAT_HISTORY = SERVER_URL + "chat/history";
 
+export const BUY_AD_URL = SERVER_URL + "buy";
+
 import cs2 from "@/assets/cs2.webp";
 import dota2 from "@/assets/dota2.jpg";
 import deadlock from "@/assets/deadlock.jpg";

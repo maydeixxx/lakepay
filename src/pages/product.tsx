@@ -1,13 +1,15 @@
 import { Button } from "@/components/Button";
 import { NavLink, useParams } from "react-router";
-import cartIcon from "@/assets/cart.svg";
 import { useEffect, useRef, useState } from "react";
 import type { Product, User } from "@/types";
 import { ADS_URL, USERS_URL } from "@/config";
 import UserIcon from "@/icons/UserIcon";
 import { photoFromCategory } from "@/utils";
 import SpinnerIcon from "@/icons/SpinnerIcon";
-import { useAppSelector } from "@/redux/store";
+import { useAppDispatch, useAppSelector } from "@/redux/store";
+import { CartIcon } from "@/icons/CartIcon";
+import { TrashIcon } from "@/icons/TrashIcon";
+import { addToCart, removeFromCart } from "@/features/cart/cartActions";
 
 export default function ProductPage() {
   let { productId } = useParams<{ productId?: string }>();
@@ -18,6 +20,8 @@ export default function ProductPage() {
   const { user } = useAppSelector((state) => state.auth);
 
   const abortControllerRef = useRef<AbortController | null>(null);
+  const dispatch = useAppDispatch();
+  const cart = useAppSelector((state) => state.cart);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -77,7 +81,7 @@ export default function ProductPage() {
     }
   }, [product]);
 
-  if (isLoading) {
+  if (isLoading || !product) {
     return (
       <>
         <section className="container mx-auto flex w-full justify-center h-96 items-center">
@@ -86,6 +90,8 @@ export default function ProductPage() {
       </>
     );
   }
+
+  async function buyProduct() {}
 
   return (
     <>
@@ -102,9 +108,22 @@ export default function ProductPage() {
             </h2>
             {user && seller?.id != user.id && (
               <div className="flex gap-4 py-4">
-                <Button variant="secondary">
-                  <img src={cartIcon} alt="" />
-                </Button>
+                {cart.items[product?.id] ? (
+                  <Button
+                    variant="secondary"
+                    onClick={() => dispatch(removeFromCart(product!))}
+                  >
+                    <TrashIcon />
+                  </Button>
+                ) : (
+                  <Button
+                    variant="secondary"
+                    onClick={() => dispatch(addToCart(product!))}
+                  >
+                    <CartIcon />
+                  </Button>
+                )}
+
                 <Button variant="secondary">Купить сейчас</Button>
               </div>
             )}

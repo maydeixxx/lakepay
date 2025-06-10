@@ -2,6 +2,9 @@ import game from "@/assets/cs2.webp";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import { FavouriteIcon } from "@/icons/FavouriteIcon";
+import { useAppSelector } from "@/redux/store";
+import { useEffect } from "react";
+import { useNavigate } from "react-router";
 
 // TODO: Fetch favourite ads from server
 const ads = [
@@ -36,6 +39,15 @@ const ads = [
 ];
 
 export default function FavouritesPage() {
+  const { user } = useAppSelector((state) => state.auth);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user) {
+      navigate("/login");
+    }
+  }, [user]);
+
   return (
     <>
       <section className="container mx-auto py-16">

@@ -24,6 +24,7 @@ export function ProductView({
 }: ProductViewProps) {
   const dispatch = useAppDispatch();
   const cart = useAppSelector((state) => state.cart);
+  const { user } = useAppSelector((state) => state.auth);
 
   return (
     <Card
@@ -43,27 +44,26 @@ export function ProductView({
       </div>
       <div className="flex gap-4 items-center">
         {/* Add on click listener add/remove from favourites */}
-        {personal && (
-          <>
-            {cart.items[product.id] ? (
-              <Button
-                onClick={() => dispatch(removeFromCart(product))}
-                variant="secondary"
-              >
-                {`${product.price}Р`}
-                <TrashIcon className="text-secondary-foreground" />
-              </Button>
-            ) : (
-              <Button
-                onClick={() => dispatch(addToCart(product))}
-                variant="secondary"
-              >
-                {`${product.price}Р`}
-                <CartIcon className="text-secondary-foreground" />
-              </Button>
-            )}
-          </>
-        )}
+        <NavLink to={`/product/${product.id}`}>
+          <Button variant="secondary">{`${product.price}Р`}</Button>
+        </NavLink>
+        {user &&
+          !personal &&
+          (cart.items[product.id] ? (
+            <Button
+              onClick={() => dispatch(removeFromCart(product))}
+              variant="secondary"
+            >
+              <TrashIcon className="text-secondary-foreground" />
+            </Button>
+          ) : (
+            <Button
+              onClick={() => dispatch(addToCart(product))}
+              variant="secondary"
+            >
+              <CartIcon className="text-secondary-foreground" />
+            </Button>
+          ))}
       </div>
     </Card>
   );

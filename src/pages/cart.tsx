@@ -1,8 +1,18 @@
 import { ProductView } from "@/components/ProductView";
 import { useAppSelector } from "@/redux/store";
+import { useEffect } from "react";
+import { useNavigate } from "react-router";
 
 export default function CartPage() {
   const { items } = useAppSelector((state) => state.cart);
+  const { user } = useAppSelector((state) => state.auth);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user) {
+      navigate("/login");
+    }
+  }, [user]);
 
   return (
     <>
