@@ -2,8 +2,11 @@ package com.LakePayProj.chatService.controllers;
 
 import com.LakePayProj.chatService.DTOs.ChatMessageDTO;
 import com.LakePayProj.chatService.DTOs.ChatRoomDTO;
+import com.LakePayProj.chatService.enums.MessageStatus;
 import com.LakePayProj.chatService.mappers.IChatMessageMapper;
 import com.LakePayProj.chatService.mappers.IUserMapper;
+import com.LakePayProj.chatService.models.ChatMessage;
+import com.LakePayProj.chatService.models.ChatNotification;
 import com.LakePayProj.chatService.models.User;
 import com.LakePayProj.chatService.services.ChatMessageService;
 import com.LakePayProj.chatService.services.ChatRoomService;
@@ -12,6 +15,8 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,32 +38,34 @@ public class ChatController {
     private ChatRoomService chatRoomService;
     private UserService userService;
 
-//    @MessageMapping("/chat")
-//    public void processMessage(@Payload ChatMessageDTO chatMessage) {
-//        User user = userService.getCurrentUser();
-//        log.info("Received websocket message from {}", user.getUsername());
-//
-//        var chatId = chatRoomService.getChatId(chatMessage.senderName(), chatMessage.recipientName(), true);
-//
-//        ChatMessage message = ChatMessage
-//                .builder()
-//                .chatId(chatId.get())
-//                .senderName(chatMessage.senderName())
-//                .recipientName(chatMessage.recipientName())
-//                .content(chatMessage.content())
-//                .status(MessageStatus.RECEIVED)
-//                .date(chatMessage.date())
-//                .build();
-//
-//        chatMessageService.save(message);
-//
-//        messagingTemplate.convertAndSendToUser(
-//                chatMessage.recipientName(),"/queue/messages",
-//                new ChatNotification(
-//                        message.getId(),
-//                        message.getSenderName())
-//        );
-//    }
+    @MessageMapping("/send")
+    public void processMessage(@Payload ChatMessageDTO chatMessage) {
+        User user = userService.getCurrentUser();
+        log.info("Received websocket message from {}", user.getUsername());
+
+        User sender = userMapper.toUser(chatMessage.sender());
+        User recipient = userMapper.toUser(chatMessage.recipient());
+        var chatId = chatRoomService.getChatId(sender, recipient, true);
+
+        ChatMessage message = ChatMessage
+                .builder()
+                .chatId(chatId.get())
+                .sender(sender)
+                .recipient(recipient)
+                .content(chatMessage.content())
+                .status(MessageStatus.RECEIVED)
+                .date(chatMessage.date())
+                .build();
+
+        chatMessageService.save(message);
+
+        messagingTemplate.convertAndSendToUser(
+                recipient.getUsername(),"/queue/messages",
+                new ChatNotification(
+                        message.getId(),
+                        sender.getUsername())
+        );
+    }
 
     @GetMapping(path = "/list", produces = "application/json")
     public @ResponseBody ResponseEntity<List<ChatRoomDTO>> getAvailableChats() {

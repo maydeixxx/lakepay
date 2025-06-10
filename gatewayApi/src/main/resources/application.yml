@@ -19,9 +19,7 @@ spring:
         - id: chatService
           uri: lb://chatService
           predicates:
-            - Path=/chat/list, /chat/info/**, /chat/history/**
-  security:
-    enabled: false
+            - Path=/chat/list, /chat/info/**, /chat/history/**, /ws/**
 server:
   port: 8990
   tomcat:
