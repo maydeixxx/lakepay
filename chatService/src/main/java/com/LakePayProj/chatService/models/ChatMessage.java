@@ -2,8 +2,10 @@ package com.LakePayProj.chatService.models;
 
 import com.LakePayProj.chatService.enums.MessageStatus;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Date;
 
@@ -11,6 +13,8 @@ import java.util.Date;
 @Data
 @Builder
 @Table(name = "messages")
+@NoArgsConstructor
+@AllArgsConstructor
 public class ChatMessage {
     @Id
     @GeneratedValue
@@ -26,4 +30,5 @@ public class ChatMessage {
     @Enumerated(EnumType.STRING)
     private MessageStatus status;
     private String chatId;
+
 }

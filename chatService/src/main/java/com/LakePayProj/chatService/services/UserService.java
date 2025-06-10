@@ -43,7 +43,8 @@ public class UserService {
      * @return текущий пользователь
      */
     public User getCurrentUser() {
-        // Получение пользователя из контекста Spring Security
-        return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User principal = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        log.info(String.valueOf(principal));
+        return principal;
     }
 }

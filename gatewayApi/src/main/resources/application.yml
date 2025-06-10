@@ -19,7 +19,7 @@ spring:
         - id: chatService
           uri: lb://chatService
           predicates:
-            - Path=/chat/list,/chat/info/**,/chat/history/**,/ws/**,/chat/all
+            - Path=/chat/list,/chat/info/**,/chat/history/**,/ws/**,/chat/all,/app/send
           filters:
             - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Methods Access-Control-Allow-Headers Access-Control-Allow-Credentials # Удаляет дублирующиеся CORS-заголовки
             - PreserveHostHeader # Сохраняет заголовок Host для корректной маршрутизации

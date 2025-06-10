@@ -31,7 +31,7 @@ import java.util.List;
 
 @Slf4j
 @Controller
-@RequestMapping("chat")
+@RequestMapping("/chat")
 @AllArgsConstructor
 public class ChatController {
     private SimpMessagingTemplate messagingTemplate;
@@ -48,11 +48,11 @@ public class ChatController {
 
     @MessageMapping("/send")
     public void processMessage(Principal principal, @Payload ChatMessageDTO chatMessage) {
+        log.info("Received websocket message from {}", chatMessage);
         User user = null;
         if (principal instanceof UsernamePasswordAuthenticationToken auth) {
             user = (User) auth.getPrincipal();
         }
-        log.info("Received websocket message from {}", user.getUsername());
 
         User sender = userMapper.toUser(chatMessage.sender());
         User recipient = userMapper.toUser(chatMessage.recipient());
@@ -71,10 +71,15 @@ public class ChatController {
         chatMessageService.save(message);
 
         messagingTemplate.convertAndSendToUser(
-                recipient.getUsername(),"/queue/messages",
+                recipient.getUsername(),"/queue/notifications",
                 new ChatNotification(
                         message.getId(),
                         sender.getUsername())
+        );
+
+        messagingTemplate.convertAndSendToUser(
+                recipient.getUsername(),"/queue/messages",
+                chatMessage
         );
     }
 

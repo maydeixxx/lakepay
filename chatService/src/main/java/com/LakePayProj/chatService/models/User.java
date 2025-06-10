@@ -28,11 +28,10 @@ public class User implements UserDetails {
     private String urlPhoto;
     private LocalDate dateOfReg;
     private BigDecimal balance;
-    private List<String> roles;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return roles.stream().map(SimpleGrantedAuthority::new).toList();
+        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
     }
 
     @Override

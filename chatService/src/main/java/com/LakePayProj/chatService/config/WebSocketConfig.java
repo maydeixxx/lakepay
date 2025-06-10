@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.LakePayProj.chatService.models.User;
 import com.LakePayProj.chatService.services.JwtService;
 import com.LakePayProj.chatService.services.UserService;
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
@@ -20,6 +21,7 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.MimeTypeUtils;
@@ -27,6 +29,7 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
+import java.util.Collections;
 import java.util.List;
 
 import static com.LakePayProj.chatService.auth.JwtAuthenticationFilter.BEARER_PREFIX;
@@ -45,13 +48,12 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws").setAllowedOriginPatterns("*").withSockJS();
-        registry.addEndpoint("/ws").setAllowedOriginPatterns("*");
     }
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
         registry.enableSimpleBroker("/topic", "/queue");
-        registry.setApplicationDestinationPrefixes("/app");
+        registry.setApplicationDestinationPrefixes("/chat");
         registry.setUserDestinationPrefix("/user");
     }
 
@@ -71,37 +73,41 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registration.interceptors(new ChannelInterceptor() {
             @Override
             public Message<?> preSend(Message<?> message, MessageChannel channel) {
-                StompHeaderAccessor accessor =
-                        MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+                StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
                 log.info("Headers: {}", accessor);
 
-                assert accessor != null;
                 if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-
                     String authorizationHeader = accessor.getFirstNativeHeader(HEADER_NAME);
-                    assert authorizationHeader != null;
+                    log.info("Authorization header: {}", authorizationHeader);
+                    if (authorizationHeader == null || !authorizationHeader.startsWith(BEARER_PREFIX)) {
+                        log.error("Missing or invalid Authorization header");
+                        return message;
+                    }
                     String jwt = authorizationHeader.substring(BEARER_PREFIX.length());
-
-                    var id = jwtService.getFromToken(jwt).get("id").toString();
-                    if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                    try {
+                        Claims claims = jwtService.getFromToken(jwt);
+                        String id = claims.get("id").toString();
+                        log.info("Extracted user ID from JWT: {}", id);
                         User user = userService.getById(Long.valueOf(id));
-
+                        if (user == null) {
+                            log.error("User not found for ID: {}", id);
+                            return message;
+                        }
                         if (jwtService.isTokenValid(jwt, user)) {
                             SecurityContext context = SecurityContextHolder.createEmptyContext();
-
-                            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
-
+                            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(user, null, Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")));
                             context.setAuthentication(authToken);
                             accessor.setUser(authToken);
+                            log.info("User authenticated: {}", user.getUsername());
+                        } else {
+                            log.error("Invalid JWT token for user ID: {}", id);
                         }
-                    } else {
-                        accessor.setUser(SecurityContextHolder.getContext().getAuthentication());
+                    } catch (Exception e) {
+                        log.error("Error processing JWT: {}", e.getMessage(), e);
                     }
                 }
-
                 return message;
             }
-
         });
     }
 }

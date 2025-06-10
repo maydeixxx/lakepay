@@ -10,10 +10,8 @@ public interface IUserMapper {
     UserDTO toDTO(User user);
     @Mapping(target = "tgId", ignore = true)
     @Mapping(target = "subscriptions", ignore = true)
-    @Mapping(target = "roles", ignore = true)
     @Mapping(target = "dateOfReg", ignore = true)
     @Mapping(target = "chatId", ignore = true)
     @Mapping(target = "balance", ignore = true)
-    @Mapping(target = "authorities", ignore = true)
     User toUser(UserDTO userDTO);
 }

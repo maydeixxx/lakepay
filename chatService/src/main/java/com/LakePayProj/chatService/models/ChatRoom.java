@@ -16,15 +16,19 @@ import java.util.List;
 @Table(name = "chats")
 public class ChatRoom {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String chatId;
-    @ManyToOne
+
+    @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "sender_id")
     private User sender;
-    @ManyToOne
+
+    @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "recipient_id")
     private User recipient;
+
     @OneToMany(mappedBy = "chatId")
     private List<ChatMessage> messages;
 }
