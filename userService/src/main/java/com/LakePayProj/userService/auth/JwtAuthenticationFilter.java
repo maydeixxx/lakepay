@@ -1,7 +1,7 @@
 package com.LakePayProj.userService.auth;
 
-import com.LakePayProj.userService.application.services.JwtService;
-import com.LakePayProj.userService.application.services.UserService;
+import com.LakePayProj.userService.service.LakepayUserDetailsService;
+import com.LakePayProj.userService.service.UserService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.SignatureException;
 import jakarta.servlet.FilterChain;
@@ -24,46 +24,27 @@ import java.io.IOException;
 @RequiredArgsConstructor
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    private final JwtService jwtService;
-    private final UserService userService;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final LakepayUserDetailsService userDetailsService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain chain
+    ) throws ServletException, IOException {
         String header = request.getHeader("Authorization");
-        String username = null;
-        String jwt = null;
 
         if (header != null && header.startsWith("Bearer ")) {
-            jwt = header.substring(7);
-            try {
-                username = jwtService.getUsername(jwt);
-            } catch (ExpiredJwtException e) {
-                log.error("Время жизни токена вышло");
-            } catch (SignatureException e) {
-                log.error("Подпись неправильна");
+            String token = header.substring(7);
+
+            if (jwtTokenProvider.isValid(token)) {
+                String username = jwtTokenProvider.getUsername(token);
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(auth);
             }
         }
-
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails user = userService
-                    .userDetailsService()
-                    .loadUserByUsername(username);
-
-            if (jwtService.isTokenValid(jwt, user)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        user,
-                        null,
-                        user.getAuthorities()
-                );
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                // Reset user context
-                SecurityContext context = SecurityContextHolder.createEmptyContext();
-                context.setAuthentication(authToken);
-
-                SecurityContextHolder.setContext(context);
-            }
-        }
-        filterChain.doFilter(request, response);
+        chain.doFilter(request, response);
     }
 }

@@ -1,13 +1,12 @@
-package com.LakePayProj.userService.api.controller;
+package com.LakePayProj.userService.controller;
 
-import com.LakePayProj.userService.api.DTOs.UserDTO;
-import com.LakePayProj.userService.api.DTOs.UserUpdateDTO;
-import com.LakePayProj.userService.application.interfaces.mappers.IUserMapper;
+import com.LakePayProj.userService.dto.UserResponse;
+import com.LakePayProj.userService.mapper.IUserMapper;
 import com.LakePayProj.userService.application.interfaces.repos.IRoleRepository;
-import com.LakePayProj.userService.application.kafka.UserProducer;
-import com.LakePayProj.userService.application.services.UserService;
+import com.LakePayProj.userService.kafka.UserProducer;
+import com.LakePayProj.userService.service.UserService;
 import com.LakePayProj.userService.domain.model.User;
-import com.LakePayProj.userService.domain.valueObject.Role;
+import com.LakePayProj.userService.enums.UserRole;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -30,7 +29,7 @@ public class UserController {
     private final IRoleRepository roleRepository;
 
     @PostMapping("/add_role")
-    public ResponseEntity<?> saveRole(@RequestBody List<Role> roles) {
+    public ResponseEntity<?> saveRole(@RequestBody List<UserRole> roles) {
         try {
             roleRepository.saveAll(roles);
         } catch (IllegalArgumentException e) {
@@ -79,9 +78,9 @@ public class UserController {
     }
 
     @GetMapping("/all_users")
-    public ResponseEntity<List<UserDTO>> allUsers() {
+    public ResponseEntity<List<UserResponse>> allUsers() {
         List<User> allUsers = userService.findAllUsers();
-        List<UserDTO> list = allUsers.stream()
+        List<UserResponse> list = allUsers.stream()
                 .map(mapper::userToUserDTO)
                 .toList();
         return new ResponseEntity<>(list, HttpStatus.OK);
@@ -95,12 +94,12 @@ public class UserController {
     }
 
     @PostMapping("/save_user")
-    public ResponseEntity<Void> saveUser(@RequestBody UserDTO userDTO) {
-        User userByTgId = userService.findUserByTgId(userDTO.getTgId());
+    public ResponseEntity<Void> saveUser(@RequestBody UserResponse userResponse) {
+        User userByTgId = userService.findUserByTgId(userResponse.getTgId());
         if (userByTgId != null) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "user already exists!");
         } else {
-            userService.saveUser(mapper.userDTOToUser(userDTO));
+            userService.saveUser(mapper.userDTOToUser(userResponse));
             return ResponseEntity.ok().build();
         }
     }
@@ -122,10 +121,10 @@ public class UserController {
     }
 
     @GetMapping("/user_id/{id}")
-    public ResponseEntity<UserDTO> findUserById(@PathVariable Long id) {
+    public ResponseEntity<UserResponse> findUserById(@PathVariable Long id) {
         User userDom = userService.findUserById(id);
-        UserDTO userDTO = mapper.userToUserDTO(userDom);
-        return new ResponseEntity<>(userDTO, HttpStatus.OK);
+        UserResponse userResponse = mapper.userToUserDTO(userDom);
+        return new ResponseEntity<>(userResponse, HttpStatus.OK);
     }
 
 //    @GetMapping("user_role/{role}")
@@ -138,18 +137,18 @@ public class UserController {
 //    }
 
     @GetMapping(value = "/user_category/{category}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<UserDTO>> findUserBySubs(@PathVariable String category) {
+    public ResponseEntity<List<UserResponse>> findUserBySubs(@PathVariable String category) {
         List<User> userBySubs = userService.findUserBySubs(category);
-        List<UserDTO> list = userBySubs.stream()
+        List<UserResponse> list = userBySubs.stream()
                 .map(mapper::userToUserDTO)
                 .toList();
         return new ResponseEntity<>(list, HttpStatus.OK);
     }
 
     @GetMapping("/user_tg/{id}")
-    public ResponseEntity<UserDTO> findUserByTgID(@PathVariable Long id) {
+    public ResponseEntity<UserResponse> findUserByTgID(@PathVariable Long id) {
         User userByTgId = userService.findUserByTgId(id);
-        UserDTO userDTO = mapper.userToUserDTO(userByTgId);
-        return new ResponseEntity<>(userDTO, HttpStatus.OK);
+        UserResponse userResponse = mapper.userToUserDTO(userByTgId);
+        return new ResponseEntity<>(userResponse, HttpStatus.OK);
     }
 }

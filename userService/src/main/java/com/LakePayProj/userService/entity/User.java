@@ -32,6 +32,6 @@ public class User {
     @Column(updatable = false)
     private LocalDateTime creationDate;
 
-    @OneToOne(mappedBy = "user")
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private UserCredential credential;
 }

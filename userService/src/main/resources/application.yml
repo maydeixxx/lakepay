@@ -9,7 +9,7 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: ${DB_MODE}
+      ddl-auto: ${DB_MODE:create}
 
   kafka:
     bootstrap-servers: kafka:29092
@@ -33,10 +33,13 @@ crypto-bot:
   api-token: ${CRYPTO_BOT_TOKEN}
 
 token:
-  signing:
-    key: ${JWT_SIGNING_KEY} # JWT signing key
-    lifetime: ${JWT_TOKEN_LIFETIME}
+  access:
+    lifetime: ${ACCESS_TOKEN_LIFETIME:15m}
+  refresh:
+    lifetime: ${REFRESH_TOKEN_LIFETIME:30d}
+  jwt:
+    key: ${JWT_SIGNING_KEY}
   telegram:
-    bot: ${TG_BOT_TOKEN} # Authentication Telegram bot token
+    bot: ${TG_BOT_TOKEN}
 
 debug: ${DEBUG_MODE}

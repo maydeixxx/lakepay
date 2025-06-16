@@ -19,7 +19,7 @@ public class UserService {
      * Создание пользователя
      */
     @Transactional
-    public User createUser(User user) {
+    public User create(User user) {
         return userRepository.save(user);
     }
 
@@ -29,7 +29,7 @@ public class UserService {
      * @throws EntityNotFoundException в случае когда пользователя не существует
      */
     @Transactional
-    public User updateUser(Long id, User updatedUser) {
+    public User update(Long id, User updatedUser) {
         return userRepository.findById(id).map(user -> {
             user.setUsername(updatedUser.getUsername());
             user.setAvatarUrl(updatedUser.getAvatarUrl());
@@ -38,21 +38,30 @@ public class UserService {
         }).orElseThrow(() -> new EntityNotFoundException("Can't find user with ID: " + id));
     }
 
-    public List<User> findAllUsers() {
+    public List<User> findAll() {
         return userRepository.findAll();
     }
 
-    public Optional<User> findUserById(Long id) {
-        return userRepository.findUserById(id);
+    public Optional<User> findById(Long id) {
+        return userRepository.findById(id);
     }
 
-    public Optional<User> findUserByTelegramId(Long id) {
+    public Optional<User> findByTelegramId(Long id) {
         return userRepository.findByTelegramId(id);
     }
 
+    public Optional<User> findByUsername(String username) {
+        return userRepository.findByUsername(username);
+    }
+
+    /**
+     * Удаление пользователя по id
+     * @param id идентификатор пользователя в БД
+     * @throws EntityNotFoundException в случае когда пользователя не существует
+     */
     @Transactional
-    public void deleteUser(Long id) {
-        Optional<User> user = userRepository.findUserById(id);
-        user.ifPresent(userRepository::delete);
+    public void delete(Long id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Can't find user with ID: " + id));
+        userRepository.delete(user);
     }
 }

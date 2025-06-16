@@ -1,12 +1,11 @@
-package com.LakePayProj.userService.application.kafka;
+package com.LakePayProj.userService.kafka;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.LakePayProj.userService.api.DTOs.UserUpdateDTO;
-import com.LakePayProj.userService.application.interfaces.repos.IUserRepository;
-import com.LakePayProj.userService.application.services.UserService;
+import com.LakePayProj.userService.repository.IUserRepository;
+import com.LakePayProj.userService.service.UserService;
 import com.LakePayProj.userService.domain.model.User;
-import com.LakePayProj.userService.infrastructure.UserEntity;
+import com.LakePayProj.userService.entity.UserEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;

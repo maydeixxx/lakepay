@@ -20,7 +20,7 @@ public class LakepayUserDetails implements UserDetails {
 
     @Override
     public String getPassword() {
-        return user.getCredential().getPasswordHash(); // if using separate credential entity
+        return user.getCredential().getPasswordHash();
     }
 
     @Override

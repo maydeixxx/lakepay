@@ -1,4 +1,4 @@
-package com.LakePayProj.userService.application.kafka;
+package com.LakePayProj.userService.kafka;
 
 import com.LakePayProj.userService.domain.model.User;
 import lombok.RequiredArgsConstructor;
