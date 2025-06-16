@@ -1,27 +1,32 @@
 package com.LakePayProj.userService.kafka;
 
-import com.LakePayProj.userService.domain.model.User;
+import com.LakePayProj.userService.dto.UserResponse;
+import com.LakePayProj.userService.entity.User;
+import com.LakePayProj.userService.mapper.IUserMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class UserProducer {
     private final KafkaTemplate<String, String> template;
+    private final ObjectMapper objectMapper;
+
+    private final IUserMapper userMapper;
 
     public void sendUser(User user) {
-        String message = user.getUsername() + ", вы успешно зарегистрировались!";
-        template.send("usersLog", String.valueOf(user.getTgId()), message);
-    }
-
-    public void sendInfoAboutSub(Long chatId, String category) {
-        String message = "🎮Вы успешно подписались на категорию: " + category + "🎮";
-        template.send("ads-sub", 0, chatId.toString(),  message);
-    }
-
-    public void sendInfoAboutUnSub(Long chatId, String category) {
-        String message = "🎮Вы успешно отписались от категории: " + category + "🎮";
-        template.send("ads-sub", 1, chatId.toString(),  message);
+        UserResponse response = userMapper.toDto(user);
+        try {
+            String responseJson = objectMapper.writeValueAsString(response);
+            template.send("usersLog", user.getId().toString(), responseJson);
+            log.info("Отправлен UserResponse в 'usersLog' для userId={}: {}", user.getId(), responseJson);
+        } catch (JsonProcessingException e) {
+            log.error("Ошибка сериализации UserResponse для userId={}: {}", user.getId(), e.getMessage());
+        }
     }
 }

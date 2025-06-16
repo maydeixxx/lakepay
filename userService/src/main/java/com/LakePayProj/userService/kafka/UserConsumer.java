@@ -1,11 +1,12 @@
 package com.LakePayProj.userService.kafka;
 
+import com.LakePayProj.userService.dto.UserResponse;
+import com.LakePayProj.userService.entity.User;
+import com.LakePayProj.userService.mapper.IUserMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.LakePayProj.userService.repository.IUserRepository;
 import com.LakePayProj.userService.service.UserService;
-import com.LakePayProj.userService.domain.model.User;
-import com.LakePayProj.userService.entity.UserEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -16,82 +17,86 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserConsumer {
-    private final UserService userService;
-    private final IUserRepository userRepository;
     private final KafkaTemplate<String, String> template;
     private final ObjectMapper objectMapper;
 
+    private final UserService userService;
+    private final IUserMapper userMapper;
+    private final IUserRepository userRepository;
+
     @KafkaListener(topics = "get_user_data_by_id_request", groupId = "userData")
     public void handleUserId(ConsumerRecord<String, String> record) {
+        Long userId;
+
         try {
-            Long userId = Long.parseLong(record.value());
-            User user = userService.findUserById(userId);
-            log.info("USER = {}", user);
-            if (user != null) {
-                String response = objectMapper.writeValueAsString(Map.of(
-                        "tgId", user.getTgId(),
-                        "balance", user.getBalance()
-                ));
-                template.send("get_user_data_by_id_response", user.getId().toString(), response);
-                log.info("Отправлен ответ в responseToUserData для userId={}: {}", userId, response);
-            } else {
-                log.warn("Пользователь с userId={} не найден", userId);
-            }
-        } catch (JsonProcessingException e) {
-            log.error("Ошибка сериализации данных пользователя: {}", e.getMessage());
+            userId = Long.parseLong(record.value());
         } catch (NumberFormatException e) {
             log.error("Некорректный формат userId в record.value: {}", record.value(), e);
+            return;
         }
+
+        Optional<User> optionalUser = userService.findById(userId);
+
+        if (optionalUser.isEmpty()) {
+            template.send("get_user_data_by_id_response", userId.toString(), null);
+            log.warn("Пользователь с userId={} не найден. Отправлен null-ответ.", userId);
+            return;
+        }
+
+        sendUserResponse(optionalUser.get(), "get_user_data_by_id_response");
     }
 
-    @KafkaListener(topics = "get_user_data_by_id_telegram_request", groupId = "userDataTelegram")
-    public void handleUserIdTelegram(ConsumerRecord<String, String> record) {
-        log.info("Получено сообщение в get_user_data_by_id_telegram_request");
-        Long userId = Long.parseLong(record.value());
-        Long tgId = userService.findUserById(userId).getTgId();
-        template.send("get_user_data_by_id_telegram_response", userId.toString(), tgId.toString());
-        log.info("Отправлено сообщение в get_user_data_by_id_telegram_response для user = {}. TgId = {}", userId, tgId);
-    }
+    @KafkaListener(topics = "get_user_data_by_telegramId_request", groupId = "userDataTelegramId")
+    public void handleTelegramId(ConsumerRecord<String, String> record) {
+        Long telegramId;
 
-    @KafkaListener(topics = "get_sub_users", groupId = "subscribed_users")
-    public void handleSubscribedUsersRequest(ConsumerRecord<String, String> record) {
-        String category = record.value();
-        List<User> users = userService.findUserBySubs(category);
-        List<Long> chatIds = users.stream().map(User::getChatId).toList();
         try {
-            String response = objectMapper.writeValueAsString(chatIds);
-            template.send("response_sub_users", "users", response);
-        } catch (JsonProcessingException e) {
-            log.error(e.getMessage());
+            telegramId = Long.parseLong(record.value());
+        } catch (NumberFormatException e) {
+            log.error("Некорректный формат telegramId в record.value: {}", record.value(), e);
+            return;
         }
+
+        Optional<User> optionalUser = userRepository.findByTelegramId(telegramId);
+
+        if (optionalUser.isEmpty()) {
+            template.send("get_user_data_by_telegramId_response", telegramId.toString(), null);
+            log.warn("Пользователь с telegramId={} не найден. Отправлен null-ответ.", telegramId);
+            return;
+        }
+
+        sendUserResponse(optionalUser.get(), "get_user_data_by_telegramId_response");
     }
 
-    @KafkaListener(topics = "get_categories_byTg_request", groupId = "categories_tg")
-    public void responseCategoriesByTg(ConsumerRecord<String, String> record) {
-        Long tgId = Long.parseLong(record.value());
+    @KafkaListener(topics = "get_user_data_by_username_request", groupId = "userDataUsername")
+    public void handleUsername(ConsumerRecord<String, String> record) {
+        String username = record.value();
+
+        Optional<User> optionalUser = userRepository.findByUsername(username);
+
+        if (optionalUser.isEmpty()) {
+            template.send("get_user_data_by_username_response", username, null);
+            log.warn("Пользователь с username='{}' не найден. Отправлен null-ответ.", username);
+            return;
+        }
+
+        sendUserResponse(optionalUser.get(), "get_user_data_by_username_response");
+    }
+
+    private void sendUserResponse(User user, String topic) {
+        UserResponse response = userMapper.toDto(user);
         try {
-            UserEntity userByTgId = userRepository.findUserByTgId(tgId);
-            List<String> subscriptions = userByTgId.getSubscriptions();
-            String response = objectMapper.writeValueAsString(subscriptions);
-            template.send("get_categories_byTg_response", tgId.toString(), response);
+            String responseJson = objectMapper.writeValueAsString(response);
+            template.send(topic, user.getId().toString(), responseJson);
+            log.info("Отправлен UserResponse в {} для userId={}: {}", topic, user.getId(), responseJson);
         } catch (JsonProcessingException e) {
-            log.error(e.getMessage());
+            log.error("Ошибка сериализации UserResponse для userId={}: {}", user.getId(), e.getMessage());
         }
-    }
-
-    @KafkaListener(topics = "update_user_data", groupId = "update_user")
-    public void updateUser(ConsumerRecord<String, String> record) {
-        log.info("Новое сообщение в update_user_data. Key = {}. Value = {}", record.key(), record.value());
-        Long userId = Long.parseLong(record.key());
-        BigDecimal newBalance = new BigDecimal(record.value());
-        UserUpdateDTO userUpdateDTO = new UserUpdateDTO();
-        userUpdateDTO.setBalance(newBalance);
-        userService.updateUser(userId, userUpdateDTO);
-        log.info("Обновлён пользователь id = {}, new balance = {}", userId, newBalance);
     }
 }

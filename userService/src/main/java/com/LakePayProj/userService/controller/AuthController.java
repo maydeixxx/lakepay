@@ -10,6 +10,7 @@ import com.LakePayProj.userService.dto.TelegramAuthRequest;
 import com.LakePayProj.userService.entity.User;
 import com.LakePayProj.userService.entity.UserCredential;
 import com.LakePayProj.userService.enums.UserRole;
+import com.LakePayProj.userService.kafka.UserProducer;
 import com.LakePayProj.userService.service.LakepayUserDetailsService;
 import com.LakePayProj.userService.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -35,6 +36,7 @@ public class AuthController {
     private final JwtTokenProvider jwtTokenProvider;
     private final UserService userService;
     private final LakepayUserDetailsService userDetailsService;
+    private final UserProducer userProducer;
 
     @PostMapping("/telegram/auth")
     public ResponseEntity<?> authenticateWithTelegram(@RequestBody TelegramAuthRequest req, HttpServletResponse res) {
@@ -48,7 +50,11 @@ public class AuthController {
             newUser.setAvatarUrl(req.photo_url());
             newUser.setTelegramId(req.id());
             newUser.setRole(UserRole.USER);
-            return userService.create(newUser);
+
+            newUser =  userService.create(newUser);
+            userProducer.sendUser(newUser);
+
+            return newUser;
         });
 
         // Генерация токена доступа
@@ -70,6 +76,8 @@ public class AuthController {
         user.setRole(UserRole.USER);
 
         user = userService.create(user);
+        userProducer.sendUser(user);
+
         return buildAuthResponse(user, res);
     }
 
