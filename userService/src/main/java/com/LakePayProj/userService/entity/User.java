@@ -1,0 +1,37 @@
+package com.LakePayProj.userService.entity;
+
+import com.LakePayProj.userService.enums.UserRole;
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(unique = true, nullable = false)
+    private Long telegramId;
+
+    @Column(unique = true, nullable = false)
+    private String username;
+
+    private String avatarUrl;
+
+    @Enumerated(EnumType.STRING)
+    private UserRole role;
+
+    @CreationTimestamp
+    @Column(updatable = false)
+    private LocalDateTime creationDate;
+
+    @OneToOne(mappedBy = "user")
+    private UserCredential credential;
+}
