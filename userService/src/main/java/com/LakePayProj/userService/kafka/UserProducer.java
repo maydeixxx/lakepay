@@ -1,6 +1,6 @@
 package com.LakePayProj.userService.kafka;
 
-import com.LakePayProj.userService.dto.UserResponse;
+import com.LakePayProj.userService.dto.response.UserResponse;
 import com.LakePayProj.userService.entity.User;
 import com.LakePayProj.userService.mapper.IUserMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;

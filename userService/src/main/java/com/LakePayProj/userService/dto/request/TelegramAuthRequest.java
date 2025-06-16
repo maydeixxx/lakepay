@@ -1,4 +1,4 @@
-package com.LakePayProj.userService.dto;
+package com.LakePayProj.userService.dto.request;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package com.LakePayProj.userService.auth;
+package com.LakePayProj.userService.security;
 
 import com.LakePayProj.userService.entity.User;
 import lombok.AllArgsConstructor;
@@ -10,7 +10,7 @@ import java.util.Collection;
 import java.util.List;
 
 @AllArgsConstructor
-public class LakepayUserDetails implements UserDetails {
+public class UserDetailsImpl implements UserDetails {
     private final User user;
 
     @Override

@@ -1,7 +1,7 @@
 package com.LakePayProj.userService.mapper;
 
 
-import com.LakePayProj.userService.dto.UserResponse;
+import com.LakePayProj.userService.dto.response.UserResponse;
 import com.LakePayProj.userService.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

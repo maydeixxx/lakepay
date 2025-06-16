@@ -1,6 +1,6 @@
-package com.LakePayProj.userService.auth;
+package com.LakePayProj.userService.security;
 
-import com.LakePayProj.userService.service.LakepayUserDetailsService;
+import com.LakePayProj.userService.service.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -23,12 +23,12 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Component
 @RequiredArgsConstructor
-public class LakepayAuthenticationManager implements AuthenticationManager {
+public class AuthenticationManagerImpl implements AuthenticationManager {
 
     @Value("${token.telegram.bot}")
     private String botToken;
 
-    private final LakepayUserDetailsService userDetailsService;
+    private final UserDetailsServiceImpl userDetailsService;
     private final PasswordEncoder passwordEncoder;
 
     @Override

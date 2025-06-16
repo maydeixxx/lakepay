@@ -1,17 +1,21 @@
 package com.LakePayProj.userService.controller;
 
-import com.LakePayProj.userService.auth.JwtTokenProvider;
-import com.LakePayProj.userService.auth.LakepayUserDetails;
-import com.LakePayProj.userService.auth.TelegramAuthenticationToken;
-import com.LakePayProj.userService.dto.AuthRequest;
-import com.LakePayProj.userService.dto.AuthResponse;
-import com.LakePayProj.userService.dto.RegisterRequest;
-import com.LakePayProj.userService.dto.TelegramAuthRequest;
+import com.LakePayProj.userService.exception.DatabaseException;
+import com.LakePayProj.userService.exception.InvalidTokenException;
+import com.LakePayProj.userService.exception.UserAlreadyExistsException;
+import com.LakePayProj.userService.exception.UserNotFoundException;
+import com.LakePayProj.userService.util.JwtTokenProvider;
+import com.LakePayProj.userService.security.UserDetailsImpl;
+import com.LakePayProj.userService.security.TelegramAuthenticationToken;
+import com.LakePayProj.userService.dto.request.AuthRequest;
+import com.LakePayProj.userService.dto.response.AuthResponse;
+import com.LakePayProj.userService.dto.request.RegisterRequest;
+import com.LakePayProj.userService.dto.request.TelegramAuthRequest;
 import com.LakePayProj.userService.entity.User;
 import com.LakePayProj.userService.entity.UserCredential;
 import com.LakePayProj.userService.enums.UserRole;
 import com.LakePayProj.userService.kafka.UserProducer;
-import com.LakePayProj.userService.service.LakepayUserDetailsService;
+import com.LakePayProj.userService.service.UserDetailsServiceImpl;
 import com.LakePayProj.userService.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +26,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,40 +38,46 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthenticationManager authManager;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final UserService userService;
-    private final LakepayUserDetailsService userDetailsService;
     private final UserProducer userProducer;
+    private final AuthenticationManager authManager;
+    private final UserDetailsService userDetailsService;
 
     @PostMapping("/telegram/auth")
     public ResponseEntity<?> authenticateWithTelegram(@RequestBody TelegramAuthRequest req, HttpServletResponse res) {
-        // Проверка валидности хэша от Telegram
-        authManager.authenticate(new TelegramAuthenticationToken(req.toMap()));
+        try {
+            // Проверка валидности хэша от Telegram
+            authManager.authenticate(new TelegramAuthenticationToken(req.toMap()));
 
-        // Сохранение пользователя, если он еще не зарегистрирован
-        User user = userService.findByUsername(req.username()).orElseGet(() -> {
-            User newUser = new User();
-            newUser.setUsername(req.username());
-            newUser.setAvatarUrl(req.photo_url());
-            newUser.setTelegramId(req.id());
-            newUser.setRole(UserRole.USER);
+            // Сохранение пользователя, если он еще не зарегистрирован
+            User user = userService.findByUsername(req.username()).orElseGet(() -> {
+                User newUser = new User();
+                newUser.setUsername(req.username());
+                newUser.setAvatarUrl(req.photo_url());
+                newUser.setTelegramId(req.id());
+                newUser.setRole(UserRole.USER);
 
-            newUser =  userService.create(newUser);
-            userProducer.sendUser(newUser);
+                newUser =  userService.create(newUser);
+                userProducer.sendUser(newUser);
 
-            return newUser;
-        });
+                return newUser;
+            });
 
-        // Генерация токена доступа
-        return buildAuthResponse(user, res);
+            // Генерация токена доступа
+            return buildAuthResponse(user, res);
+        } catch (AuthenticationException e) {
+            throw new InvalidTokenException("Invalid Telegram authentication data: " + e.getMessage());
+        } catch (Exception e) {
+            throw new DatabaseException("Failed to authenticate with Telegram", e);
+        }
     }
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest req, HttpServletResponse res) {
         if (userService.findByUsername(req.username()).isPresent()) {
-            return ResponseEntity.badRequest().body("Username already taken");
+            throw new UserAlreadyExistsException("Username already taken: " + req.username());
         }
 
         UserCredential credential = new UserCredential();
@@ -75,39 +88,49 @@ public class AuthController {
         user.setCredential(credential);
         user.setRole(UserRole.USER);
 
-        user = userService.create(user);
-        userProducer.sendUser(user);
-
-        return buildAuthResponse(user, res);
+        try {
+            user = userService.create(user);
+            userProducer.sendUser(user);
+            return buildAuthResponse(user, res);
+        } catch (Exception e) {
+            throw new DatabaseException("Failed to register user", e);
+        }
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest req, HttpServletResponse res) {
-        Authentication auth = authManager.authenticate(
-                new UsernamePasswordAuthenticationToken(req.username(), req.password())
-        );
-
-        UserDetails userDetails = (UserDetails) auth.getPrincipal();
-
-        return buildAuthResponse(userDetails, res);
+        try {
+            Authentication auth = authManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(req.username(), req.password())
+            );
+            UserDetails userDetails = (UserDetails) auth.getPrincipal();
+            return buildAuthResponse(userDetails, res);
+        } catch (AuthenticationException e) {
+            throw new UserNotFoundException("Invalid credentials for user: " + req.username());
+        }
     }
 
     @PostMapping("/refresh")
     public ResponseEntity<?> refresh(@CookieValue(name = "refreshToken", required = false) String refreshToken) {
         if (refreshToken == null || !jwtTokenProvider.isValid(refreshToken)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or missing refresh token");
+            throw new InvalidTokenException("Invalid or missing refresh token");
         }
 
-        String username = jwtTokenProvider.getUsername(refreshToken);
-        UserDetails user = userDetailsService.loadUserByUsername(username);
-        String newAccessToken = jwtTokenProvider.generateAccessToken(user);
-
-        return ResponseEntity.ok(new AuthResponse(newAccessToken));
+        try {
+            String username = jwtTokenProvider.getUsername(refreshToken);
+            UserDetails user = userDetailsService.loadUserByUsername(username);
+            String newAccessToken = jwtTokenProvider.generateAccessToken(user);
+            return ResponseEntity.ok(new AuthResponse(newAccessToken));
+        } catch (UsernameNotFoundException e) {
+            throw new UserNotFoundException("User not found for refresh: " + e.getMessage());
+        } catch (Exception e) {
+            throw new InvalidTokenException("Failed to refresh token: " + e.getMessage());
+        }
     }
 
     // Вспомогательные функции
     private ResponseEntity<AuthResponse> buildAuthResponse(User user, HttpServletResponse res) {
-        return buildAuthResponse(new LakepayUserDetails(user), res);
+        return buildAuthResponse(new UserDetailsImpl(user), res);
     }
 
     private ResponseEntity<AuthResponse> buildAuthResponse(UserDetails userDetails, HttpServletResponse res) {

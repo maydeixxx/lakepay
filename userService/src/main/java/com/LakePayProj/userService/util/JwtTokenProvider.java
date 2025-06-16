@@ -1,4 +1,4 @@
-package com.LakePayProj.userService.auth;
+package com.LakePayProj.userService.util;
 
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;

@@ -1,6 +1,6 @@
 package com.LakePayProj.userService.controller;
 
-import com.LakePayProj.userService.dto.UserResponse;
+import com.LakePayProj.userService.dto.response.UserResponse;
 import com.LakePayProj.userService.mapper.IUserMapper;
 import com.LakePayProj.userService.application.interfaces.repos.IRoleRepository;
 import com.LakePayProj.userService.kafka.UserProducer;

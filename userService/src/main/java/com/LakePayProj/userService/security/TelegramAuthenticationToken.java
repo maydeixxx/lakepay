@@ -1,4 +1,4 @@
-package com.LakePayProj.userService.auth;
+package com.LakePayProj.userService.security;
 
 import jakarta.annotation.Nullable;
 import lombok.Getter;

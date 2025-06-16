@@ -1,6 +1,6 @@
 package com.LakePayProj.userService.kafka;
 
-import com.LakePayProj.userService.dto.UserResponse;
+import com.LakePayProj.userService.dto.response.UserResponse;
 import com.LakePayProj.userService.entity.User;
 import com.LakePayProj.userService.mapper.IUserMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -14,9 +14,6 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Slf4j

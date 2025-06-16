@@ -1,4 +1,4 @@
-package com.LakePayProj.userService.dto;
+package com.LakePayProj.userService.dto.response;
 
 import com.LakePayProj.userService.enums.UserRole;
 
