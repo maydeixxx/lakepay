@@ -1,6 +1,6 @@
 package com.LakePayProj.userService.kafka;
 
-import com.LakePayProj.userService.dto.response.UserResponse;
+import com.LakePayProj.userService.dto.UserDto;
 import com.LakePayProj.userService.entity.User;
 import com.LakePayProj.userService.mapper.IUserMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -87,7 +87,7 @@ public class UserConsumer {
     }
 
     private void sendUserResponse(User user, String topic) {
-        UserResponse response = userMapper.toDto(user);
+        UserDto response = userMapper.toDto(user);
         try {
             String responseJson = objectMapper.writeValueAsString(response);
             template.send(topic, user.getId().toString(), responseJson);

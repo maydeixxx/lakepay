@@ -1,10 +1,10 @@
-package com.LakePayProj.userService.dto.response;
+package com.LakePayProj.userService.dto;
 
 import com.LakePayProj.userService.enums.UserRole;
 
 import java.time.LocalDateTime;
 
-public record UserResponse(
+public record UserDto(
         Long id,
         Long telegramId,
         String username,
