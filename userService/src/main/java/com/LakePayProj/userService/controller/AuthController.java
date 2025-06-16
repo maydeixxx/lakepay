@@ -1,5 +1,6 @@
 package com.LakePayProj.userService.controller;
 
+import com.LakePayProj.userService.dto.response.ApiResponse;
 import com.LakePayProj.userService.exception.DatabaseException;
 import com.LakePayProj.userService.exception.InvalidTokenException;
 import com.LakePayProj.userService.exception.UserAlreadyExistsException;
@@ -66,7 +67,7 @@ public class AuthController {
             });
 
             // Генерация токена доступа
-            return buildAuthResponse(user, res);
+            return buildAuthResponse(user, res, "Authentication successful");
         } catch (AuthenticationException e) {
             throw new InvalidTokenException("Invalid Telegram authentication data: " + e.getMessage());
         } catch (Exception e) {
@@ -91,7 +92,7 @@ public class AuthController {
         try {
             user = userService.create(user);
             userProducer.sendUser(user);
-            return buildAuthResponse(user, res);
+            return buildAuthResponse(user, res, "Registration successful");
         } catch (Exception e) {
             throw new DatabaseException("Failed to register user", e);
         }
@@ -104,7 +105,7 @@ public class AuthController {
                     new UsernamePasswordAuthenticationToken(req.username(), req.password())
             );
             UserDetails userDetails = (UserDetails) auth.getPrincipal();
-            return buildAuthResponse(userDetails, res);
+            return buildAuthResponse(userDetails, res, "Login successful");
         } catch (AuthenticationException e) {
             throw new UserNotFoundException("Invalid credentials for user: " + req.username());
         }
@@ -120,7 +121,11 @@ public class AuthController {
             String username = jwtTokenProvider.getUsername(refreshToken);
             UserDetails user = userDetailsService.loadUserByUsername(username);
             String newAccessToken = jwtTokenProvider.generateAccessToken(user);
-            return ResponseEntity.ok(new AuthResponse(newAccessToken));
+            return ResponseEntity.ok(ApiResponse.<AuthResponse>builder()
+                    .success(true)
+                    .message("Token refreshed successfully")
+                    .data(new AuthResponse(newAccessToken))
+                    .build());
         } catch (UsernameNotFoundException e) {
             throw new UserNotFoundException("User not found for refresh: " + e.getMessage());
         } catch (Exception e) {
@@ -129,11 +134,11 @@ public class AuthController {
     }
 
     // Вспомогательные функции
-    private ResponseEntity<AuthResponse> buildAuthResponse(User user, HttpServletResponse res) {
-        return buildAuthResponse(new UserDetailsImpl(user), res);
+    private ResponseEntity<ApiResponse<?>> buildAuthResponse(User user, HttpServletResponse res, String message) {
+        return buildAuthResponse(new UserDetailsImpl(user), res, message);
     }
 
-    private ResponseEntity<AuthResponse> buildAuthResponse(UserDetails userDetails, HttpServletResponse res) {
+    private ResponseEntity<ApiResponse<?>> buildAuthResponse(UserDetails userDetails, HttpServletResponse res, String message) {
         String accessToken = jwtTokenProvider.generateAccessToken(userDetails);
         String refreshToken = jwtTokenProvider.generateRefreshToken(userDetails);
 
@@ -147,6 +152,10 @@ public class AuthController {
 
         res.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
-        return ResponseEntity.ok(new AuthResponse(accessToken));
+        return ResponseEntity.ok(ApiResponse.<AuthResponse>builder()
+                .success(true)
+                .message(message)
+                .data(new AuthResponse(accessToken))
+                .build());
     }
 }
