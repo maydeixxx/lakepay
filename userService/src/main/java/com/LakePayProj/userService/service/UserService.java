@@ -1,6 +1,7 @@
 package com.LakePayProj.userService.service;
 
 import com.LakePayProj.userService.entity.User;
+import com.LakePayProj.userService.exception.UserNotFoundException;
 import com.LakePayProj.userService.repository.IUserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -52,6 +53,15 @@ public class UserService {
 
     public Optional<User> findByUsername(String username) {
         return userRepository.findByUsername(username);
+    }
+
+    @Transactional
+    public List<User> searchUsersByUsername(String username) {
+        List<User> users = userRepository.findUsersByUsernameLike(username);
+        if (users.isEmpty()) {
+            throw new UserNotFoundException("No users found with username containing: " + username);
+        }
+        return users;
     }
 
     /**

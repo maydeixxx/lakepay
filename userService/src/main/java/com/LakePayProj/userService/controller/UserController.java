@@ -29,6 +29,8 @@ public class UserController {
     private final UserService userService;
     private final UserProducer userProducer;
 
+    // Защищенные маршруты
+
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<?>> currentUser(@AuthenticationPrincipal UserDetails userDetails) {
         String username = userDetails.getUsername();
@@ -77,6 +79,8 @@ public class UserController {
         }
     }
 
+    // Публичные маршруты
+
     @GetMapping("/profile/{id}")
     public ResponseEntity<ApiResponse<?>> userById(@PathVariable Long id) {
         Optional<User> user = userService.findById(id);
@@ -108,6 +112,16 @@ public class UserController {
                 .success(true)
                 .message("Fetched user info")
                 .data(response)
+                .build());
+    }
+
+    @GetMapping("/search}")
+    public ResponseEntity<ApiResponse<List<User>>> searchUsersByUsername(@RequestParam String username) {
+        List<User> users = userService.searchUsersByUsername(username);
+        return ResponseEntity.ok(ApiResponse.<List<User>>builder()
+                .success(true)
+                .message("Users found")
+                .data(users)
                 .build());
     }
 
