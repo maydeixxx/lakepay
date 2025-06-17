@@ -1,5 +1,6 @@
 package com.LakePayProj.userService.config;
 
+import com.LakePayProj.userService.enums.UserRole;
 import com.LakePayProj.userService.exception.UnauthorizedAccessException;
 import com.LakePayProj.userService.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
@@ -26,8 +27,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("/auth/**").permitAll()
-                        .anyRequest().authenticated()
+                        .requestMatchers("/auth/**", "/users/public/**").permitAll()
+                        .requestMatchers("/users/self/**").authenticated()
+                        .requestMatchers("/users/admin/**").hasRole(UserRole.ADMIN.name())
                 )
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
