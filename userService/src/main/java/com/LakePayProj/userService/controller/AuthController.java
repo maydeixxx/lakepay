@@ -64,6 +64,12 @@ public class AuthController {
                 return newUser;
             });
 
+            // Привязать аккаунт телеграм, если не привязан
+            if (user.getTelegramId() == null) {
+                user.setTelegramId(req.id());
+                user = userService.update(user.getId(), user);
+            }
+
             // Генерация токена доступа
             return buildAuthResponse(user, res, "Authentication successful");
         } catch (AuthenticationException e) {
