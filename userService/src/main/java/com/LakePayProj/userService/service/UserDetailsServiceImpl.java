@@ -1,8 +1,8 @@
 package com.LakePayProj.userService.service;
 
 import com.LakePayProj.userService.exception.UserNotFoundException;
-import com.LakePayProj.userService.security.UserDetailsImpl;
 import com.LakePayProj.userService.repository.IUserRepository;
+import com.LakePayProj.userService.security.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

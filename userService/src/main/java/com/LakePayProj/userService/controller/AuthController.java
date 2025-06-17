@@ -1,22 +1,21 @@
 package com.LakePayProj.userService.controller;
 
+import com.LakePayProj.userService.dto.request.AuthRequest;
+import com.LakePayProj.userService.dto.request.RegisterRequest;
+import com.LakePayProj.userService.dto.request.TelegramAuthRequest;
 import com.LakePayProj.userService.dto.response.ApiResponse;
-import com.LakePayProj.userService.entity.BlockedToken;
+import com.LakePayProj.userService.dto.response.AuthResponse;
+import com.LakePayProj.userService.entity.User;
+import com.LakePayProj.userService.entity.UserCredential;
+import com.LakePayProj.userService.enums.UserRole;
 import com.LakePayProj.userService.exception.DatabaseException;
 import com.LakePayProj.userService.exception.InvalidTokenException;
 import com.LakePayProj.userService.exception.UserAlreadyExistsException;
 import com.LakePayProj.userService.exception.UserNotFoundException;
-import com.LakePayProj.userService.service.JwtTokenService;
-import com.LakePayProj.userService.security.UserDetailsImpl;
-import com.LakePayProj.userService.security.TelegramAuthenticationToken;
-import com.LakePayProj.userService.dto.request.AuthRequest;
-import com.LakePayProj.userService.dto.response.AuthResponse;
-import com.LakePayProj.userService.dto.request.RegisterRequest;
-import com.LakePayProj.userService.dto.request.TelegramAuthRequest;
-import com.LakePayProj.userService.entity.User;
-import com.LakePayProj.userService.entity.UserCredential;
-import com.LakePayProj.userService.enums.UserRole;
 import com.LakePayProj.userService.kafka.UserProducer;
+import com.LakePayProj.userService.security.TelegramAuthenticationToken;
+import com.LakePayProj.userService.security.UserDetailsImpl;
+import com.LakePayProj.userService.service.JwtTokenService;
 import com.LakePayProj.userService.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -32,8 +31,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/auth")
@@ -61,7 +58,7 @@ public class AuthController {
                 newUser.setTelegramId(req.id());
                 newUser.setRole(UserRole.USER);
 
-                newUser =  userService.create(newUser);
+                newUser = userService.create(newUser);
                 userProducer.sendUser(newUser);
 
                 return newUser;
@@ -137,7 +134,8 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<?> logout(
             @CookieValue(name = "refreshToken", required = false) String refreshToken,
-            @RequestHeader(name = "Authorization", required = false) String authorizationHeader) {
+            @RequestHeader(name = "Authorization", required = false) String authorizationHeader
+    ) {
         if (refreshToken == null || !jwtTokenService.isValid(refreshToken)) {
             throw new InvalidTokenException("No valid session to log out");
         }

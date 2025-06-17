@@ -10,6 +10,8 @@ import java.util.Optional;
 public interface IUserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u WHERE LOWER(u.username) LIKE LOWER(CONCAT('%', :username, '%'))")
     List<User> findUsersByUsernameLike(String username);
+
     Optional<User> findByTelegramId(Long telegramId);
+
     Optional<User> findByUsername(String username);
 }

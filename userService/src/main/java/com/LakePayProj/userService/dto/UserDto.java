@@ -11,4 +11,5 @@ public record UserDto(
         String avatarUrl,
         UserRole role,
         LocalDateTime creationDate
-) {}
+) {
+}

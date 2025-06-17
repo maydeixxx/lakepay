@@ -9,7 +9,6 @@ import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -64,7 +63,7 @@ public class JwtTokenService {
 
     public boolean isValid(String token) {
         try {
-            Jws<Claims> claims =Jwts.parser()
+            Jws<Claims> claims = Jwts.parser()
                     .verifyWith(jwtSecretKey)
                     .build()
                     .parseSignedClaims(token);

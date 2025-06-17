@@ -26,6 +26,7 @@ public class UserService {
 
     /**
      * Обновление данных пользователя
+     *
      * @param updatedUser поля avatarUrl, username и role будут обновлены в БД
      * @throws EntityNotFoundException в случае когда пользователя не существует
      */
@@ -66,6 +67,7 @@ public class UserService {
 
     /**
      * Удаление пользователя по id
+     *
      * @param id идентификатор пользователя в БД
      * @throws EntityNotFoundException в случае когда пользователя не существует
      */
