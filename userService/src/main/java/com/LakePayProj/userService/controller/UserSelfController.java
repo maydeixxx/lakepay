@@ -23,8 +23,8 @@ public class UserSelfController {
 
     @GetMapping("/")
     public ResponseEntity<ApiResponse<?>> currentUser(@AuthenticationPrincipal UserDetails userDetails) {
-        String username = userDetails.getUsername();
-        User user = userService.findByUsername(username).orElseThrow(() -> new UserNotFoundException("Can't find user with username: " + username));
+        String userId = userDetails.getUsername();
+        User user = userService.findById(Long.parseLong(userId)).orElseThrow(() -> new UserNotFoundException("Can't find user with ID: " + userId));
         UserDto response = userMapper.toDto(user);
         return ResponseEntity.ok(ApiResponse.<UserDto>builder()
                 .success(true)
@@ -35,8 +35,8 @@ public class UserSelfController {
 
     @PutMapping("/update")
     public ResponseEntity<ApiResponse<?>> updateCurrentUser(@AuthenticationPrincipal UserDetails userDetails, @RequestBody UserDto req) {
-        String username = userDetails.getUsername();
-        User user = userService.findByUsername(username).orElseThrow(() -> new UserNotFoundException("Can't find user with username: " + username));
+        String userId = userDetails.getUsername();
+        User user = userService.findById(Long.parseLong(userId)).orElseThrow(() -> new UserNotFoundException("Can't find user with ID: " + userId));
 
         try {
             user = userService.update(user.getId(), userMapper.toUser(req));
@@ -52,8 +52,8 @@ public class UserSelfController {
 
     @DeleteMapping("/delete")
     public ResponseEntity<ApiResponse<?>> deleteCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
-        String username = userDetails.getUsername();
-        User user = userService.findByUsername(username).orElseThrow(() -> new UserNotFoundException("Can't find user with username: " + username));
+        String userId = userDetails.getUsername();
+        User user = userService.findById(Long.parseLong(userId)).orElseThrow(() -> new UserNotFoundException("Can't find user with ID: " + userId));
 
         try {
             userService.delete(user.getId());

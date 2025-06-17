@@ -124,8 +124,8 @@ public class AuthController {
         }
 
         try {
-            String username = jwtTokenService.getUsername(refreshToken);
-            UserDetails user = userDetailsService.loadUserByUsername(username);
+            String userId = jwtTokenService.getUsername(refreshToken);
+            UserDetails user = userDetailsService.loadUserByUsername(userId);
             String newAccessToken = jwtTokenService.generateAccessToken(user);
             return ResponseEntity.ok(ApiResponse.<AuthResponse>builder()
                     .success(true)
@@ -197,8 +197,8 @@ public class AuthController {
 
         String accessToken = authorizationHeader.substring(7);
 
-        String username = jwtTokenService.getUsername(accessToken);
-        User user = userService.findByUsername(username).orElseThrow(() -> new UserNotFoundException("Can not find user with username: " + username));
+        String userId = jwtTokenService.getUsername(accessToken);
+        User user = userService.findById(Long.parseLong(userId)).orElseThrow(() -> new UserNotFoundException("Can not find user with ID: " + userId));
 
         if (user.getCredential() == null) {
             // Для пользователей вошедших через телеграм пароль пустой

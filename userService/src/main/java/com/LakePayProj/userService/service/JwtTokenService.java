@@ -69,7 +69,7 @@ public class JwtTokenService {
                     .parseSignedClaims(token);
 
             return blockedTokenRepository.findByToken(token).isEmpty() &&
-                    !claims.getBody().getExpiration().before(new Date());
+                    !claims.getPayload().getExpiration().before(new Date());
         } catch (JwtException e) {
             return false;
         }
