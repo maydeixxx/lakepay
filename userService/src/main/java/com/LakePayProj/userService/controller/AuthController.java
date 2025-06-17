@@ -27,7 +27,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -61,7 +60,7 @@ public class AuthController {
                 newUser.setRole(UserRole.USER);
 
                 newUser = userService.create(newUser);
-                userProducer.sendUser(newUser);
+                userProducer.publishCreateUser(newUser);
 
                 return newUser;
             });
@@ -70,6 +69,7 @@ public class AuthController {
             if (user.getTelegramId() == null) {
                 user.setTelegramId(req.id());
                 user = userService.update(user.getId(), user);
+                userProducer.publishUpdateUser(user);
             }
 
             // Генерация токена доступа
@@ -97,7 +97,7 @@ public class AuthController {
 
         try {
             user = userService.create(user);
-            userProducer.sendUser(user);
+            userProducer.publishCreateUser(user);
             return buildAuthResponse(user, res, "Registration successful");
         } catch (Exception e) {
             throw new DatabaseException("Failed to register user", e);
@@ -154,31 +154,7 @@ public class AuthController {
 
         String accessToken = authorizationHeader.substring(7);
 
-        try {
-            // Заблокировать refresh и access токены
-            jwtTokenService.blockToken(accessToken);
-            jwtTokenService.blockToken(refreshToken);
-
-            // Очистить куки с refresh токеном
-            ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
-                    .httpOnly(true)
-                    .secure(true)
-                    .path("/auth/refresh")
-                    .maxAge(0)
-                    .sameSite("Strict")
-                    .build();
-
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                    .body(ApiResponse.<Void>builder()
-                            .success(true)
-                            .message("Successfully logged out")
-                            .build());
-        } catch (UsernameNotFoundException e) {
-            throw new UserNotFoundException("User not found during logout: " + e.getMessage());
-        } catch (Exception e) {
-            throw new DatabaseException("Failed to logout: " + e.getMessage(), e);
-        }
+        return invalidateTokensResponse(accessToken, refreshToken, "Successfully logged out");
     }
 
     @PostMapping("/update-password")
@@ -219,29 +195,11 @@ public class AuthController {
         try {
             // Обновление пароля
             userService.update(user.getId(), user);
-
-            // Инвалидация токенов доступа
-            jwtTokenService.blockToken(accessToken);
-            jwtTokenService.blockToken(refreshToken);
-
-            // Очистить куки с refresh токеном
-            ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
-                    .httpOnly(true)
-                    .secure(true)
-                    .path("/auth/refresh")
-                    .maxAge(0)
-                    .sameSite("Strict")
-                    .build();
-
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                    .body(ApiResponse.<Void>builder()
-                            .success(true)
-                            .message("Password updated successfully")
-                            .build());
         } catch (Exception e) {
             throw new DatabaseException("Failed to update password: " + e.getMessage(), e);
         }
+
+        return invalidateTokensResponse(accessToken, refreshToken, "Password updated successfully");
     }
 
     // Вспомогательные функции
@@ -268,5 +226,33 @@ public class AuthController {
                 .message(message)
                 .data(new AuthResponse(accessToken))
                 .build());
+    }
+
+    private ResponseEntity<ApiResponse<?>> invalidateTokensResponse(String accessToken, String refreshToken, String message) {
+        try {
+            // Инвалидация токенов доступа
+            jwtTokenService.blockToken(accessToken);
+            jwtTokenService.blockToken(refreshToken);
+
+            // Очистить куки с refresh токеном
+            ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/auth/refresh")
+                    .maxAge(0)
+                    .sameSite("Strict")
+                    .build();
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                    .body(ApiResponse.<Void>builder()
+                            .success(true)
+                            .message(message)
+                            .build());
+        } catch (UsernameNotFoundException e) {
+            throw new UserNotFoundException("User not found during logout: " + e.getMessage());
+        } catch (Exception e) {
+            throw new DatabaseException("Failed to logout: " + e.getMessage(), e);
+        }
     }
 }

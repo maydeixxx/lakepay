@@ -66,7 +66,8 @@ public class UserAdminController {
     public ResponseEntity<ApiResponse<?>> saveUser(@RequestBody UserDto req) {
         try {
             User user = userService.create(userMapper.toUser(req));
-            userProducer.sendUser(user);
+            userProducer.publishCreateUser(user);
+
             return ResponseEntity.ok(ApiResponse.<UserDto>builder()
                     .success(true)
                     .message("Successfully saved new user")
@@ -82,6 +83,8 @@ public class UserAdminController {
     public ResponseEntity<ApiResponse<?>> updateUser(@PathVariable Long id, @RequestBody UserDto req) {
         try {
             User user = userService.update(id, userMapper.toUser(req));
+            userProducer.publishUpdateUser(user);
+
             return ResponseEntity.ok(ApiResponse.<UserDto>builder()
                     .success(true)
                     .message("Successfully updated user")
@@ -97,6 +100,7 @@ public class UserAdminController {
     public ResponseEntity<ApiResponse<?>> deleteUser(@PathVariable Long id) {
         try {
             userService.delete(id);
+            userProducer.publishDeleteUser(id);
             return ResponseEntity.ok(ApiResponse.<Void>builder()
                     .success(true)
                     .message("Successfully deleted user")

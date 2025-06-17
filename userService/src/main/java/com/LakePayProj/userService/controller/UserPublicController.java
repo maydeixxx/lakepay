@@ -37,7 +37,7 @@ public class UserPublicController {
         List<PublicUserDto> users = userService.searchUsersByUsername(username).stream().map(userMapper::toPublicDto).toList();
         return ResponseEntity.ok(ApiResponse.<List<PublicUserDto>>builder()
                 .success(true)
-                .message("Users found")
+                .message("Found users")
                 .data(users)
                 .build());
     }

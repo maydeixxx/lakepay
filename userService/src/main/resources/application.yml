@@ -12,10 +12,12 @@ spring:
       ddl-auto: ${DB_MODE:create}
 
   kafka:
-    bootstrap-servers: kafka:29092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:29092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      retries: ${KAFKA_PRODUCER_RETRIES:3} # Количество повторных попыток при сбое
+      acks: all                            # Подтверждение от всех брокеров
     consumer:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -27,10 +29,6 @@ eureka:
   client:
     service-url:
       defaultZone: http://eureka-service:8761/eureka/
-
-crypto-bot:
-  api-url: https://testnet-pay.crypt.bot/api/
-  api-token: ${CRYPTO_BOT_TOKEN}
 
 token:
   access:

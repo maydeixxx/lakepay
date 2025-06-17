@@ -21,6 +21,7 @@
 - **DB_URL**: URL подключения к базе данных.
 - **DB_USERNAME**: Имя пользователя для базы данных.
 - **DB_PASSWORD**: Пароль для базы данных.
+- **DB_MODE**: Режим работы базы данных (`update`, `create`, `create-drop`, ...)
 
 #### Настройка JWT
 - **JWT_SIGNING_KEY**: Секретный ключ для подписи JWT (Ключ подписи HS256).
@@ -29,6 +30,10 @@
 
 #### Телеграм API
 - **TG_BOT_TOKEN**: Токен бота Telegram для валидации аутентификации.
+
+#### Настройка Kafka
+- **KAFKA_BOOTSTRAP_SERVERS**: Сервер в кластере Kafka, который принимает, хранит и доставляет сообщения.
+- **KAFKA_PRODUCER_RETRIES**: Количество попыток повторной отправки сообщения при сбое
 
 ### Список команд
 
@@ -85,7 +90,6 @@ mvn clean
 - **POST `/auth/update-password`**
   - **Описание**: Обновление пароля текущего аутентифицированного пользователя. Для пользователей, зарегистрированных через Telegram (без пароля), позволяет установить начальный пароль без указания текущего пароля.
   - **Запрос**: `UpdatePasswordRequest`. Для Telegram-пользователей `currentPassword` должен быть пустым.
-  - **Требования**: Аутентификация через `@AuthenticationPrincipal`.
   - **Ответ**: `ApiResponse<Void>` с очищением `refreshToken` cookie.
   - **Статус**: 200 (успех), 401 (если текущий пароль неверен), или 500 (`DatabaseException`).
 
@@ -94,20 +98,17 @@ mvn clean
 
 - **GET `/users/self/`**
     - **Описание**: Получение данных текущего пользователя.
-    - **Требования**: Аутентификация через `@AuthenticationPrincipal`.
     - **Ответ**: `ApiResponse<UserDto>` с данными пользователя.
     - **Статус**: 200 (успех) или 404 (если пользователь не найден, `UserNotFoundException`).
 
 - **PUT `/users/self/update`**
     - **Описание**: Обновление данных текущего пользователя.
     - **Запрос**: `UserDto` (JSON с обновляемыми полями).
-    - **Требования**: Аутентификация через `@AuthenticationPrincipal`.
     - **Ответ**: `ApiResponse<UserDto>` с обновленными данными.
     - **Статус**: 200 (успех) или 500 (если обновление провалилось, `DatabaseException`).
 
 - **DELETE `/users/self/delete`**
     - **Описание**: Удаление учетной записи текущего пользователя.
-    - **Требования**: Аутентификация через `@AuthenticationPrincipal`.
     - **Ответ**: `ApiResponse<Void>`.
     - **Статус**: 200 (успех) или 500 (если удаление провалилось, `DatabaseException`).
 
@@ -171,6 +172,26 @@ mvn clean
     - **Ответ**: `ApiResponse<Void>`.
     - **Статус**: 200 (успех) или 500 (если удаление провалилось, `DatabaseException`).
 
+## Kafka Integration
+
+### Consumer
+- **Топики**:
+  - `get_user_data_by_id_request`: Запрос данных пользователя по ID.
+  - `get_user_data_by_telegramId_request`: Запрос данных пользователя по Telegram ID.
+  - `get_user_data_by_username_request`: Запрос данных пользователя по имени пользователя.
+- **Группа потребителей**: `userData`.
+- **Ответы**: Отправляются в топики `get_user_data_by_[field]_response` с `UserDto` (сериализованным как JSON) или `null`, если пользователь не найден.
+- **Обработка ошибок**: В случае некорректного формата идентификатора (например, `userId` или `telegramId`) логируется ошибка, и сообщение игнорируется.
+
+- **Топики**:
+  - `create_user`: Логирует события создания пользователей.
+  - `update_user`: Логирует события обновления пользователей.
+  - `delete_user`: Логирует события удаления пользователей (возвращает строку `userId`).
+- **Полезная нагрузка**:
+  - Для `create_user` и `update_user`: `UserDto`, сериализованный как JSON, с ключом `userId`.
+  - Для `delete_user`: Строка, содержащая только `userId` (например, `"123"`), что позволяет минимизировать объем данных при удалении.
+- **Обработка ошибок**: Ошибки сериализации (например, при преобразовании `UserDto` в JSON) логируются, и отправка прерывается.
+
 ## Модели
 
 - **UserDto**: Содержит поля `id`, `telegramId`, `username`, `avatarUrl`, `role`, `creationDate`. Используется в админских эндпоинтах для полного доступа к данным.
@@ -178,5 +199,6 @@ mvn clean
 - **AuthRequest**: Содержит `username` и `password` для входа.
 - **RegisterRequest**: Содержит `username` и `password` для регистрации.
 - **TelegramAuthRequest**: Содержит данные от Telegram (`id`, `first_name`, `last_name`, `username`, `photo_url`, `auth_date`, `hash`).
+- **UpdatePasswordRequest**: Содержит `currentPassword` и `newPassword` для обновления пароля.
 - **AuthResponse**: Содержит `accessToken`.
 - **ApiResponse**: Универсальный ответ с полями `success`, `message`, `data`, `error`.

@@ -5,6 +5,7 @@ import com.LakePayProj.userService.dto.response.ApiResponse;
 import com.LakePayProj.userService.entity.User;
 import com.LakePayProj.userService.exception.DatabaseException;
 import com.LakePayProj.userService.exception.UserNotFoundException;
+import com.LakePayProj.userService.kafka.UserProducer;
 import com.LakePayProj.userService.mapper.IUserMapper;
 import com.LakePayProj.userService.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ public class UserSelfController {
 
     private final IUserMapper userMapper;
     private final UserService userService;
+    private final UserProducer userProducer;
 
     @GetMapping("/")
     public ResponseEntity<ApiResponse<?>> currentUser(@AuthenticationPrincipal UserDetails userDetails) {
@@ -40,6 +42,8 @@ public class UserSelfController {
 
         try {
             user = userService.update(user.getId(), userMapper.toUser(req));
+            userProducer.publishUpdateUser(user);
+
             return ResponseEntity.ok(ApiResponse.<UserDto>builder()
                     .success(true)
                     .message("Successfully updated user")
@@ -52,11 +56,12 @@ public class UserSelfController {
 
     @DeleteMapping("/delete")
     public ResponseEntity<ApiResponse<?>> deleteCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
-        String userId = userDetails.getUsername();
-        User user = userService.findById(Long.parseLong(userId)).orElseThrow(() -> new UserNotFoundException("Can't find user with ID: " + userId));
-
         try {
-            userService.delete(user.getId());
+            Long userId = Long.parseLong(userDetails.getUsername());
+
+            userService.delete(userId);
+            userProducer.publishDeleteUser(userId);
+
             return ResponseEntity.ok(ApiResponse.<Void>builder()
                     .success(true)
                     .message("Successfully deleted user")
