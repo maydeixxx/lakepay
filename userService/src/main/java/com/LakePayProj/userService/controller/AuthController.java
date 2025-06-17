@@ -1,11 +1,12 @@
 package com.LakePayProj.userService.controller;
 
 import com.LakePayProj.userService.dto.response.ApiResponse;
+import com.LakePayProj.userService.entity.BlockedToken;
 import com.LakePayProj.userService.exception.DatabaseException;
 import com.LakePayProj.userService.exception.InvalidTokenException;
 import com.LakePayProj.userService.exception.UserAlreadyExistsException;
 import com.LakePayProj.userService.exception.UserNotFoundException;
-import com.LakePayProj.userService.util.JwtTokenProvider;
+import com.LakePayProj.userService.service.JwtTokenService;
 import com.LakePayProj.userService.security.UserDetailsImpl;
 import com.LakePayProj.userService.security.TelegramAuthenticationToken;
 import com.LakePayProj.userService.dto.request.AuthRequest;
@@ -16,12 +17,10 @@ import com.LakePayProj.userService.entity.User;
 import com.LakePayProj.userService.entity.UserCredential;
 import com.LakePayProj.userService.enums.UserRole;
 import com.LakePayProj.userService.kafka.UserProducer;
-import com.LakePayProj.userService.service.UserDetailsServiceImpl;
 import com.LakePayProj.userService.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -34,13 +33,15 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
     private final PasswordEncoder passwordEncoder;
-    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtTokenService jwtTokenService;
     private final UserService userService;
     private final UserProducer userProducer;
     private final AuthenticationManager authManager;
@@ -113,14 +114,14 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ResponseEntity<?> refresh(@CookieValue(name = "refreshToken", required = false) String refreshToken) {
-        if (refreshToken == null || !jwtTokenProvider.isValid(refreshToken)) {
+        if (refreshToken == null || !jwtTokenService.isValid(refreshToken)) {
             throw new InvalidTokenException("Invalid or missing refresh token");
         }
 
         try {
-            String username = jwtTokenProvider.getUsername(refreshToken);
+            String username = jwtTokenService.getUsername(refreshToken);
             UserDetails user = userDetailsService.loadUserByUsername(username);
-            String newAccessToken = jwtTokenProvider.generateAccessToken(user);
+            String newAccessToken = jwtTokenService.generateAccessToken(user);
             return ResponseEntity.ok(ApiResponse.<AuthResponse>builder()
                     .success(true)
                     .message("Token refreshed successfully")
@@ -133,20 +134,61 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(
+            @CookieValue(name = "refreshToken", required = false) String refreshToken,
+            @RequestHeader(name = "Authorization", required = false) String authorizationHeader) {
+        if (refreshToken == null || !jwtTokenService.isValid(refreshToken)) {
+            throw new InvalidTokenException("No valid session to log out");
+        }
+
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            throw new InvalidTokenException("Missing access token");
+        }
+
+        String accessToken = authorizationHeader.substring(7);
+
+        try {
+            // Block both refresh and access tokens
+            jwtTokenService.blockToken(accessToken);
+            jwtTokenService.blockToken(refreshToken);
+
+            // Clear the refresh token cookie
+            ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/auth/refresh")
+                    .maxAge(0)
+                    .sameSite("Strict")
+                    .build();
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                    .body(ApiResponse.<Void>builder()
+                            .success(true)
+                            .message("Successfully logged out")
+                            .build());
+        } catch (UsernameNotFoundException e) {
+            throw new UserNotFoundException("User not found during logout: " + e.getMessage());
+        } catch (Exception e) {
+            throw new DatabaseException("Failed to logout: " + e.getMessage(), e);
+        }
+    }
+
     // Вспомогательные функции
     private ResponseEntity<ApiResponse<?>> buildAuthResponse(User user, HttpServletResponse res, String message) {
         return buildAuthResponse(new UserDetailsImpl(user), res, message);
     }
 
     private ResponseEntity<ApiResponse<?>> buildAuthResponse(UserDetails userDetails, HttpServletResponse res, String message) {
-        String accessToken = jwtTokenProvider.generateAccessToken(userDetails);
-        String refreshToken = jwtTokenProvider.generateRefreshToken(userDetails);
+        String accessToken = jwtTokenService.generateAccessToken(userDetails);
+        String refreshToken = jwtTokenService.generateRefreshToken(userDetails);
 
         ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
                 .secure(true)
                 .path("/auth/refresh")
-                .maxAge(jwtTokenProvider.refreshTokenValidity)
+                .maxAge(jwtTokenService.refreshTokenValidity)
                 .sameSite("Strict")
                 .build();
 

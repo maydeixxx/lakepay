@@ -1,7 +1,7 @@
 package com.LakePayProj.userService.security;
 
 import com.LakePayProj.userService.service.UserDetailsServiceImpl;
-import com.LakePayProj.userService.util.JwtTokenProvider;
+import com.LakePayProj.userService.service.JwtTokenService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,7 +20,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtTokenService jwtTokenService;
     private final UserDetailsServiceImpl userDetailsService;
 
     @Override
@@ -34,8 +34,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring(7);
 
-            if (jwtTokenProvider.isValid(token)) {
-                String username = jwtTokenProvider.getUsername(token);
+            if (jwtTokenService.isValid(token)) {
+                String username = jwtTokenService.getUsername(token);
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
                 UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(auth);
