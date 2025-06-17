@@ -3,6 +3,7 @@ package com.LakePayProj.userService.controller;
 import com.LakePayProj.userService.dto.request.AuthRequest;
 import com.LakePayProj.userService.dto.request.RegisterRequest;
 import com.LakePayProj.userService.dto.request.TelegramAuthRequest;
+import com.LakePayProj.userService.dto.request.UpdatePasswordRequest;
 import com.LakePayProj.userService.dto.response.ApiResponse;
 import com.LakePayProj.userService.dto.response.AuthResponse;
 import com.LakePayProj.userService.entity.User;
@@ -26,6 +27,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -153,11 +155,11 @@ public class AuthController {
         String accessToken = authorizationHeader.substring(7);
 
         try {
-            // Block both refresh and access tokens
+            // Заблокировать refresh и access токены
             jwtTokenService.blockToken(accessToken);
             jwtTokenService.blockToken(refreshToken);
 
-            // Clear the refresh token cookie
+            // Очистить куки с refresh токеном
             ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
                     .httpOnly(true)
                     .secure(true)
@@ -176,6 +178,69 @@ public class AuthController {
             throw new UserNotFoundException("User not found during logout: " + e.getMessage());
         } catch (Exception e) {
             throw new DatabaseException("Failed to logout: " + e.getMessage(), e);
+        }
+    }
+
+    @PostMapping("/update-password")
+    public ResponseEntity<?> updatePassword(
+            @CookieValue(name = "refreshToken", required = false) String refreshToken,
+            @RequestHeader(name = "Authorization", required = false) String authorizationHeader,
+            @RequestBody UpdatePasswordRequest req
+    ) {
+        if (refreshToken == null || !jwtTokenService.isValid(refreshToken)) {
+            throw new InvalidTokenException("No valid session to log out");
+        }
+
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            throw new InvalidTokenException("Missing access token");
+        }
+
+        String accessToken = authorizationHeader.substring(7);
+
+        String username = jwtTokenService.getUsername(accessToken);
+        User user = userService.findByUsername(username).orElseThrow(() -> new UserNotFoundException("Can not find user with username: " + username));
+
+        if (user.getCredential() == null) {
+            // Для пользователей вошедших через телеграм пароль пустой
+            if (req.currentPassword() != null && !req.currentPassword().isEmpty()) {
+                throw new InvalidTokenException("Telegram users cannot provide a current password; set a new password instead");
+            }
+            UserCredential credential = new UserCredential();
+            credential.setPasswordHash(passwordEncoder.encode(req.newPassword()));
+            user.setCredential(credential);
+        } else {
+            // Валидация текущего пароля
+            if (!passwordEncoder.matches(req.currentPassword(), user.getCredential().getPasswordHash())) {
+                throw new InvalidTokenException("Current password is incorrect");
+            }
+            user.getCredential().setPasswordHash(passwordEncoder.encode(req.newPassword()));
+        }
+
+        try {
+            // Обновление пароля
+            userService.update(user.getId(), user);
+
+            // Инвалидация токенов доступа
+            jwtTokenService.blockToken(accessToken);
+            jwtTokenService.blockToken(refreshToken);
+
+            // Очистить куки с refresh токеном
+            ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/auth/refresh")
+                    .maxAge(0)
+                    .sameSite("Strict")
+                    .build();
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                    .body(ApiResponse.<Void>builder()
+                            .success(true)
+                            .message("Password updated successfully")
+                            .build());
+        } catch (Exception e) {
+            throw new DatabaseException("Failed to update password: " + e.getMessage(), e);
         }
     }
 
