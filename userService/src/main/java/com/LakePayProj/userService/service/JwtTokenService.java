@@ -77,9 +77,11 @@ public class JwtTokenService {
 
     public void blockToken(String token) {
         Instant now = Instant.now();
-        blockedTokenRepository.save(BlockedToken.builder()
-                .token(token)
-                .expiryDate(LocalDateTime.from(now.plus(refreshTokenValidity)))
-                .build());
+
+        BlockedToken blockedToken = new BlockedToken();
+        blockedToken.setToken(token);
+        blockedToken.setExpiryDate(LocalDateTime.from(now.plus(refreshTokenValidity)));
+
+        blockedTokenRepository.save(blockedToken);
     }
 }
