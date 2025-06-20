@@ -120,8 +120,8 @@ public class AuthController {
             );
             UserDetails userDetails = (UserDetails) auth.getPrincipal();
             return buildAuthResponse(userDetails, res, "Login successful");
-        } catch (AuthenticationException e) {
-            log.error("Invalid credentials for user: {}", req.username(), e);
+        } catch (UsernameNotFoundException e) {
+            log.debug("Invalid credentials for user: {}", req.username(), e);
             throw new UserNotFoundException("Invalid credentials for user: " + req.username());
         }
     }

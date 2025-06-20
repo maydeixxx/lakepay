@@ -9,11 +9,13 @@ import com.LakePayProj.userService.kafka.UserProducer;
 import com.LakePayProj.userService.mapper.IUserMapper;
 import com.LakePayProj.userService.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RestController
 @RequestMapping("/users/self")
 @RequiredArgsConstructor
@@ -23,7 +25,7 @@ public class UserSelfController {
     private final UserService userService;
     private final UserProducer userProducer;
 
-    @GetMapping("/")
+    @GetMapping()
     public ResponseEntity<ApiResponse<?>> currentUser(@AuthenticationPrincipal UserDetails userDetails) {
         String username = userDetails.getUsername();
         User user = userService.findByUsername(username).orElseThrow(() -> new UserNotFoundException("Can't find user with username: " + username));
@@ -41,7 +43,11 @@ public class UserSelfController {
         User user = userService.findByUsername(username).orElseThrow(() -> new UserNotFoundException("Can't find user with username: " + username));
 
         try {
-            user = userService.update(user.getId(), userMapper.toUser(req));
+            // Предотвращение эскалации прав
+            User newUser = userMapper.toUser(req);
+            newUser.setRole(user.getRole());
+
+            user = userService.update(user.getId(), newUser);
             userProducer.publishUpdateUser(user);
 
             return ResponseEntity.ok(ApiResponse.<UserDto>builder()
@@ -50,6 +56,7 @@ public class UserSelfController {
                     .data(userMapper.toDto(user))
                     .build());
         } catch (Exception e) {
+            log.debug("Failed to update user", e);
             throw new DatabaseException("Failed to update user", e);
         }
     }
@@ -69,6 +76,7 @@ public class UserSelfController {
                     .data(null)
                     .build());
         } catch (Exception e) {
+            log.debug("Failed to delete user", e);
             throw new DatabaseException("Failed to delete user", e);
         }
     }
