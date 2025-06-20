@@ -33,7 +33,7 @@ public class UserService {
     @Transactional
     public User update(Long id, User updatedUser) {
         return userRepository.findById(id).map(user -> {
-            user.setUsername(updatedUser.getUsername());
+            user.setFullName(updatedUser.getFullName());
             user.setAvatarUrl(updatedUser.getAvatarUrl());
             user.setRole(updatedUser.getRole());
             return userRepository.save(user);

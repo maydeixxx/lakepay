@@ -24,7 +24,10 @@ public class User {
     @Column(unique = true)
     private Long telegramId;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false)
+    private String fullName;
+
+    @Column(unique = true, nullable = false, updatable = false)
     private String username;
 
     private String avatarUrl;

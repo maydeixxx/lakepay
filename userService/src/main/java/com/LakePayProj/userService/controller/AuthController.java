@@ -55,8 +55,11 @@ public class AuthController {
 
             // Сохранение пользователя, если он еще не зарегистрирован
             User user = userService.findByUsername(req.username()).orElseGet(() -> {
+                String fullName = (req.first_name() + " " + req.last_name()).trim();
+
                 User newUser = new User();
                 newUser.setUsername(req.username());
+                newUser.setFullName(fullName);
                 newUser.setAvatarUrl(req.photo_url());
                 newUser.setTelegramId(req.id());
                 newUser.setRole(UserRole.ROLE_USER);
@@ -94,6 +97,7 @@ public class AuthController {
 
         User user = new User();
         user.setUsername(req.username());
+        user.setFullName(req.fullName());
         user.setCredential(credential);
         user.setRole(UserRole.ROLE_USER);
 
