@@ -20,6 +20,7 @@ import com.LakePayProj.userService.service.JwtTokenService;
 import com.LakePayProj.userService.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +34,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
@@ -57,7 +59,7 @@ public class AuthController {
                 newUser.setUsername(req.username());
                 newUser.setAvatarUrl(req.photo_url());
                 newUser.setTelegramId(req.id());
-                newUser.setRole(UserRole.USER);
+                newUser.setRole(UserRole.ROLE_USER);
 
                 newUser = userService.create(newUser);
                 userProducer.publishCreateUser(newUser);
@@ -93,13 +95,14 @@ public class AuthController {
         User user = new User();
         user.setUsername(req.username());
         user.setCredential(credential);
-        user.setRole(UserRole.USER);
+        user.setRole(UserRole.ROLE_USER);
 
         try {
             user = userService.create(user);
             userProducer.publishCreateUser(user);
             return buildAuthResponse(user, res, "Registration successful");
         } catch (Exception e) {
+            log.error("Failed to register user", e);
             throw new DatabaseException("Failed to register user", e);
         }
     }
@@ -113,6 +116,7 @@ public class AuthController {
             UserDetails userDetails = (UserDetails) auth.getPrincipal();
             return buildAuthResponse(userDetails, res, "Login successful");
         } catch (AuthenticationException e) {
+            log.error("Invalid credentials for user: {}", req.username(), e);
             throw new UserNotFoundException("Invalid credentials for user: " + req.username());
         }
     }
@@ -124,8 +128,8 @@ public class AuthController {
         }
 
         try {
-            String userId = jwtTokenService.getUsername(refreshToken);
-            UserDetails user = userDetailsService.loadUserByUsername(userId);
+            String username = jwtTokenService.getUsername(refreshToken);
+            UserDetails user = userDetailsService.loadUserByUsername(username);
             String newAccessToken = jwtTokenService.generateAccessToken(user);
             return ResponseEntity.ok(ApiResponse.<AuthResponse>builder()
                     .success(true)

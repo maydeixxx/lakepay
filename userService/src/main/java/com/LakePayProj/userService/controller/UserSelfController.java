@@ -25,8 +25,8 @@ public class UserSelfController {
 
     @GetMapping("/")
     public ResponseEntity<ApiResponse<?>> currentUser(@AuthenticationPrincipal UserDetails userDetails) {
-        String userId = userDetails.getUsername();
-        User user = userService.findById(Long.parseLong(userId)).orElseThrow(() -> new UserNotFoundException("Can't find user with ID: " + userId));
+        String username = userDetails.getUsername();
+        User user = userService.findByUsername(username).orElseThrow(() -> new UserNotFoundException("Can't find user with username: " + username));
         UserDto response = userMapper.toDto(user);
         return ResponseEntity.ok(ApiResponse.<UserDto>builder()
                 .success(true)
@@ -37,8 +37,8 @@ public class UserSelfController {
 
     @PutMapping("/update")
     public ResponseEntity<ApiResponse<?>> updateCurrentUser(@AuthenticationPrincipal UserDetails userDetails, @RequestBody UserDto req) {
-        String userId = userDetails.getUsername();
-        User user = userService.findById(Long.parseLong(userId)).orElseThrow(() -> new UserNotFoundException("Can't find user with ID: " + userId));
+        String username = userDetails.getUsername();
+        User user = userService.findByUsername(username).orElseThrow(() -> new UserNotFoundException("Can't find user with username: " + username));
 
         try {
             user = userService.update(user.getId(), userMapper.toUser(req));
@@ -57,10 +57,11 @@ public class UserSelfController {
     @DeleteMapping("/delete")
     public ResponseEntity<ApiResponse<?>> deleteCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
         try {
-            Long userId = Long.parseLong(userDetails.getUsername());
+            String username = userDetails.getUsername();
+            User user = userService.findByUsername(username).orElseThrow(() -> new UserNotFoundException("Can't find user with username: " + username));
 
-            userService.delete(userId);
-            userProducer.publishDeleteUser(userId);
+            userService.delete(user.getId());
+            userProducer.publishDeleteUser(user.getId());
 
             return ResponseEntity.ok(ApiResponse.<Void>builder()
                     .success(true)

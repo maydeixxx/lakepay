@@ -1,6 +1,8 @@
 package com.LakePayProj.userService.security;
 
+import com.LakePayProj.userService.entity.User;
 import com.LakePayProj.userService.service.UserDetailsServiceImpl;
+import com.LakePayProj.userService.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -9,6 +11,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -28,7 +31,7 @@ public class AuthenticationManagerImpl implements AuthenticationManager {
     @Value("${token.telegram.bot}")
     private String botToken;
 
-    private final UserDetailsServiceImpl userDetailsService;
+    private final UserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
 
     @Override
