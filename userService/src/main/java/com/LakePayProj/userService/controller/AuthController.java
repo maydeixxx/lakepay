@@ -47,7 +47,7 @@ public class AuthController {
     private final AuthenticationManager authManager;
     private final UserDetailsService userDetailsService;
 
-    @PostMapping("/telegram/auth")
+    @PostMapping("/telegram")
     public ResponseEntity<?> authenticateWithTelegram(@RequestBody TelegramAuthRequest req, HttpServletResponse res) {
         try {
             // Проверка валидности хэша от Telegram

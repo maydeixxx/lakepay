@@ -57,7 +57,7 @@ mvn clean
 ### 1. AuthController (`/auth`)
 Этот контроллер отвечает за аутентификацию, регистрацию и управление сессиями пользователей.
 
-- **POST `/auth/telegram/auth`**
+- **POST `/auth/telegram`**
     - **Описание**: Аутентификация пользователя через Telegram. Проверяет валидность данных от Telegram и создает нового пользователя, если он еще не зарегистрирован.
     - **Запрос**: `TelegramAuthRequest` (JSON с `id`, `first_name`, `last_name`, `username`, `photo_url`, `auth_date`, `hash`).
     - **Ответ**: `ApiResponse<AuthResponse>` с `accessToken` и `refreshToken` в cookie.
@@ -96,7 +96,7 @@ mvn clean
 ### 2. UserSelfController (`/users/self`)
 Контроллер для управления данными текущего аутентифицированного пользователя.
 
-- **GET `/users/self/`**
+- **GET `/users/self`**
     - **Описание**: Получение данных текущего пользователя.
     - **Ответ**: `ApiResponse<UserDto>` с данными пользователя.
     - **Статус**: 200 (успех) или 404 (если пользователь не найден, `UserNotFoundException`).

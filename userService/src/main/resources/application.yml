@@ -41,6 +41,6 @@ token:
   jwt:
     key: ${JWT_SIGNING_KEY:25uKMKyiebWwXhiOD7mfuEppPjMvZSJQhGDz8mt-w40}
   telegram:
-    bot: ${TG_BOT_TOKEN:7806898713:AAG8iFdnsd4u-EI7ddf3N01ogG8KyIpZ-DI}
+    bot: ${TG_BOT_TOKEN:test_token}
 
 debug: ${DEBUG_MODE:false}
