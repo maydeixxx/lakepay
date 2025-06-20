@@ -100,6 +100,7 @@ public class AuthController {
         user.setFullName(req.fullName());
         user.setCredential(credential);
         user.setRole(UserRole.ROLE_USER);
+        credential.setUser(user);
 
         try {
             user = userService.create(user);
