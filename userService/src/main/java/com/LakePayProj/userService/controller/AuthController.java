@@ -54,11 +54,12 @@ public class AuthController {
             authManager.authenticate(new TelegramAuthenticationToken(req.toMap()));
 
             // Сохранение пользователя, если он еще не зарегистрирован
-            User user = userService.findByUsername(req.username()).orElseGet(() -> {
+            User user = userService.findByTelegramId(req.id()).orElseGet(() -> {
                 String fullName = (req.first_name() + " " + req.last_name()).trim();
+                String username = generateUniqueUsername(req.username());
 
                 User newUser = new User();
-                newUser.setUsername(req.username());
+                newUser.setUsername(username);
                 newUser.setFullName(fullName);
                 newUser.setAvatarUrl(req.photo_url());
                 newUser.setTelegramId(req.id());
@@ -69,13 +70,6 @@ public class AuthController {
 
                 return newUser;
             });
-
-            // Привязать аккаунт телеграм, если не привязан
-            if (user.getTelegramId() == null) {
-                user.setTelegramId(req.id());
-                user = userService.update(user.getId(), user);
-                userProducer.publishUpdateUser(user);
-            }
 
             // Генерация токена доступа
             return buildAuthResponse(user, res, "Authentication successful");
@@ -263,5 +257,18 @@ public class AuthController {
         } catch (Exception e) {
             throw new DatabaseException("Failed to logout: " + e.getMessage(), e);
         }
+    }
+
+    private String generateUniqueUsername(String baseUsername) {
+        String candidateUsername = baseUsername;
+        int suffix = 1;
+
+        // Keep trying until a unique username is found
+        while (userService.findByUsername(candidateUsername).isPresent()) {
+            candidateUsername = baseUsername + suffix;
+            suffix++;
+        }
+
+        return candidateUsername;
     }
 }
