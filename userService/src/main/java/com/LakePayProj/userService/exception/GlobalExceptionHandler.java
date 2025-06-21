@@ -110,6 +110,22 @@ public class GlobalExceptionHandler {
                 .build(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ApiResponse<?>> handleBadRequestException(BadRequestException ex, WebRequest request) {
+        log.debug("Bad request error ", ex);
+        ErrorDetails errorDetails = new ErrorDetails(
+                "BAD_REQUEST",
+                ex.getMessage(),
+                request.getDescription(false),
+                LocalDateTime.now()
+        );
+        return new ResponseEntity<>(ApiResponse.<Void>builder()
+                .success(false)
+                .message("Bad request")
+                .error(errorDetails)
+                .build(), HttpStatus.BAD_REQUEST);
+    }
+
     // Handle generic exceptions as a fallback
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<?>> handleGlobalException(Exception ex, WebRequest request) {
