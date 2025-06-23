@@ -3,7 +3,6 @@ package com.LakePayProj.adService.controllers;
 import com.LakePayProj.adService.DTOs.AdDto;
 import com.LakePayProj.adService.DTOs.AdDtoUpdate;
 import com.LakePayProj.adService.DTOs.ApiResponse;
-import com.LakePayProj.adService.exceptions.DatabaseException;
 import com.LakePayProj.adService.mappers.IAdMapper;
 import com.LakePayProj.adService.services.AdService;
 import com.LakePayProj.adService.services.kafka.AdProducer;
@@ -127,7 +126,7 @@ public class AdController {
         );
     }
 
-    @PatchMapping("update_ad/{id}")
+    @PutMapping("update_ad/{id}")
     public ResponseEntity<?> updateAd(@PathVariable Long id, @RequestBody AdDtoUpdate updates) {
         service.updateAd(id, updates);
         return ResponseEntity.ok(ApiResponse.builder()

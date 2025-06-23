@@ -2,7 +2,7 @@ package com.LakePayProj.adService.mappers;
 
 import com.LakePayProj.adService.DTOs.AdDto;
 import com.LakePayProj.adService.domain.Ad;
-import com.LakePayProj.adService.infrastructure.AdEntity;
+import com.LakePayProj.adService.entity.AdEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

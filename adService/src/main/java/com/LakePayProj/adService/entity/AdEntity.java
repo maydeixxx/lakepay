@@ -1,4 +1,4 @@
-package com.LakePayProj.adService.infrastructure;
+package com.LakePayProj.adService.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;

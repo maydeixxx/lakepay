@@ -7,14 +7,12 @@ import com.LakePayProj.adService.exceptions.EmptyAdListException;
 import com.LakePayProj.adService.mappers.IAdMapper;
 import com.LakePayProj.adService.repositories.IAdRepository;
 import com.LakePayProj.adService.domain.Ad;
-import com.LakePayProj.adService.infrastructure.AdEntity;
+import com.LakePayProj.adService.entity.AdEntity;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @AllArgsConstructor

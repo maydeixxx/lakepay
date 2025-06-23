@@ -5,7 +5,7 @@ import com.LakePayProj.adService.exceptions.AdNotFoundException;
 import com.LakePayProj.adService.exceptions.KafkaException;
 import com.LakePayProj.adService.repositories.IAdRepository;
 import com.LakePayProj.adService.services.AdService;
-import com.LakePayProj.adService.infrastructure.AdEntity;
+import com.LakePayProj.adService.entity.AdEntity;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
