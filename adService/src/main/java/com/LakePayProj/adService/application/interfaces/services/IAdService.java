@@ -1,6 +1,5 @@
-package com.LakePayProj.adService.services;
+package com.LakePayProj.adService.application.interfaces.services;
 
-import com.LakePayProj.adService.DTOs.AdDtoUpdate;
 import com.LakePayProj.adService.domain.Ad;
 import org.springframework.stereotype.Service;
 
@@ -15,5 +14,5 @@ public interface IAdService {
     List<Ad> findAllAds();
     List<Ad> findAdsBySellerId(Long sellerId);
     List<Ad> findAdsByCategory(String category);
-    void updateAd(Long id, AdDtoUpdate updates);
+    void updateAd(Long id, Map<String, Object> updates);
 }

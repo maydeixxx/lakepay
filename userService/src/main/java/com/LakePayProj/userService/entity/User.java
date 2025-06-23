@@ -11,7 +11,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "users")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -24,10 +23,7 @@ public class User {
     @Column(unique = true)
     private Long telegramId;
 
-    @Column(nullable = false)
-    private String fullName;
-
-    @Column(unique = true, nullable = false, updatable = false)
+    @Column(unique = true, nullable = false)
     private String username;
 
     private String avatarUrl;
