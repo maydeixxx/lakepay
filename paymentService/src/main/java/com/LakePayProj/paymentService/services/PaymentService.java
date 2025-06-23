@@ -1,9 +1,9 @@
-package com.LakePayProj.paymentService.application.services;
+package com.LakePayProj.paymentService.services;
 
-import com.LakePayProj.paymentService.application.interfaces.repos.PaymentRepository;
-import com.LakePayProj.paymentService.application.interfaces.services.IPaymentService;
-import com.LakePayProj.paymentService.application.services.kafka.PaymentProducer;
-import com.LakePayProj.paymentService.infrastructure.PaymentEntity;
+import com.LakePayProj.paymentService.exceptions.*;
+import com.LakePayProj.paymentService.repos.PaymentRepository;
+import com.LakePayProj.paymentService.services.kafka.PaymentProducer;
+import com.LakePayProj.paymentService.entity.PaymentEntity;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -80,8 +80,7 @@ public class PaymentService implements IPaymentService {
 
             return payUrl;
         } catch (Exception e) {
-            log.error("Ошибка создания счёта в Crypto Bot: {}", e.getMessage(), e);
-            return null;
+            throw new CreateInvoiceException("Failed to create new invoice :(", e);
         }
     }
 
@@ -141,7 +140,7 @@ public class PaymentService implements IPaymentService {
             updateUserBalance(userId, price, "buy", "default");
             log.info("Покупка завершена: userId={}, adId={}, message={}", userId, adId, message);
         } catch (Exception e) {
-            log.error("Ошибка покупки объявления: userId={}, adId={}, error={}", userId, adId, e.getMessage(), e);
+            throw new PayAdException(String.format("error while paying ad %s", adId), e);
         }
     }
 
@@ -237,8 +236,7 @@ public class PaymentService implements IPaymentService {
             log.info("Деньги перевелись: userId={}, amount={}, currency={}, spendId={}", userId, amount, currency, spendId);
             return true;
         } catch (Exception e) {
-            log.error("Ошибка перевода средств через Crypto Bot: userId={}, error={}", userId, e.getMessage(), e);
-            return false;
+            throw new TransferFundsException(String.format("error while transferring funds to user [%s]", userId), e);
         }
     }
 
@@ -269,8 +267,7 @@ public class PaymentService implements IPaymentService {
 
             return new BigDecimal(rateData.get().get("rate").toString());
         } catch (Exception e) {
-            log.error("Ошибка получения курса валют: {}", e.getMessage(), e);
-            throw new RuntimeException("Ошибка получения курса валют: " + e.getMessage());
+            throw new GetCourseException(String.format("error while getting course for %s -> %s", sourceAsset, targetAsset), e);
         }
     }
 
@@ -290,9 +287,9 @@ public class PaymentService implements IPaymentService {
             BigDecimal balance = new BigDecimal(data.get("balance").toString());
 
             if ("deposit".equals(operation)) {
-                Optional<PaymentEntity> lastPayment = paymentRepository.findTopByUserIdOrderByCreatedAtDesc(userId);
-                if (lastPayment.isPresent() && lastPayment.get().getAmount().compareTo(amount) == 0 &&
-                        "COMPLETED".equals(lastPayment.get().getStatus())) {
+                PaymentEntity lastPayment = paymentRepository.findTopByUserIdOrderByCreatedAtDesc(userId).orElseThrow(() -> new PaymentNotFoundException("Payment not found"));
+                if (lastPayment != null && lastPayment.getAmount().compareTo(amount) == 0 &&
+                        "COMPLETED".equals(lastPayment.getStatus())) {
                     log.info("Платёж уже обработан: userId={}, amount={}", userId, amount);
                     return balance;
                 }
@@ -320,7 +317,7 @@ public class PaymentService implements IPaymentService {
             Thread.sleep(1000);
             log.info("Баланс обновлён: userId={}, operation={}, amount={}, newBalance={}", userId, operation, amount, newBalance);
         } catch (Exception e) {
-            log.error("Ошибка обновления баланса: userId={}, operation={}, error={}", userId, operation, e.getMessage(), e);
+            throw new UpdateBalanceException(String.format("error while updating user [%s] balance", userId), e);
         }
         return newBalance;
     }
@@ -331,7 +328,7 @@ public class PaymentService implements IPaymentService {
             Thread.sleep(1000);
             log.info("Изменен статус объявления = {}", true);
         } catch (Exception e) {
-            log.error("Ошибка обновления статуса объявления: {}", e.getMessage());
+            throw new UpdateAdStatusException(String.format("error while updating ad [%s] status", adId), e);
         }
     }
 }

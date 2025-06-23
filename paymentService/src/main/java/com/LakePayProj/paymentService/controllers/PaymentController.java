@@ -1,9 +1,15 @@
-package com.LakePayProj.paymentService.api.controllers;
+package com.LakePayProj.paymentService.controllers;
 
-import com.LakePayProj.paymentService.application.interfaces.repos.PaymentRepository;
-import com.LakePayProj.paymentService.application.services.PaymentService;
-import com.LakePayProj.paymentService.application.services.kafka.PaymentProducer;
-import com.LakePayProj.paymentService.infrastructure.PaymentEntity;
+import com.LakePayProj.paymentService.DTOs.ApiResponse;
+import com.LakePayProj.paymentService.exceptions.PaymentExistsException;
+import com.LakePayProj.paymentService.exceptions.PaymentNotFoundException;
+import com.LakePayProj.paymentService.exceptions.TransferFundsException;
+import com.LakePayProj.paymentService.exceptions.UserNotFoundException;
+import com.LakePayProj.paymentService.repos.PaymentRepository;
+import com.LakePayProj.paymentService.services.PaymentService;
+import com.LakePayProj.paymentService.services.kafka.PaymentProducer;
+import com.LakePayProj.paymentService.entity.PaymentEntity;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +20,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.Map;
-import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -41,20 +46,23 @@ public class PaymentController {
             }
 
             Map<String, Object> invoice = (Map) payload.get("payload");
+
             String invoiceId = invoice.get("invoice_id").toString();
 
-            Optional<PaymentEntity> existingPayment = paymentRepository.findByInvoiceId(invoiceId);
-            if (existingPayment.isPresent() && "COMPLETED".equals(existingPayment.get().getStatus())) {
+            PaymentEntity existingPayment = paymentRepository.findByInvoiceId(invoiceId).orElseThrow(() -> new PaymentNotFoundException(String.format("Payment by invoice id %s not found", invoiceId)));
+            if (existingPayment != null && "COMPLETED".equals(existingPayment.getStatus())) {
                 log.info("Счет {} уже обработан", invoiceId);
-                return ResponseEntity.ok().build();
+                return ResponseEntity.ok(ApiResponse.builder()
+                        .success(true)
+                        .message("Payment already handled")
+                        .build()
+                );
             }
 
-            PaymentEntity payment = existingPayment.orElseGet(() -> {
-                PaymentEntity newPayment = new PaymentEntity();
-                newPayment.setInvoiceId(invoiceId);
-                newPayment.setStatus("PENDING");
-                return paymentRepository.save(newPayment);
-            });
+            PaymentEntity payment = new PaymentEntity();
+            payment.setInvoiceId(invoiceId);
+            payment.setStatus("PENDING");
+            paymentRepository.save(payment);
 
             String description = (String) invoice.get("description");
             BigDecimal amount = new BigDecimal(invoice.get("amount").toString());
@@ -103,47 +111,48 @@ public class PaymentController {
     }
 
     @PostMapping("/deposit")
-    public ResponseEntity<?> deposit(@RequestBody Map<String, Object> data) {
-        try {
-            String userId = data.get("userId").toString();
-            producer.getUserDataById(userId);
-            String currency = data.get("currency").toString();
-            BigDecimal amount = new BigDecimal(data.get("amount").toString());
+    public ResponseEntity<ApiResponse<?>> deposit(@RequestBody Map<String, Object> data) throws JsonProcessingException {
+        String userId = data.get("userId").toString();
+        producer.getUserDataById(userId);
+        String currency = data.get("currency").toString();
+        BigDecimal amount = new BigDecimal(data.get("amount").toString());
 
-            if (paymentRepository.existsByUserIdAndStatus(Long.parseLong(userId), "PENDING")) {
-                log.warn("Для пользователя userId={} уже существует активный счет", userId);
-                return ResponseEntity.badRequest().body("У пользователя уже есть активный счет");
-            }
-
-            String payUrl = service.createInvoice(amount, currency, "Deposit for user " + userId);
-            if (payUrl == null) {
-                return ResponseEntity.badRequest().body("Не удалось создать счет");
-            }
-
-            String message = objectMapper.writeValueAsString(Map.of(
-                    "userId", userId,
-                    "payUrl", payUrl,
-                    "amount", amount,
-                    "currency", currency
-            ));
-            producer.sendPaymentCreated(message);
-            return ResponseEntity.ok().build();
-        } catch (Exception e) {
-            log.error("Ошибка создания счета: {}", e.getMessage(), e);
-            return ResponseEntity.badRequest().body("Bad request: " + e.getMessage());
+        if (paymentRepository.existsByUserIdAndStatus(Long.parseLong(userId), "PENDING")) {
+            log.warn("Для пользователя userId={} уже существует активный счет", userId);
+            throw new PaymentExistsException(String.format("payment already exists for user %s", userId));
         }
+
+        String payUrl = service.createInvoice(amount, currency, "Deposit for user " + userId);
+
+        String message = objectMapper.writeValueAsString(Map.of(
+                "userId", userId,
+                "payUrl", payUrl,
+                "amount", amount,
+                "currency", currency
+        ));
+        producer.sendPaymentCreated(message);
+        return ResponseEntity.ok(ApiResponse.builder()
+                .success(true)
+                .message("Successfully created invoice for deposit")
+                .data(payUrl)
+                .build()
+        );
     }
 
     @PostMapping("/buy")
-    public ResponseEntity<Void> buyAd(@RequestBody Map<String, Long> data) {
+    public ResponseEntity<ApiResponse<?>> buyAd(@RequestBody Map<String, Long> data) {
         Long userId = Long.valueOf(data.get("userId").toString());
         Long adId = Long.valueOf(data.get("adId").toString());
         service.buyAd(userId, adId);
-        return new ResponseEntity<>(HttpStatus.OK);
+        return ResponseEntity.ok(ApiResponse.builder()
+                .success(true)
+                .message("successfully bought ad " + adId)
+                .build()
+        );
     }
 
     @PostMapping("/withdraw")
-    public ResponseEntity<?> withdrawFunds(@RequestBody Map<String, Object> request) {
+    public ResponseEntity<ApiResponse<?>> withdrawFunds(@RequestBody Map<String, Object> request) {
         try {
             Long userId = Long.valueOf(request.get("userId").toString());
             BigDecimal amount = new BigDecimal(request.get("amount").toString());
@@ -154,8 +163,7 @@ public class PaymentController {
             Thread.sleep(2000);
             Map<String, Object> userData = service.getUserDataFromCache(userId);
             if (userData == null) {
-                log.error("Данные пользователя не найдены для userId={}", userId);
-                return ResponseEntity.badRequest().body("Данные пользователя не найдены");
+                throw new UserNotFoundException(String.format("user %s not found", userId));
             }
             Long tgId = Long.valueOf(userData.get("tgId").toString());
             BigDecimal balance = new BigDecimal(userData.get("balance").toString());
@@ -165,8 +173,7 @@ public class PaymentController {
             amountInUsd = amount.multiply(rate);
 
             if (balance.compareTo(amountInUsd) < 0) {
-                log.warn("Недостаточно средств для вывода: userId={}, balance={}, amountInUsd={}", userId, balance, amountInUsd);
-                return ResponseEntity.badRequest().body("Недостаточно средств на балансе");
+                throw new IllegalArgumentException("balance is fewer than amount to transfer");
             }
 
             String message = objectMapper.writeValueAsString(Map.of(
@@ -176,13 +183,16 @@ public class PaymentController {
                     "currency", currency,
                     "balance", balance
             ));
-            kafkaTemplate.send("withdraw_request", userId.toString(), message);
+            producer.sendWithdrawRequest(userId, message);
             log.info("Запрос на вывод отправлен в Kafka: userId={}, amount={}, currency={}", userId, amount, currency);
 
-            return ResponseEntity.ok().build();
+            return ResponseEntity.ok(ApiResponse.builder()
+                    .success(true)
+                    .message("success transfer funds")
+                    .build()
+            );
         } catch (Exception e) {
-            log.error("Ошибка обработки запроса на вывод: {}", e.getMessage(), e);
-            return ResponseEntity.badRequest().build();
+            throw new TransferFundsException("error transfer funds", e);
         }
     }
 }
