@@ -20,6 +20,7 @@ import com.LakePayProj.userService.service.JwtTokenService;
 import com.LakePayProj.userService.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +34,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
@@ -45,32 +47,29 @@ public class AuthController {
     private final AuthenticationManager authManager;
     private final UserDetailsService userDetailsService;
 
-    @PostMapping("/telegram/auth")
+    @PostMapping("/telegram")
     public ResponseEntity<?> authenticateWithTelegram(@RequestBody TelegramAuthRequest req, HttpServletResponse res) {
         try {
             // Проверка валидности хэша от Telegram
             authManager.authenticate(new TelegramAuthenticationToken(req.toMap()));
 
             // Сохранение пользователя, если он еще не зарегистрирован
-            User user = userService.findByUsername(req.username()).orElseGet(() -> {
+            User user = userService.findByTelegramId(req.id()).orElseGet(() -> {
+                String fullName = (req.first_name() + " " + req.last_name()).trim();
+                String username = generateUniqueUsername(req.username());
+
                 User newUser = new User();
-                newUser.setUsername(req.username());
+                newUser.setUsername(username);
+                newUser.setFullName(fullName);
                 newUser.setAvatarUrl(req.photo_url());
                 newUser.setTelegramId(req.id());
-                newUser.setRole(UserRole.USER);
+                newUser.setRole(UserRole.ROLE_USER);
 
                 newUser = userService.create(newUser);
                 userProducer.publishCreateUser(newUser);
 
                 return newUser;
             });
-
-            // Привязать аккаунт телеграм, если не привязан
-            if (user.getTelegramId() == null) {
-                user.setTelegramId(req.id());
-                user = userService.update(user.getId(), user);
-                userProducer.publishUpdateUser(user);
-            }
 
             // Генерация токена доступа
             return buildAuthResponse(user, res, "Authentication successful");
@@ -92,14 +91,17 @@ public class AuthController {
 
         User user = new User();
         user.setUsername(req.username());
+        user.setFullName(req.fullName());
         user.setCredential(credential);
-        user.setRole(UserRole.USER);
+        user.setRole(UserRole.ROLE_USER);
+        credential.setUser(user);
 
         try {
             user = userService.create(user);
             userProducer.publishCreateUser(user);
             return buildAuthResponse(user, res, "Registration successful");
         } catch (Exception e) {
+            log.error("Failed to register user", e);
             throw new DatabaseException("Failed to register user", e);
         }
     }
@@ -112,7 +114,8 @@ public class AuthController {
             );
             UserDetails userDetails = (UserDetails) auth.getPrincipal();
             return buildAuthResponse(userDetails, res, "Login successful");
-        } catch (AuthenticationException e) {
+        } catch (UsernameNotFoundException e) {
+            log.debug("Invalid credentials for user: {}", req.username(), e);
             throw new UserNotFoundException("Invalid credentials for user: " + req.username());
         }
     }
@@ -124,8 +127,8 @@ public class AuthController {
         }
 
         try {
-            String userId = jwtTokenService.getUsername(refreshToken);
-            UserDetails user = userDetailsService.loadUserByUsername(userId);
+            String username = jwtTokenService.getUsername(refreshToken);
+            UserDetails user = userDetailsService.loadUserByUsername(username);
             String newAccessToken = jwtTokenService.generateAccessToken(user);
             return ResponseEntity.ok(ApiResponse.<AuthResponse>builder()
                     .success(true)
@@ -173,8 +176,8 @@ public class AuthController {
 
         String accessToken = authorizationHeader.substring(7);
 
-        String userId = jwtTokenService.getUsername(accessToken);
-        User user = userService.findById(Long.parseLong(userId)).orElseThrow(() -> new UserNotFoundException("Can not find user with ID: " + userId));
+        String username = jwtTokenService.getUsername(accessToken);
+        User user = userService.findByUsername(username).orElseThrow(() -> new UserNotFoundException("Can not find user with username: " + username));
 
         if (user.getCredential() == null) {
             // Для пользователей вошедших через телеграм пароль пустой
@@ -254,5 +257,18 @@ public class AuthController {
         } catch (Exception e) {
             throw new DatabaseException("Failed to logout: " + e.getMessage(), e);
         }
+    }
+
+    private String generateUniqueUsername(String baseUsername) {
+        String candidateUsername = baseUsername;
+        int suffix = 1;
+
+        // Keep trying until a unique username is found
+        while (userService.findByUsername(candidateUsername).isPresent()) {
+            candidateUsername = baseUsername + suffix;
+            suffix++;
+        }
+
+        return candidateUsername;
     }
 }

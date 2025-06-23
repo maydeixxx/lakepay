@@ -24,18 +24,29 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    /**
-     * Обновление данных пользователя
-     *
-     * @param updatedUser поля avatarUrl, username и role будут обновлены в БД
-     * @throws EntityNotFoundException в случае когда пользователя не существует
-     */
+
     @Transactional
     public User update(Long id, User updatedUser) {
         return userRepository.findById(id).map(user -> {
-            user.setUsername(updatedUser.getUsername());
-            user.setAvatarUrl(updatedUser.getAvatarUrl());
-            user.setRole(updatedUser.getRole());
+            if (updatedUser.getFullName() != null) user.setFullName(updatedUser.getFullName());
+            if (updatedUser.getAvatarUrl() != null) user.setAvatarUrl(updatedUser.getAvatarUrl());
+            if (updatedUser.getRole() != null) user.setRole(updatedUser.getRole());
+            if (updatedUser.getCredential() != null) user.setCredential(updatedUser.getCredential());
+            if (updatedUser.getTelegramId() != null) user.setTelegramId(updatedUser.getTelegramId());
+            return userRepository.save(user);
+        }).orElseThrow(() -> new EntityNotFoundException("Can't find user with ID: " + id));
+    }
+
+    /**
+     * Обновление публичных данных пользователя
+     * @param fullName новое имя пользователя
+     * @param avatarUrl ссылка на аватарку профиля
+     * @throws EntityNotFoundException в случае когда пользователя не существует
+     */
+    public User updateProfile(Long id, String fullName, String avatarUrl) {
+        return userRepository.findById(id).map(user -> {
+            if (fullName != null) user.setFullName(fullName);
+            if (avatarUrl != null) user.setAvatarUrl(avatarUrl);
             return userRepository.save(user);
         }).orElseThrow(() -> new EntityNotFoundException("Can't find user with ID: " + id));
     }

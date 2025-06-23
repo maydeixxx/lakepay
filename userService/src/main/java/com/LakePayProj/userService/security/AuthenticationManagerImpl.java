@@ -1,7 +1,10 @@
 package com.LakePayProj.userService.security;
 
+import com.LakePayProj.userService.entity.User;
 import com.LakePayProj.userService.service.UserDetailsServiceImpl;
+import com.LakePayProj.userService.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -9,6 +12,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -21,6 +25,7 @@ import java.util.Map;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class AuthenticationManagerImpl implements AuthenticationManager {
@@ -28,7 +33,7 @@ public class AuthenticationManagerImpl implements AuthenticationManager {
     @Value("${token.telegram.bot}")
     private String botToken;
 
-    private final UserDetailsServiceImpl userDetailsService;
+    private final UserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -73,6 +78,8 @@ public class AuthenticationManagerImpl implements AuthenticationManager {
 
             byte[] hmacBytes = hmac.doFinal(dataCheckString.getBytes(UTF_8));
             String expectedHash = bytesToHex(hmacBytes);
+
+            log.debug("Expected telegram hash: {}, at timestamp: {}", expectedHash, data.get("auth_date"));
 
             if (!expectedHash.equals(hash)) {
                 throw new BadCredentialsException("Invalid Telegram hash");

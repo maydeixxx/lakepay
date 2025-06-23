@@ -15,12 +15,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UserNotFoundException {
-        /*
-        E!аная хрень я конвертирую Long в String в JwtTokenService, чтобы конвертировать String в Long здесь.
-        А все потому что пользователь может поменять свой username и я не хочу каждый раз
-        делать инвалидацию токенов доступа и выкидывать его из аккаунта.
-        **/
-        return userRepository.findById(Long.parseLong(username))
+        return userRepository.findByUsername(username)
                 .map(UserDetailsImpl::new)
                 .orElseThrow(() -> new UserNotFoundException("Can't find user with username: " + username));
     }

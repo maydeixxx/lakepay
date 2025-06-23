@@ -1,6 +1,7 @@
 package com.LakePayProj.userService.exception;
 
 import com.LakePayProj.userService.dto.response.ApiResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -9,11 +10,13 @@ import org.springframework.web.context.request.WebRequest;
 
 import java.time.LocalDateTime;
 
+@Slf4j
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<ApiResponse<?>> handleUserAlreadyExists(UserAlreadyExistsException ex, WebRequest request) {
+        log.debug("User already exists ", ex);
         ErrorDetails errorDetails = new ErrorDetails(
                 "USER_ALREADY_EXISTS",
                 ex.getMessage(),
@@ -29,6 +32,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ApiResponse<?>> handleUserNotFound(UserNotFoundException ex, WebRequest request) {
+        log.debug("User not found ", ex);
         ErrorDetails errorDetails = new ErrorDetails(
                 "USER_NOT_FOUND",
                 ex.getMessage(),
@@ -44,6 +48,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidTokenException.class)
     public ResponseEntity<ApiResponse<?>> handleInvalidToken(InvalidTokenException ex, WebRequest request) {
+        log.debug("Token validation failed ", ex);
         ErrorDetails errorDetails = new ErrorDetails(
                 "INVALID_TOKEN",
                 ex.getMessage(),
@@ -59,6 +64,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(KafkaException.class)
     public ResponseEntity<ApiResponse<?>> handleKafkaException(KafkaException ex, WebRequest request) {
+        log.debug("Kafka exception ", ex);
         ErrorDetails errorDetails = new ErrorDetails(
                 "KAFKA_EXCEPTION",
                 ex.getMessage(),
@@ -74,6 +80,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(UnauthorizedAccessException.class)
     public ResponseEntity<ApiResponse<?>> handleUnauthorizedAccessException(UnauthorizedAccessException ex, WebRequest request) {
+        log.debug("Access denied, unauthorized ", ex);
         ErrorDetails errorDetails = new ErrorDetails(
                 "UNAUTHORIZED",
                 ex.getMessage(),
@@ -89,6 +96,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DatabaseException.class)
     public ResponseEntity<ApiResponse<?>> handleDatabaseException(DatabaseException ex, WebRequest request) {
+        log.debug("Database error ", ex);
         ErrorDetails errorDetails = new ErrorDetails(
                 "DATABASE_ERROR",
                 ex.getMessage(),
@@ -102,9 +110,26 @@ public class GlobalExceptionHandler {
                 .build(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ApiResponse<?>> handleBadRequestException(BadRequestException ex, WebRequest request) {
+        log.debug("Bad request error ", ex);
+        ErrorDetails errorDetails = new ErrorDetails(
+                "BAD_REQUEST",
+                ex.getMessage(),
+                request.getDescription(false),
+                LocalDateTime.now()
+        );
+        return new ResponseEntity<>(ApiResponse.<Void>builder()
+                .success(false)
+                .message("Bad request")
+                .error(errorDetails)
+                .build(), HttpStatus.BAD_REQUEST);
+    }
+
     // Handle generic exceptions as a fallback
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<?>> handleGlobalException(Exception ex, WebRequest request) {
+        log.debug("Internal server error ", ex);
         ErrorDetails errorDetails = new ErrorDetails(
                 "SOMETHING_WENT_WRONG",
                 "An unexpected error occurred: " + ex.getMessage(),
