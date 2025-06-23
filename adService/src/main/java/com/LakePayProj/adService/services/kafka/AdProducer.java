@@ -1,6 +1,7 @@
-package com.LakePayProj.adService.application.services.kafka;
+package com.LakePayProj.adService.services.kafka;
 
 import com.LakePayProj.adService.domain.Ad;
+import com.LakePayProj.adService.exceptions.KafkaException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -36,6 +37,10 @@ public class AdProducer {
 
     public void sendNewAd(String category, Ad ad) {
         String info = formatAdForTelegram(ad);
-        template.send("ads", category, info);
+        try {
+            template.send("ads", category, info);
+        } catch (Exception e) {
+            throw new KafkaException("error while using kafka", e);
+        }
     }
 }

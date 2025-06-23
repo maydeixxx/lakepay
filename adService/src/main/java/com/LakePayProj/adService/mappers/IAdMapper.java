@@ -1,6 +1,6 @@
-package com.LakePayProj.adService.application.interfaces.mappers;
+package com.LakePayProj.adService.mappers;
 
-import com.LakePayProj.adService.api.DTOs.AdDto;
+import com.LakePayProj.adService.DTOs.AdDto;
 import com.LakePayProj.adService.domain.Ad;
 import com.LakePayProj.adService.infrastructure.AdEntity;
 import org.mapstruct.Mapper;
@@ -18,6 +18,4 @@ public interface IAdMapper {
     @Mapping(target = "login", ignore = true)
     @Mapping(target = "password", ignore = true)
     AdDto adDomainToDto(Ad ad);
-
-    AdEntity adDtoToEntity(AdDto adDto);
 }
