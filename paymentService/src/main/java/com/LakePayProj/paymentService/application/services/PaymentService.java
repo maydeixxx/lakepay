@@ -12,6 +12,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.annotation.TopicPartition;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -36,9 +37,6 @@ public class PaymentService implements IPaymentService {
 
     @Value("${crypto-bot.api}")
     private String apiUrl;
-
-    @Value("${crypto-bot.token}")
-    private String apiToken;
 
     @Override
     public String createInvoice(BigDecimal amount, String asset, String description) {
@@ -145,18 +143,6 @@ public class PaymentService implements IPaymentService {
         }
     }
 
-    @KafkaListener(topics = "get_user_data_by_id_response", groupId = "userData")
-    public void getUserData(ConsumerRecord<String, String> record) {
-        try {
-            log.info("Получено сообщение в responseToUserData: key={}, value={}", record.key(), record.value());
-            Map<String, Object> userData = objectMapper.readValue(record.value(), Map.class);
-            Long userId = Long.parseLong(record.key());
-            cacheUserData.put(userId, userData);
-            log.info("Обновлён кэш userData для userId={}: {}", userId, userData);
-        } catch (Exception e) {
-            log.error("Ошибка обработки responseToUserData: {}", e.getMessage(), e);
-        }
-    }
 
     public Map<String, Object> getUserDataFromCache(Long userId) {
         return cacheUserData.get(userId);
@@ -184,7 +170,20 @@ public class PaymentService implements IPaymentService {
         }
     }
 
-    @KafkaListener(topics = "get_ad_data_response", groupId = "AD_MONEY")
+    @KafkaListener(topics = "get_user_data_by_id_response", groupId = "userData")
+    public void getUserData(ConsumerRecord<String, String> record) {
+        try {
+            log.info("Получено сообщение в responseToUserData: key={}, value={}", record.key(), record.value());
+            Map<String, Object> userData = objectMapper.readValue(record.value(), Map.class);
+            Long userId = Long.parseLong(record.key());
+            cacheUserData.put(userId, userData);
+            log.info("Обновлён кэш userData для userId={}: {}", userId, userData);
+        } catch (Exception e) {
+            log.error("Ошибка обработки responseToUserData: {}", e.getMessage(), e);
+        }
+    }
+
+    @KafkaListener(topicPartitions = @TopicPartition(topic = "get_ad_data_response", partitions = {"0, 1"}), groupId = "AD_MONEY")
     public void getSellerIdConsume(ConsumerRecord<String, String> record) {
         if (record.partition() == 0) {
             try {
@@ -333,5 +332,6 @@ public class PaymentService implements IPaymentService {
         } catch (Exception e) {
             log.error("Ошибка обновления статуса объявления: {}", e.getMessage());
         }
+
     }
 }
