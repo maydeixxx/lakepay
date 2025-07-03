@@ -1,6 +1,6 @@
 package com.LakePayProj.paymentService.exceptions;
 
-import com.LakePayProj.paymentService.DTOs.ApiResponse;
+import com.LakePayProj.paymentService.models.DTOs.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -170,6 +170,21 @@ public class GlobalExceptionHandler {
                 .error(errorDetails)
                 .build(), HttpStatus.CONFLICT
         );
+    }
+
+    @ExceptionHandler(AdNotFoundException.class)
+    public ResponseEntity<?> handleAdNotFoundException(AdNotFoundException exception, WebRequest request) {
+        ErrorDetails errorDetails = new ErrorDetails(
+                "ad not found",
+                exception.getMessage(),
+                request.getDescription(false),
+                LocalDateTime.now()
+        );
+        return new ResponseEntity<>(ApiResponse.builder()
+                .success(false)
+                .message(errorDetails.getMessage())
+                .error(errorDetails)
+                .build(), HttpStatus.NOT_FOUND);
     }
 
 }

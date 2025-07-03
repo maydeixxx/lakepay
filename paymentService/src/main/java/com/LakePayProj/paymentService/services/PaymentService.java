@@ -1,9 +1,11 @@
 package com.LakePayProj.paymentService.services;
 
 import com.LakePayProj.paymentService.exceptions.*;
+import com.LakePayProj.paymentService.models.redis.AdRedis;
+import com.LakePayProj.paymentService.models.redis.UserRedis;
 import com.LakePayProj.paymentService.repos.PaymentRepository;
 import com.LakePayProj.paymentService.services.kafka.PaymentProducer;
-import com.LakePayProj.paymentService.entity.PaymentEntity;
+import com.LakePayProj.paymentService.models.entity.PaymentEntity;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -27,13 +29,14 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 @RequiredArgsConstructor
 public class PaymentService implements IPaymentService {
+
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
     private final PaymentProducer producer;
     private final PaymentRepository paymentRepository;
+    private final UserServiceRedis userServiceRedis;
+    private final AdServiceRedis adServiceRedis;
     private final ConcurrentHashMap<Long, Long> sellerIdCache = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<Long, Map<String, Object>> cacheUserData = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<Long, Map<String, Object>> cachedAdDataForSell = new ConcurrentHashMap<>();
 
     @Value("${crypto-bot.api}")
     private String apiUrl;
@@ -87,29 +90,28 @@ public class PaymentService implements IPaymentService {
     public void buyAd(Long userId, Long adId) {
         try {
             log.warn("Данные пользователя не найдены для userId={}. Запрос данных...", userId);
-            producer.getUserDataById(userId.toString());
+            producer.getUserDataById(userId);
             Thread.sleep(2000);
-            Map<String, Object> userData = cacheUserData.get(userId);
-            if (userData == null) {
+            UserRedis user = userServiceRedis.getById(userId);
+            if (user == null) {
                 log.error("Не удалось получить данные пользователя для userId={}", userId);
-                return;
+                throw new UserNotFoundException(String.format("user by id %s not found", userId));
             }
-            log.info("Получены данные пользователя: {}", userData);
+            log.info("Получены данные пользователя: {}", user);
 
-            Long buyTgId = Long.valueOf(userData.get("tgId").toString());
-            BigDecimal balance = new BigDecimal(userData.get("balance").toString());
+            Long buyTgId = user.getTgId();
+            BigDecimal balance = user.getBalance();
 
-            cacheUserData.clear();
             producer.getAdData(adId.toString(), "price_credentials");
             Thread.sleep(2000);
-            Map<String, Object> adData = cachedAdDataForSell.get(adId);
-            if (adData.isEmpty()) {
+            AdRedis ad = adServiceRedis.getAdById(adId);
+            if (ad == null) {
                 log.error("Данные не получены!!");
-                return;
+                throw new AdNotFoundException(String.format("Ad by id %s noty found", adId));
             }
-            BigDecimal price = BigDecimal.valueOf(Double.parseDouble(adData.get("price").toString()));
-            String login = adData.get("login").toString();
-            String password = adData.get("password").toString();
+            BigDecimal price = ad.getPrice();
+            String login = ad.getLogin();
+            String password = ad.getPassword();
             log.info("Данные: price = {}, login = {}, password = {}", price, login, password);
             Long sellerId = getSellerIdConsume(adId);
 
@@ -143,8 +145,8 @@ public class PaymentService implements IPaymentService {
     }
 
 
-    public Map<String, Object> getUserDataFromCache(Long userId) {
-        return cacheUserData.get(userId);
+    public UserRedis getUserDataFromCache(Long userId) {
+        return userServiceRedis.getById(userId);
     }
 
     public Long getSellerIdConsume(Long adId) {
@@ -175,7 +177,14 @@ public class PaymentService implements IPaymentService {
             log.info("Получено сообщение в responseToUserData: key={}, value={}", record.key(), record.value());
             Map<String, Object> userData = objectMapper.readValue(record.value(), Map.class);
             Long userId = Long.parseLong(record.key());
-            cacheUserData.put(userId, userData);
+            Long tgId = Long.parseLong(userData.get("tgId").toString());
+            BigDecimal balance = new BigDecimal(userData.get("balance").toString());
+            UserRedis user = UserRedis.builder()
+                    .id(userId)
+                    .tgId(tgId)
+                    .balance(balance)
+                    .build();
+            userServiceRedis.saveUser(user);
             log.info("Обновлён кэш userData для userId={}: {}", userId, userData);
         } catch (Exception e) {
             log.error("Ошибка обработки responseToUserData: {}", e.getMessage(), e);
@@ -197,11 +206,22 @@ public class PaymentService implements IPaymentService {
         } else if (record.partition() == 1) {
             try {
                 log.info("Получено сообщение в get_ad_data_response partition=1: key={}, value={}", record.key(), record.value());
-                Long adId = Long.parseLong(record.key());
                 Map<String, Object> adData = objectMapper.readValue(record.value(), Map.class);
+
+                BigDecimal price = BigDecimal.valueOf(Double.parseDouble(adData.get("price").toString()));
+                Long adId = Long.parseLong(record.key());
+                String login = adData.get("login").toString();
+                String password = adData.get("password").toString();
+                AdRedis ad = AdRedis.builder()
+                        .id(adId)
+                        .login(login)
+                        .password(password)
+                        .price(price)
+                        .build();
+                adServiceRedis.saveAd(ad);
+
                 log.info("Полученные данные = {}", adData);
-                cachedAdDataForSell.put(adId, adData);
-                log.info("Кэшированные данные = {}", cachedAdDataForSell);
+                log.info("Кэшированные данные = {}", ad);
             } catch (Exception e) {
                 log.error("Error = {}", e.getMessage());
             }
@@ -274,16 +294,16 @@ public class PaymentService implements IPaymentService {
     public BigDecimal updateUserBalance(Long userId, BigDecimal amount, String operation, String asset) {
         BigDecimal newBalance = null;
         try {
-            producer.getUserDataById(userId.toString());
+            producer.getUserDataById(userId);
             Thread.sleep(2000);
-            Map<String, Object> data = getUserDataFromCache(userId);
-            if (data == null) {
+            UserRedis user = getUserDataFromCache(userId);
+            if (user == null) {
                 log.error("Не удалось получить данные пользователя userId={}", userId);
                 return null;
             }
-            log.info("Получены данные для пользователя: id = {}", data);
+            log.info("Получены данные для пользователя: id = {}", user);
 
-            BigDecimal balance = new BigDecimal(data.get("balance").toString());
+            BigDecimal balance = user.getBalance();
 
             if ("deposit".equals(operation)) {
                 PaymentEntity lastPayment = paymentRepository.findTopByUserIdOrderByCreatedAtDesc(userId).orElseThrow(() -> new PaymentNotFoundException("Payment not found"));

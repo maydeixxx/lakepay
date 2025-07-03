@@ -64,9 +64,9 @@ public class PaymentProducer {
         }
     }
 
-    public void getUserDataById(String id) {
+    public void getUserDataById(Long id) {
         try {
-            template.send("get_user_data_by_id_request", id, id);
+            template.send("get_user_data_by_id_request", id.toString(), id.toString());
             log.info("Sent message to get_user_data_by_id for userId={}", id);
         } catch (Exception e) {
             throw new KafkaException("error while sending message get_user_data_by_id_request", e);

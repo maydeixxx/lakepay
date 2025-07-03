@@ -3,7 +3,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>com.LakePayProj</groupId>
+		<groupId>com.lakepay</groupId>
 		<artifactId>LakePay</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
@@ -11,7 +11,7 @@
 	<artifactId>notificationService</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>notificationService</name>
-	<description>Demo project for Spring Boot</description>
+	<description>notification service for lakepay</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -52,6 +52,12 @@
 			<groupId>org.telegram</groupId>
 			<artifactId>telegrambots</artifactId>
 			<version>6.8.0</version>
+		</dependency>
+
+		<!-- kafka -->
+		<dependency>
+			<groupId>org.springframework.kafka</groupId>
+			<artifactId>spring-kafka</artifactId>
 		</dependency>
 
 		<dependency>

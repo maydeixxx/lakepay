@@ -20,7 +20,7 @@ spring:
           uri: lb://chatService
           predicates:
             - Path=/chat/**
-            -
+
 server:
   port: 8990
   tomcat:
@@ -32,4 +32,4 @@ eureka:
     service-url:
       defaultZone: http://eureka-service:8761/eureka/
 
-debug: ${DEBUG_MODE:false} # Установите значение по умолчанию, если переменная не определена
+debug: ${DEBUG_MODE:false}

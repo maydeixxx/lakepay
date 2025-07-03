@@ -1,4 +1,4 @@
-package com.LakePayProj.paymentService.DTOs;
+package com.LakePayProj.paymentService.models.DTOs;
 
 import com.LakePayProj.paymentService.exceptions.ErrorDetails;
 import lombok.AllArgsConstructor;

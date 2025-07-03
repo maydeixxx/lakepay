@@ -1,6 +1,6 @@
 package com.LakePayProj.paymentService.repos;
 
-import com.LakePayProj.paymentService.entity.PaymentEntity;
+import com.LakePayProj.paymentService.models.entity.PaymentEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

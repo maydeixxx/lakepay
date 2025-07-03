@@ -1,14 +1,15 @@
 package com.LakePayProj.paymentService.controllers;
 
-import com.LakePayProj.paymentService.DTOs.ApiResponse;
+import com.LakePayProj.paymentService.models.DTOs.ApiResponse;
 import com.LakePayProj.paymentService.exceptions.PaymentExistsException;
 import com.LakePayProj.paymentService.exceptions.PaymentNotFoundException;
 import com.LakePayProj.paymentService.exceptions.TransferFundsException;
 import com.LakePayProj.paymentService.exceptions.UserNotFoundException;
+import com.LakePayProj.paymentService.models.redis.UserRedis;
 import com.LakePayProj.paymentService.repos.PaymentRepository;
 import com.LakePayProj.paymentService.services.PaymentService;
 import com.LakePayProj.paymentService.services.kafka.PaymentProducer;
-import com.LakePayProj.paymentService.entity.PaymentEntity;
+import com.LakePayProj.paymentService.models.entity.PaymentEntity;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
@@ -26,6 +27,7 @@ import java.util.Map;
 @RequestMapping()
 @RequiredArgsConstructor
 public class PaymentController {
+
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final PaymentService service;
     private final PaymentRepository paymentRepository;
@@ -71,10 +73,10 @@ public class PaymentController {
 
             if (description.startsWith("Deposit for user")) {
                 Long userId = Long.parseLong(description.replace("Deposit for user ", ""));
-                Map<String, Object> userData = service.getUserDataFromCache(userId);
+                UserRedis userData = service.getUserDataFromCache(userId);
                 if (userData == null) {
                     log.warn("Данные пользователя не найдены в кэше для userId={}", userId);
-                    producer.getUserDataById(userId.toString());
+                    producer.getUserDataById(userId);
                     Thread.sleep(2000);
                     userData = service.getUserDataFromCache(userId);
                     if (userData == null) {
@@ -82,7 +84,7 @@ public class PaymentController {
                         return ResponseEntity.badRequest().body("Данные пользователя не найдены");
                     }
                 }
-                Long tgId = Long.valueOf(userData.get("tgId").toString());
+                Long tgId = userData.getTgId();
 
                 String operation = "deposit";
                 BigDecimal newBalance = service.updateUserBalance(userId, amount, operation, currency);
@@ -112,12 +114,12 @@ public class PaymentController {
 
     @PostMapping("/deposit")
     public ResponseEntity<ApiResponse<?>> deposit(@RequestBody Map<String, Object> data) throws JsonProcessingException {
-        String userId = data.get("userId").toString();
+        Long userId = Long.parseLong(data.get("userId").toString());
         producer.getUserDataById(userId);
         String currency = data.get("currency").toString();
         BigDecimal amount = new BigDecimal(data.get("amount").toString());
 
-        if (paymentRepository.existsByUserIdAndStatus(Long.parseLong(userId), "PENDING")) {
+        if (paymentRepository.existsByUserIdAndStatus(userId, "PENDING")) {
             log.warn("Для пользователя userId={} уже существует активный счет", userId);
             throw new PaymentExistsException(String.format("payment already exists for user %s", userId));
         }
@@ -159,14 +161,14 @@ public class PaymentController {
             String currency = request.get("currency").toString();
             log.debug("Запрос на вывод средств: userId={}, amount={}, currency={}", userId, amount, currency);
 
-            producer.getUserDataById(userId.toString());
+            producer.getUserDataById(userId);
             Thread.sleep(2000);
-            Map<String, Object> userData = service.getUserDataFromCache(userId);
+            UserRedis userData = service.getUserDataFromCache(userId);
             if (userData == null) {
                 throw new UserNotFoundException(String.format("user %s not found", userId));
             }
-            Long tgId = Long.valueOf(userData.get("tgId").toString());
-            BigDecimal balance = new BigDecimal(userData.get("balance").toString());
+            Long tgId = userData.getTgId();
+            BigDecimal balance = userData.getBalance();
             log.info("balance = {}, tgId = {}", balance, tgId);
             BigDecimal amountInUsd;
             BigDecimal rate = service.getExchangeCourse(currency, "USD");
