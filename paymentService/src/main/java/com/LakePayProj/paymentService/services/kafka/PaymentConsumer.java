@@ -1,6 +1,7 @@
-package com.LakePayProj.paymentService.application.services.kafka;
+package com.LakePayProj.paymentService.services.kafka;
 
-import com.LakePayProj.paymentService.application.services.PaymentService;
+import com.LakePayProj.paymentService.exceptions.KafkaException;
+import com.LakePayProj.paymentService.services.PaymentService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -59,7 +60,7 @@ public class PaymentConsumer {
             log.info("Вывод подтверждён: userId={}, amount={}, currency={}", userId, amount, currency);
 
         } catch (Exception e) {
-            log.error("Ошибка обработки withdraw_request: {}", e.getMessage(), e);
+            throw new KafkaException("error while handling message from withdraw_request", e);
         }
     }
 }

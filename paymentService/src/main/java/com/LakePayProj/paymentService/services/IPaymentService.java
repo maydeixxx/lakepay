@@ -1,4 +1,4 @@
-package com.LakePayProj.paymentService.application.interfaces.services;
+package com.LakePayProj.paymentService.services;
 
 import org.springframework.stereotype.Service;
 
