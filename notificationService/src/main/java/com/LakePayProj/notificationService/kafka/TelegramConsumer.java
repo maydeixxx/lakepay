@@ -1,7 +1,9 @@
 package com.LakePayProj.notificationService.kafka;
 
-import com.LakePayProj.notificationService.models.UserAdResponse;
-import com.LakePayProj.notificationService.tgBot.TelegramService;
+import com.LakePayProj.notificationService.exceptions.WithdrawException;
+import com.LakePayProj.notificationService.models.redis.UserRedis;
+import com.LakePayProj.notificationService.services.TelegramService;
+import com.LakePayProj.notificationService.services.UserRedisService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -10,44 +12,42 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class TelegramConsumer {
-    private final TelegramService service;
+
+    private final TelegramService telegramService;
     private final ObjectMapper objectMapper;
     private final TelegramProducer producer;
-    private final List<String> cacheSubscribedUsers = new ArrayList<>();
-    private final ConcurrentHashMap<String, UserAdResponse> responseStore = new ConcurrentHashMap<>();
+    private final UserRedisService userRedisService;
 
     @KafkaListener(topics = "usersLog", groupId = "user-notifications")
     public void sendNewUser(ConsumerRecord<String, String> record) {
         String chatId = record.key();
         String message = record.value();
-        service.sendMessage(chatId, message);
+        telegramService.sendMessage(chatId, message);
         log.debug("Отправлено сообщение для chatId={}: {}", chatId, message);
     }
 
     @KafkaListener(topics = "ad_data", groupId = "MONEY")
     public void sendAdDataToUser(ConsumerRecord<String, String> record) {
         try {
-            Map<String, Object> data = objectMapper.readValue(record.value(), Map.class);
+            Map<String, Object> data = objectMapper.readValue(record.value(), new TypeReference<>() {});
             String tgId = data.get("tgId").toString();
             String adId = data.get("adId").toString();
             String login = data.get("login").toString();
             String password = data.get("password").toString();
-            StringBuilder message = new StringBuilder();
-            message.append("Успешная покупка объявления 🆔 ").append(adId).append("\n*Данные от аккаунта*\n")
-                    .append("login: ").append(login).append("\n")
-                    .append("password: ").append(password);
-            service.sendMessage(tgId, message.toString().trim());
+            String message =
+                    "Успешная покупка объявления 🆔 " + adId + "\n*Данные от аккаунта*\n" +
+                    "login: " + login + "\n" +
+                    "password: " + password;
+            telegramService.sendMessage(tgId, message.trim());
         } catch (Exception e) {
             log.error(e.getMessage());
         }
@@ -56,10 +56,10 @@ public class TelegramConsumer {
     @KafkaListener(topics = "payment_created", groupId = "notification-group")
     public void handlePaymentCreated(ConsumerRecord<String, String> record) {
         try {
-            Map<String, Object> data = objectMapper.readValue(record.value(), Map.class);
+            Map<String, Object> data = objectMapper.readValue(record.value(), new TypeReference<>() {});
             Long userId = Long.valueOf(data.get("userId").toString());
-            String payUrl = (String) data.get("payUrl");
-            service.sendPaymentLink(userId, payUrl);
+            String payUrl = data.get("payUrl").toString();
+            telegramService.sendPaymentLink(userId, payUrl);
             log.info("Отправлена ссылка на оплату: userId={}, payUrl={}", userId, payUrl);
         } catch (Exception e) {
             log.error("Ошибка обработки payment_created: {}", e.getMessage(), e);
@@ -69,19 +69,18 @@ public class TelegramConsumer {
     @KafkaListener(topics = "deposit_confirmed", groupId = "MONEY")
     public void handleSuccessfulDeposit(ConsumerRecord<String, String> record) {
         try {
-            Map<String, Object> data = objectMapper.readValue(record.value(), Map.class);
+            Map<String, Object> data = objectMapper.readValue(record.value(), new TypeReference<>() {});
             data.forEach((key, value) -> log.info("Key: {}, Value: {}", key, value));
             String chatId = data.get("chatId").toString();
             log.info("chatId = {}", chatId);
             String amount = data.get("amount").toString();
             String asset = data.get("currency").toString();
             String balance = data.get("balance").toString();
-            StringBuilder message = new StringBuilder();
-            message.append("🤑Successful deposit🤑\n");
-            message.append("Amount: ").append(amount).append("\n");
-            message.append("Asset: ").append(asset).append("\n");
-            message.append("Your current balance: ").append(balance).append("$ 💵");
-            service.sendMessage(chatId, message.toString().trim());
+            String message = "🤑Successful deposit🤑\n" +
+                    "Amount: " + amount + "\n" +
+                    "Asset: " + asset + "\n" +
+                    "Your current balance: " + balance + "$ 💵";
+            telegramService.sendMessage(chatId, message.trim());
         } catch (Exception e) {
             log.error(e.getMessage());
         }
@@ -93,7 +92,7 @@ public class TelegramConsumer {
         String chatId = record.key();
         String message = record.value();
         switch (partition) {
-            case 0, 1 -> service.sendMessage(chatId, message);
+            case 0, 1 -> telegramService.sendMessage(chatId, message);
             default -> log.error("Неверный выбор partition");
         }
     }
@@ -107,14 +106,14 @@ public class TelegramConsumer {
 
     @KafkaListener(topics = "ads", groupId = "ads-sub")
     public void sendNewAds(ConsumerRecord<String, String> record) {
-        producer.getUsers(record.key());
+        String category = record.key();
+        producer.getUsers(category);
         try {
             Thread.sleep(2000);
-            log.info(cacheSubscribedUsers.toString());
-            cacheSubscribedUsers.forEach(user -> {
-                service.sendMessage(String.valueOf(user), record.value());
-            });
-            log.info("Отправлены уведомления о новых объявлениях для категории {}: {} пользователей", record.key(), cacheSubscribedUsers);
+            List<UserRedis> users = userRedisService.findUsersByCategory(category);
+            log.info(users.toString());
+            users.forEach(user -> telegramService.sendMessage(user.getChatId(), record.value()));
+            log.info("Отправлены уведомления о новых объявлениях для категории {}: {} пользователей", record.key(), users);
         } catch (Exception e) {
             log.error("Error = {}", e.getMessage());
         }
@@ -123,31 +122,33 @@ public class TelegramConsumer {
     @KafkaListener(topics = "withdraw_confirmed", groupId = "MONEY")
     public void handleSuccessfulWithdraw(ConsumerRecord<String, String> record) {
         try {
-            Map<String, Object> data = objectMapper.readValue(record.value(), Map.class);
+            Map<String, Object> data = objectMapper.readValue(record.value(), new TypeReference<>() {});
             String userId = data.get("userId").toString();
             String chatId = data.get("chatId").toString();
             String amount = data.get("amount").toString();
             String currency = data.get("currency").toString();
             String balance = data.get("balance").toString();
-            StringBuilder message = new StringBuilder();
-            message.append("💸 Средства успешно выведены 💸\n");
-            message.append("Сумма: ").append(amount).append("\n");
-            message.append("Валюта: ").append(currency).append("\n");
-            message.append("Ваш текущий баланс: ").append(balance).append("$ 💵");
-            service.sendMessage(chatId, message.toString().trim());
+            String message = "💸 Средства успешно выведены 💸\n" +
+                    "Сумма: " + amount + "\n" +
+                    "Валюта: " + currency + "\n" +
+                    "Ваш текущий баланс: " + balance + "$ 💵";
+            telegramService.sendMessage(chatId, message.trim());
             log.info("Уведомление о выводе отправлено: userId={}, chatId={}, amount={}, currency={}", userId, chatId, amount, currency);
         } catch (Exception e) {
-            log.error("Ошибка обработки withdraw_confirmed");
+            throw new WithdrawException("Failed to withdraw funds, message { " + e.getMessage() + " }");
         }
     }
 
     @KafkaListener(topics = "response_sub_users", groupId = "subscribed_users")
     public void getSubScribedUsers(ConsumerRecord<String, String> record) {
         try {
-            List<Long> chatIds = objectMapper.readValue(record.value(), List.class);
-            cacheSubscribedUsers.clear();
-            cacheSubscribedUsers.addAll(chatIds.stream().map(String::valueOf).toList());
-            log.info("Получены подписчики: {}", cacheSubscribedUsers);
+            List<String> chatIds = objectMapper.readValue(record.value(), new TypeReference<>() {});
+            chatIds.forEach(
+                    chatId -> userRedisService.saveUser(UserRedis.builder()
+                    .chatId(chatId)
+                    .build())
+            );
+            log.info("Получены подписчики: {}", chatIds);
         } catch (Exception e) {
             log.error("Не удалось получить подписчиков категории {}: {}", record.value(), e.getMessage());
         }
@@ -157,11 +158,13 @@ public class TelegramConsumer {
     public void getCategoriesByTgId(ConsumerRecord<String, String> record) {
         try {
             String tgId = record.key();
-            List<String> categories = objectMapper.readValue(record.value(), List.class);
-
-            UserAdResponse response = new UserAdResponse();
-            response.setExpectedCategories(categories);
-            responseStore.put(tgId, response);
+            List<String> categories = objectMapper.readValue(record.value(), new TypeReference<>() {});
+            userRedisService.saveUser(
+                    UserRedis.builder()
+                    .tgId(tgId)
+                    .expectedCategories(categories)
+                    .build()
+            );
 
             categories.forEach(category -> producer.getAdsByCategory(category, Long.valueOf(tgId)));
             log.info("✅ Категории для tgId {}: {}", tgId, categories);
@@ -178,22 +181,16 @@ public class TelegramConsumer {
         try {
             List<Map<String, Object>> ads = objectMapper.readValue(rawMessage, new TypeReference<>() {});
             if (ads.isEmpty()) {
-                service.sendMessage(tgId, "Нет объявлений для категории.");
+                telegramService.sendMessage(tgId, "Нет объявлений для категории.");
                 log.info("Нет объявлений для tgId {}", tgId);
                 return;
             }
 
-            UserAdResponse response = responseStore.get(tgId);
-            if (response == null) {
-                log.warn("Нет ответа для tgId = {}", tgId);
-                return;
-            }
+            UserRedis response = userRedisService.findUserByTgId(tgId);
 
-            // Группируем объявления по категориям
             Map<String, List<Map<String, Object>>> adsByCategory = ads.stream()
                     .collect(Collectors.groupingBy(ad -> ad.getOrDefault("category", "unknown").toString()));
 
-            // Обрабатываем каждую категорию
             for (String category : adsByCategory.keySet()) {
                 StringBuilder adBuilder = new StringBuilder();
                 adBuilder.append("*Объявление в категории:* ").append(category).append("\n");
@@ -210,14 +207,12 @@ public class TelegramConsumer {
                     adBuilder.append("Нет активных объявлений\n");
                 }
 
-                // Отправляем сообщение для текущей категории
                 String categoryMessage = adBuilder.toString().trim();
                 if (!categoryMessage.isEmpty()) {
-                    service.sendMessage(tgId, categoryMessage);
+                    telegramService.sendMessage(tgId, categoryMessage);
                     log.info("Отправлено сообщение для tgId {} в категории {}:\n{}", tgId, category, categoryMessage);
                 }
 
-                // Сохраняем сообщение в response для отслеживания
                 response.getCategoryMessages().put(category, categoryMessage);
             }
 
@@ -226,13 +221,12 @@ public class TelegramConsumer {
 
             log.debug("Получено {} / {} категорий для tgId {}", received.size(), expected.size(), tgId);
 
-            // Если все категории обработаны, вызываем sendFinalAdMessage
             if (received.containsAll(expected)) {
                 sendFinalAdMessage(tgId, response);
             }
         } catch (Exception e) {
             log.error("Ошибка обработки объявления для tgId {}: {}", tgId, e.getMessage());
-            service.sendMessage(tgId, "Произошла ошибка при обработке объявлений.");
+            telegramService.sendMessage(tgId, "Произошла ошибка при обработке объявлений.");
         }
     }
 
@@ -262,12 +256,10 @@ public class TelegramConsumer {
         );
     }
 
-    private void sendFinalAdMessage(String tgId, UserAdResponse response) {
+    private void sendFinalAdMessage(String tgId, UserRedis response) {
         if (response.getCategoryMessages().isEmpty() || response.getCategoryMessages().values().stream().allMatch(String::isEmpty)) {
-            service.sendMessage(tgId, "В ваших подписках пока что нет доступных объявлений");
+            telegramService.sendMessage(tgId, "В ваших подписках пока что нет доступных объявлений");
             log.info("Отправлено сообщение об отсутствии объявлений для tgId {}", tgId);
         }
-        responseStore.remove(tgId);
-        log.info("Очищен responseStore для tgId {}", tgId);
     }
 }

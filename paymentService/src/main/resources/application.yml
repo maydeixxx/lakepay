@@ -9,7 +9,7 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: ${DB_MODE}
+      ddl-auto: ${DB_MODE:false}
 
   kafka:
     bootstrap-servers: kafka:29092
@@ -21,6 +21,11 @@ spring:
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:lakePayRedis}
+      port: ${SPRING_REDIS_PORT:6379}
 
 eureka:
   client:

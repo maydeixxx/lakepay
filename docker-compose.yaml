@@ -101,12 +101,11 @@ services:
       - maven-repo:/root/.m2/repository
     depends_on:
       - eureka-service
+      - lakePayRedis
       - gateway-api
       - zookeeper
       - lakePayPostgres
       - kafka
-    labels:
-      amplicode.image: springboot
     env_file: ".env"
 
   # External Images
@@ -133,8 +132,6 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
     depends_on:
       - zookeeper
-    labels:
-      amplicode.image: confluent/kafka
 
   lakePayPostgres:
     image: postgres:17.4
@@ -148,9 +145,20 @@ services:
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: lakepay_db
 
+  lakePayRedis:
+    image: redis:latest
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    environment:
+      - REDIS_PORT=6379
+
 volumes:
   maven-repo:
   userPostgres_data:
+  redis_data:
   adPostgres_data:
   kafka_data:
   postgres_data:

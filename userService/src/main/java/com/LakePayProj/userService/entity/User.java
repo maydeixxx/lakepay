@@ -9,6 +9,7 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -25,6 +26,9 @@ public class User {
 
     @Column(unique = true, nullable = false)
     private String username;
+
+    @Column(name = "subscriptions", updatable = true)
+    private List<String> categories;
 
     private String avatarUrl;
 
