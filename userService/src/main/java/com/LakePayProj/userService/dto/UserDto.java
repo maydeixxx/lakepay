@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 public record UserDto(
         Long id,
         Long telegramId,
-        String fullName,
         String username,
         String avatarUrl,
         UserRole role,

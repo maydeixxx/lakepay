@@ -18,6 +18,10 @@ public class UserDetailsImpl implements UserDetails {
         return List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
     }
 
+    public String getDisplayUsername() {
+        return user.getUsername();
+    }
+
     @Override
     public String getPassword() {
         return user.getCredential().getPasswordHash();
@@ -25,7 +29,7 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public String getUsername() {
-        return user.getUsername();
+        return user.getId().toString();
     }
 
     @Override

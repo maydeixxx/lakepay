@@ -15,7 +15,6 @@ import javax.crypto.SecretKey;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Date;
 
 
@@ -70,20 +69,17 @@ public class JwtTokenService {
                     .parseSignedClaims(token);
 
             return blockedTokenRepository.findByToken(token).isEmpty() &&
-                    claims.getPayload().getExpiration().after(new Date());
+                    !claims.getPayload().getExpiration().before(new Date());
         } catch (JwtException e) {
             return false;
         }
     }
 
     public void blockToken(String token) {
-        Instant now = Instant.now().plus(refreshTokenValidity);
-        ZoneId zoneId = ZoneId.systemDefault();
-
-        BlockedToken blockedToken = new BlockedToken();
-        blockedToken.setToken(token);
-        blockedToken.setExpiryDate(LocalDateTime.ofInstant(now, zoneId));
-
-        blockedTokenRepository.save(blockedToken);
+        Instant now = Instant.now();
+        blockedTokenRepository.save(BlockedToken.builder()
+                .token(token)
+                .expiryDate(LocalDateTime.from(now.plus(refreshTokenValidity)))
+                .build());
     }
 }
