@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.NullArgumentException;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.annotation.TopicPartition;
@@ -17,6 +18,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -33,27 +35,30 @@ public class UserConsumer {
 
     @KafkaListener(topics = "get_user_data_by_id_request", groupId = "userData")
     public void processUserIdRequest(ConsumerRecord<String, String> record) {
-        processRequest(record, Long::parseLong, id -> List.of(userRepository.findById(id)), "get_user_data_by_id_response");
+        processRequest(record, Long::parseLong, id -> List.of(userToMap(userRepository.findById(id))), "get_user_data_by_id_response");
     }
 
-    @KafkaListener(topics = "get_user_data_by_telegramId_request", groupId = "userData")
+    @KafkaListener(topics = "get_user_data_by_id_request", groupId = "userData")
     public void processUserTelegramIdRequest(ConsumerRecord<String, String> record) {
-        processRequest(record, Long::parseLong, tgId -> List.of(userRepository.findByTelegramId(tgId)), "get_user_data_by_telegramId_response");
+        processRequest(record, Long::parseLong, tgId -> List.of(userToMap(userRepository.findByTelegramId(tgId))), "get_user_data_by_id_response");
     }
 
     @KafkaListener(topics = "get_user_data_by_username_request", groupId = "userData")
     public void processUserUsernameRequest(ConsumerRecord<String, String> record) {
-        processRequest(record, value -> value, username -> List.of(userRepository.findByUsername(username)), "get_user_data_by_username_response");
+        processRequest(record, value -> value, username -> List.of(userToMap(userRepository.findByUsername(username))), "get_user_data_by_username_response");
     }
 
     @KafkaListener(topicPartitions = @TopicPartition(partitions = {"0"}, topic = "get_sub_users"), groupId = "userData")
     public void processUserCategoriesRequest(ConsumerRecord<String, String> record) {
-        processRequest(record, value -> value, userService::findUsersByCategory, "response_sub_users");
+        List<Map<String, Object>> users = userService.findUsersByCategory(record.value()).stream()
+                .map(this::userToMap)
+                .toList();
+        processRequest(record, value -> value, category -> userService.findUsersByCategory(category).stream().map(this::userToMap).toList(), "response_sub_users");
     }
 
 
     private <T> void processRequest(ConsumerRecord<String, String> record, java.util.function.Function<String, T> parser,
-                                    java.util.function.Function<T, List<Optional<User>>> finder, String responseTopic) {
+                                    java.util.function.Function<T, List<Map<String, Object>>> finder, String responseTopic) {
         T identifier;
         try {
             identifier = parser.apply(record.value());
@@ -62,36 +67,40 @@ public class UserConsumer {
             return;
         }
 
-        List<Optional<User>> optionalUsers = finder.apply(identifier);
-        if (optionalUsers.isEmpty()) {
+        List<Map<String, Object>> users = finder.apply(identifier);
+        if (users.isEmpty()) {
             kafkaTemplate.send(responseTopic, identifier.toString(), null);
             log.warn("User with identifier {} not found. Sent null response.", identifier);
             return;
         }
-        List<User> users = optionalUsers.stream()
-                .map(user -> user.orElseThrow(() -> new NotFoundException("User not found")))
-                .toList();
 
         publishUserResponse(users, responseTopic, record.key());
     }
 
 
-    private void publishUserResponse(List<User> users, String topic, String recordKey) {
+    private void publishUserResponse(List<Map<String, Object>> users, String topic, String recordKey) {
         try {
-            List<UserDto> userDTO = users.stream()
-                    .map(userMapper::toDto)
-                    .toList();
-            String responseJson = objectMapper.writeValueAsString(userDTO);
-            if (userDTO.size() <= 1) {
-                kafkaTemplate.send(topic, users.getFirst().getId().toString(), responseJson);
-                log.info("Published UserResponse to {} for userId={}: {}", topic, users.getFirst().getId().toString(), responseJson);
+            String responseJson = objectMapper.writeValueAsString(users);
+            if (users.size() <= 1) {
+                kafkaTemplate.send(topic, users.getFirst().get("id").toString(), responseJson);
+                log.info("Published UserResponse to {} for userId={}: {}", topic, users.getFirst().get("id").toString(), responseJson);
             } else {
                 kafkaTemplate.send(topic, recordKey, responseJson);
                 log.info("Published response: {} | in topic {} ", responseJson, topic);
             }
 
         } catch (JsonProcessingException e) {
-            log.error("Error serializing UserResponse for userId={}: {}", users.getFirst().getId().toString(), e.getMessage());
+            log.error("Error serializing UserResponse for userId={}: {}", users.getFirst().get("id").toString(), e.getMessage());
         }
+    }
+
+    private Map<String, Object> userToMap(Optional<User> optionalUser) {
+        User user = optionalUser.orElseThrow(() -> new NullArgumentException(""));
+        return Map.of(
+                "id", user.getId(),
+                "tgId", user.getTelegramId(),
+                "username", user.getUsername(),
+                "categories", user.getUsername()
+        );
     }
 }

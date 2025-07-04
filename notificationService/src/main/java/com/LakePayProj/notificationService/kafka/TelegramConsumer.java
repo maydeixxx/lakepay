@@ -1,5 +1,6 @@
 package com.LakePayProj.notificationService.kafka;
 
+import com.LakePayProj.notificationService.exceptions.WithdrawException;
 import com.LakePayProj.notificationService.models.redis.UserRedis;
 import com.LakePayProj.notificationService.services.TelegramService;
 import com.LakePayProj.notificationService.services.UserRedisService;
@@ -57,7 +58,7 @@ public class TelegramConsumer {
         try {
             Map<String, Object> data = objectMapper.readValue(record.value(), new TypeReference<>() {});
             Long userId = Long.valueOf(data.get("userId").toString());
-            String payUrl = (String) data.get("payUrl");
+            String payUrl = data.get("payUrl").toString();
             telegramService.sendPaymentLink(userId, payUrl);
             log.info("Отправлена ссылка на оплату: userId={}, payUrl={}", userId, payUrl);
         } catch (Exception e) {
@@ -109,7 +110,7 @@ public class TelegramConsumer {
         producer.getUsers(category);
         try {
             Thread.sleep(2000);
-            List<com.LakePayProj.notificationService.models.redis.UserRedis> users = userRedisService.findUsersByCategory(category);
+            List<UserRedis> users = userRedisService.findUsersByCategory(category);
             log.info(users.toString());
             users.forEach(user -> telegramService.sendMessage(user.getChatId(), record.value()));
             log.info("Отправлены уведомления о новых объявлениях для категории {}: {} пользователей", record.key(), users);
@@ -134,7 +135,7 @@ public class TelegramConsumer {
             telegramService.sendMessage(chatId, message.trim());
             log.info("Уведомление о выводе отправлено: userId={}, chatId={}, amount={}, currency={}", userId, chatId, amount, currency);
         } catch (Exception e) {
-            log.error("Ошибка обработки withdraw_confirmed");
+            throw new WithdrawException("Failed to withdraw funds, message { " + e.getMessage() + " }");
         }
     }
 
@@ -143,7 +144,7 @@ public class TelegramConsumer {
         try {
             List<String> chatIds = objectMapper.readValue(record.value(), new TypeReference<>() {});
             chatIds.forEach(
-                    chatId -> userRedisService.saveUser(com.LakePayProj.notificationService.models.redis.UserRedis.builder()
+                    chatId -> userRedisService.saveUser(UserRedis.builder()
                     .chatId(chatId)
                     .build())
             );
@@ -159,7 +160,7 @@ public class TelegramConsumer {
             String tgId = record.key();
             List<String> categories = objectMapper.readValue(record.value(), new TypeReference<>() {});
             userRedisService.saveUser(
-                    com.LakePayProj.notificationService.models.redis.UserRedis.builder()
+                    UserRedis.builder()
                     .tgId(tgId)
                     .expectedCategories(categories)
                     .build()
@@ -185,7 +186,7 @@ public class TelegramConsumer {
                 return;
             }
 
-            com.LakePayProj.notificationService.models.redis.UserRedis response = userRedisService.findUserByTgId(tgId);
+            UserRedis response = userRedisService.findUserByTgId(tgId);
 
             Map<String, List<Map<String, Object>>> adsByCategory = ads.stream()
                     .collect(Collectors.groupingBy(ad -> ad.getOrDefault("category", "unknown").toString()));

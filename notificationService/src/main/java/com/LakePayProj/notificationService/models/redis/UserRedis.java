@@ -12,6 +12,7 @@ import java.util.Map;
 @Builder
 public class UserRedis {
 
+    private String id;
     private String adCategory;
     private String chatId;
     private String tgId;

@@ -57,7 +57,7 @@ public class TelegramProducer {
     }
 
     public void getUserData(Long id) {
-        template.send("get_user_data_by_id_telegram_request", id.toString(), id.toString());
+        template.send("get_user_data_by_id_request", id.toString(), id.toString());
         log.info("Отправлено сообщение в get_user_data_by_id_request userId = {}", id);
     }
 }

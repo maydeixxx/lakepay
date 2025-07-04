@@ -1,6 +1,12 @@
 package com.LakePayProj.notificationService.services;
 
+import com.LakePayProj.notificationService.exceptions.SendMessageException;
+import com.LakePayProj.notificationService.exceptions.UserExistsInHash;
 import com.LakePayProj.notificationService.kafka.TelegramProducer;
+import com.LakePayProj.notificationService.models.redis.UserRedis;
+import com.LakePayProj.notificationService.repos.UserRedisRepo;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,14 +23,18 @@ import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScope
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class TelegramService extends TelegramLongPollingBot {
+
     private final TelegramProducer producer;
+    private final UserRedisService userRedisService;
+    private final UserRedisRepo userRedisRepo;
     private final List<String> categories = List.of("PUBG", "CS2", "FORTNITE", "DEADLOCK", "DOTA2");
-    private String chatIdHash;
+    private final ObjectMapper objectMapper;
 
     @Override
     public String getBotUsername() {
@@ -77,7 +87,14 @@ public class TelegramService extends TelegramLongPollingBot {
         Long chatId = update.getMessage().getChatId();
         Long tgId = update.getMessage().getFrom().getId();
         String text = update.getMessage().getText().trim();
-        chatIdHash = String.valueOf(chatId);
+        if (userRedisRepo.findByTgId(tgId.toString()).isEmpty()) {
+            userRedisService.saveUser(
+                    UserRedis.builder()
+                            .tgId(tgId.toString())
+                            .chatId(chatId.toString())
+                            .build()
+            );
+        }
 
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(chatId);
@@ -105,20 +122,31 @@ public class TelegramService extends TelegramLongPollingBot {
 
     public void sendPaymentLink(Long userId, String payUrl) {
         try {
-            producer.getUserData(userId);
+            if (userRedisRepo.findUserRedisById(userId.toString()).isEmpty()) {
+                producer.getUserData(userId);
+            }
+            String chatId = userRedisService.findUserById(userId.toString()).getChatId();
             Thread.sleep(2000);
-            sendMessage(chatIdHash, "Ссылка на оплату: " + payUrl);
-            log.info("Отправлена ссылка на оплату: userId={}, chatId={}, payUrl={}", userId, chatIdHash, payUrl);
+            sendMessage(chatId, "Ссылка на оплату: " + payUrl);
+            log.info("Отправлена ссылка на оплату: userId={}, chatId={}, payUrl={}", userId, chatId, payUrl);
         } catch (Exception e) {
             log.error("Ошибка отправки ссылки на оплату: userId={}, error={}", userId, e.getMessage(), e);
         }
     }
 
-    @KafkaListener(topics = "get_user_data_by_id_telegram_response", groupId = "userData")
+    @KafkaListener(topics = "get_user_data_by_id_response", groupId = "userData")
     public void getUserDataResponse(ConsumerRecord<String, String> record) {
         try {
-            chatIdHash = record.value();
-            log.info("Записан chatId = {}", chatIdHash);
+            List<Map<String, Object>> listUsers = objectMapper.readValue(record.value(), new TypeReference<>() {});
+            Map<String, Object> userData = listUsers.getFirst();
+            userRedisService.saveUser(
+                    UserRedis.builder()
+                            .id(userData.get("id").toString())
+                            .chatId(userData.get("tgId").toString())
+                            .tgId(userData.get("tgId").toString())
+                            .build()
+            );
+            log.info("Записан chatId = {}", record.value());
         } catch (Exception e) {
             log.error("Ошибка при получении сообщения в get_user_data_by_id_telegram_response. {}", e.getMessage());
         }
@@ -131,7 +159,7 @@ public class TelegramService extends TelegramLongPollingBot {
         try {
             execute(sendMessage);
         } catch (TelegramApiException e) {
-            log.error("Ошибка при отправке сообщения вручную: ", e);
+            throw new SendMessageException(String.format("failed to send message to %s", chatId));
         }
     }
 }

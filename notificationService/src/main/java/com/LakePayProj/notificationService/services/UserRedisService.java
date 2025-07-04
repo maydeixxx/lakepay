@@ -1,5 +1,6 @@
 package com.LakePayProj.notificationService.services;
 
+import com.LakePayProj.notificationService.exceptions.UserExistsInHash;
 import com.LakePayProj.notificationService.models.redis.UserRedis;
 import com.LakePayProj.notificationService.repos.UserRedisRepo;
 import jakarta.ws.rs.NotFoundException;
@@ -16,7 +17,11 @@ public class UserRedisService {
     private final UserRedisRepo userRedisRepo;
 
     public void saveUser(UserRedis userRedis) {
-        userRedisRepo.save(userRedis);
+        if (userRedisRepo.findByChatId(userRedis.getChatId()).isEmpty()) {
+            userRedisRepo.save(userRedis);
+        } else {
+            throw new UserExistsInHash(String.format("user(%s) already exists in hash", userRedis.getChatId()));
+        }
     }
 
     @Cacheable(value = "users", key = "#category")
@@ -33,4 +38,10 @@ public class UserRedisService {
         );
     }
 
+    @Cacheable(value = "users", key = "#id")
+    public UserRedis findUserById(String id) {
+        return userRedisRepo.findUserRedisById(id).orElseThrow(
+                () -> new NotFoundException(String.format("user by id {%s} not found", id))
+        );
+    }
 }

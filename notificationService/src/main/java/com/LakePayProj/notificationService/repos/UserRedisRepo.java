@@ -12,5 +12,7 @@ public interface UserRedisRepo extends CrudRepository<UserRedis, String> {
 
     Optional<List<UserRedis>> findAllByAdCategory(String adCategory);
     Optional<UserRedis> findByTgId(String tgId);
+    Optional<UserRedis> findByChatId(String chatId);
+    Optional<UserRedis> findUserRedisById(String id);
 
 }
