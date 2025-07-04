@@ -15,6 +15,11 @@ spring:
   application:
     name: notificationService
 
+  data:
+    redis:
+      port: ${SPRING_REDIS_PORT:6379}
+      host: ${SPRING_REDIS_HOST:lakePayRedis}
+
 token:
   telegram:
     bot: ${TG_BOT_TOKEN}

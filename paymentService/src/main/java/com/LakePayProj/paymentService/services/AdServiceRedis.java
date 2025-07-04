@@ -20,7 +20,7 @@ public class AdServiceRedis {
     @Cacheable(value = "ads", key = "#adId")
     public AdRedis getAdById(Long adId) {
         return adRepoRedis.findById(adId).orElseThrow(
-                () -> new AdNotFoundException(String.format("Ad by id %s noty found", adId))
+                () -> new AdNotFoundException(String.format("Ad by id %s not found", adId))
         );
     }
 

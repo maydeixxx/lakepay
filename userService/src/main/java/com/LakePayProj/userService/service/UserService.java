@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -65,6 +66,13 @@ public class UserService {
 
     public Optional<User> findByUsername(String username) {
         return userRepository.findByUsername(username);
+    }
+
+    public List<Optional<User>> findUsersByCategory(String category) {
+        return userRepository.findAll().stream()
+                .filter(user -> user.getCategories().contains(category))
+                .map(Optional::ofNullable)
+                .toList();
     }
 
     @Transactional

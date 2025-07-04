@@ -6,7 +6,6 @@ import com.LakePayProj.userService.dto.response.ApiResponse;
 import com.LakePayProj.userService.entity.User;
 import com.LakePayProj.userService.exception.BadRequestException;
 import com.LakePayProj.userService.exception.DatabaseException;
-import com.LakePayProj.userService.exception.UserAlreadyExistsException;
 import com.LakePayProj.userService.exception.UserNotFoundException;
 import com.LakePayProj.userService.kafka.UserProducer;
 import com.LakePayProj.userService.mapper.IUserMapper;
@@ -20,7 +19,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional;
 
 @Slf4j
 @RestController

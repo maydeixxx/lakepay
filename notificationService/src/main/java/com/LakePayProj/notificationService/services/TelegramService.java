@@ -1,4 +1,4 @@
-package com.LakePayProj.notificationService.tgBot;
+package com.LakePayProj.notificationService.services;
 
 import com.LakePayProj.notificationService.kafka.TelegramProducer;
 import jakarta.annotation.PostConstruct;

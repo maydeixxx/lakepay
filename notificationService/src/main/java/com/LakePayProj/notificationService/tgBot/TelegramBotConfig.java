@@ -1,6 +1,6 @@
-package com.LakePayProj.notificationService.tgBot.config;
+package com.LakePayProj.notificationService.tgBot;
 
-import com.LakePayProj.notificationService.tgBot.TelegramService;
+import com.LakePayProj.notificationService.services.TelegramService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
