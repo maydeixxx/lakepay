@@ -1,11 +1,13 @@
 package com.LakePayProj.paymentService.services;
 
 import com.LakePayProj.paymentService.exceptions.*;
+import com.LakePayProj.paymentService.models.DTOs.AdUpdateDto;
 import com.LakePayProj.paymentService.models.redis.AdRedis;
 import com.LakePayProj.paymentService.models.redis.UserRedis;
 import com.LakePayProj.paymentService.repos.PaymentRepository;
 import com.LakePayProj.paymentService.services.kafka.PaymentProducer;
 import com.LakePayProj.paymentService.models.entity.PaymentEntity;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +25,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
@@ -36,7 +37,6 @@ public class PaymentService implements IPaymentService {
     private final PaymentRepository paymentRepository;
     private final UserServiceRedis userServiceRedis;
     private final AdServiceRedis adServiceRedis;
-    private final ConcurrentHashMap<Long, Long> sellerIdCache = new ConcurrentHashMap<>();
 
     @Value("${crypto-bot.api}")
     private String apiUrl;
@@ -58,7 +58,7 @@ public class PaymentService implements IPaymentService {
                     entity,
                     String.class
             );
-            Map<String, Object> responseData = objectMapper.readValue(response.getBody(), Map.class);
+            Map<String, Object> responseData = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
             if (!(Boolean) responseData.getOrDefault("ok", false)) {
                 log.error("Crypto Bot API error: {}", responseData.get("error"));
                 return null;
@@ -104,7 +104,9 @@ public class PaymentService implements IPaymentService {
 
             producer.getAdData(adId.toString(), "price_credentials");
             Thread.sleep(2000);
-            AdRedis ad = adServiceRedis.getAdById(adId);
+            AdRedis ad = adServiceRedis.getAdById(adId).orElseThrow(
+                    () -> new AdNotFoundException(String.format("ad by id {%s} not found", adId))
+            );
             if (ad == null) {
                 log.error("Данные не получены!!");
                 throw new AdNotFoundException(String.format("Ad by id %s noty found", adId));
@@ -133,7 +135,6 @@ public class PaymentService implements IPaymentService {
                     "login", login,
                     "sellerId", sellerId
             ));
-            sellerIdCache.clear();
 
             producer.sendAdData(message);
             updateAdStatus(adId);
@@ -151,7 +152,7 @@ public class PaymentService implements IPaymentService {
 
     public Long getSellerIdConsume(Long adId) {
         try {
-            Long sellerId = sellerIdCache.get(adId);
+            Long sellerId = adServiceRedis.getAdById(adId).orElseThrow().getSellerId();
             if (sellerId != null) {
                 log.info("sellerId={} найден в кэше для adId={}", sellerId, adId);
                 return sellerId;
@@ -159,7 +160,7 @@ public class PaymentService implements IPaymentService {
 
             producer.getAdData(adId.toString(), "sellerId");
             Thread.sleep(2000);
-            sellerId = sellerIdCache.get(adId);
+            sellerId = adServiceRedis.getAdById(adId).orElseThrow().getSellerId();
             if (sellerId != null) {
                 log.info("sellerId={} получен для adId={}", sellerId, adId);
                 return sellerId;
@@ -175,7 +176,7 @@ public class PaymentService implements IPaymentService {
     public void getUserData(ConsumerRecord<String, String> record) {
         try {
             log.info("Получено сообщение в responseToUserData: key={}, value={}", record.key(), record.value());
-            Map<String, Object> userData = objectMapper.readValue(record.value(), Map.class);
+            Map<String, Object> userData = objectMapper.readValue(record.value(), new TypeReference<>() {});
             Long userId = Long.parseLong(record.key());
             Long tgId = Long.parseLong(userData.get("tgId").toString());
             BigDecimal balance = new BigDecimal(userData.get("balance").toString());
@@ -196,17 +197,28 @@ public class PaymentService implements IPaymentService {
         if (record.partition() == 0) {
             try {
                 log.info("Получено сообщение в get_ad_data_response partition=0: key={}, value={}", record.key(), record.value());
-                Map<String, Object> data = objectMapper.readValue(record.value(), Map.class);
+                Map<String, Object> data = objectMapper.readValue(record.value(), new TypeReference<>() {});
                 Long adId = Long.parseLong(data.get("adId").toString());
                 Long sellerId = Long.parseLong(data.get("sellerId").toString());
-                sellerIdCache.put(adId, sellerId);
+                if (adServiceRedis.getAdById(adId).isEmpty()) {
+                    adServiceRedis.saveAd(AdRedis.builder()
+                            .id(adId)
+                            .sellerId(sellerId)
+                            .build()
+                    );
+                } else {
+                    AdUpdateDto updates = AdUpdateDto.builder()
+                            .sellerId(sellerId)
+                            .build();
+                    adServiceRedis.updateCacheAd(adId, updates, "sellerId");
+                }
             } catch (Exception e) {
                 log.error("Ошибка обработки get_ad_data: {}", e.getMessage());
             }
         } else if (record.partition() == 1) {
             try {
                 log.info("Получено сообщение в get_ad_data_response partition=1: key={}, value={}", record.key(), record.value());
-                Map<String, Object> adData = objectMapper.readValue(record.value(), Map.class);
+                Map<String, Object> adData = objectMapper.readValue(record.value(), new TypeReference<>() {});
 
                 BigDecimal price = BigDecimal.valueOf(Double.parseDouble(adData.get("price").toString()));
                 Long adId = Long.parseLong(record.key());
@@ -246,7 +258,7 @@ public class PaymentService implements IPaymentService {
                     entity,
                     String.class
             );
-            Map<String, Object> responseData = objectMapper.readValue(response.getBody(), Map.class);
+            Map<String, Object> responseData = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
             if (!(Boolean) responseData.getOrDefault("ok", false)) {
                 log.error("Не получилось отправить средства: {}", responseData.get("error"));
@@ -273,8 +285,9 @@ public class PaymentService implements IPaymentService {
                     String.class
             );
 
-            Map<String, Object> data = objectMapper.readValue(response.getBody(), Map.class);
+            Map<String, Object> data = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
             List<Map<String, Object>> rates = (List<Map<String, Object>>) data.get("result");
+
             Optional<Map<String, Object>> rateData = rates.stream()
                     .filter(r -> sourceAsset.equals(r.get("source")) && targetAsset.equals(r.get("target")))
                     .findFirst();
@@ -292,7 +305,7 @@ public class PaymentService implements IPaymentService {
 
     @Transactional
     public BigDecimal updateUserBalance(Long userId, BigDecimal amount, String operation, String asset) {
-        BigDecimal newBalance = null;
+        BigDecimal newBalance;
         try {
             producer.getUserDataById(userId);
             Thread.sleep(2000);
@@ -323,9 +336,7 @@ public class PaymentService implements IPaymentService {
                     }
                     newBalance = balance.add(amountInUsd);
                 }
-                case "buy", "withdraw" -> {
-                    newBalance = balance.subtract(amount);
-                }
+                case "buy", "withdraw" -> newBalance = balance.subtract(amount);
                 case "sellerUpdate" -> newBalance = balance.add(amount);
                 default -> {
                     log.error("Недопустимая операция: userId={}, operation={}", userId, operation);

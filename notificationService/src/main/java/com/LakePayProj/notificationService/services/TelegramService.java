@@ -1,7 +1,6 @@
 package com.LakePayProj.notificationService.services;
 
 import com.LakePayProj.notificationService.exceptions.SendMessageException;
-import com.LakePayProj.notificationService.exceptions.UserExistsInHash;
 import com.LakePayProj.notificationService.kafka.TelegramProducer;
 import com.LakePayProj.notificationService.models.redis.UserRedis;
 import com.LakePayProj.notificationService.repos.UserRedisRepo;
@@ -36,13 +35,16 @@ public class TelegramService extends TelegramLongPollingBot {
     private final List<String> categories = List.of("PUBG", "CS2", "FORTNITE", "DEADLOCK", "DOTA2");
     private final ObjectMapper objectMapper;
 
+    @Value("${telegram.bot.username}")
+    private String botUsername;
+
+    @Value("${telegram.bot.token}")
+    private String token;
+
     @Override
     public String getBotUsername() {
-        return "@lakePayBot";
+        return botUsername;
     }
-
-    @Value("${token.telegram.bot}")
-    private String token;
 
     @Override
     public String getBotToken() {
@@ -107,17 +109,13 @@ public class TelegramService extends TelegramLongPollingBot {
             case "/info" ->
                     sendMessage.setText("Я бот биржи аккаунтов LakePay. Через меня можно зарегистрироваться и получать уведомления о новых объявлениях.");
             case "/categories" -> sendMessage.setText("Доступные категории:\n" + String.join("\n", categories));
-            case "/available_ads" -> {
-                producer.availableAds(tgId);
-            }
+            case "/available_ads" -> producer.availableAds(tgId);
             default -> sendMessage.setText("Неизвестная команда. Напишите /help для списка доступных команд.");
         }
 
         producer.sendTgAndChatId(tgId, chatId);
 
-        if (sendMessage.getText() != null) {
-            execute(sendMessage);
-        }
+        execute(sendMessage);
     }
 
     public void sendPaymentLink(Long userId, String payUrl) {

@@ -21,8 +21,9 @@ spring:
       port: ${SPRING_REDIS_PORT:6379}
       host: ${SPRING_REDIS_HOST:lakePayRedis}
 
-token:
-  telegram:
-    bot: ${TG_BOT_TOKEN}
+telegram:
+  bot:
+    username: ${TG_BOT_USERNAME}
+    token: ${TG_BOT_TOKEN}
 
 debug: ${DEBUG_MODE}
