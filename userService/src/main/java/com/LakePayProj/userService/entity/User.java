@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "users")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -25,10 +24,7 @@ public class User {
     @Column(unique = true)
     private Long telegramId;
 
-    @Column(nullable = false)
-    private String fullName;
-
-    @Column(unique = true, nullable = false, updatable = false)
+    @Column(unique = true, nullable = false)
     private String username;
 
     @Column(name = "subscriptions", updatable = true)

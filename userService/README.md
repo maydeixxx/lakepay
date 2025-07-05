@@ -57,7 +57,7 @@ mvn clean
 ### 1. AuthController (`/auth`)
 Этот контроллер отвечает за аутентификацию, регистрацию и управление сессиями пользователей.
 
-- **POST `/auth/telegram`**
+- **POST `/auth/telegram/auth`**
     - **Описание**: Аутентификация пользователя через Telegram. Проверяет валидность данных от Telegram и создает нового пользователя, если он еще не зарегистрирован.
     - **Запрос**: `TelegramAuthRequest` (JSON с `id`, `first_name`, `last_name`, `username`, `photo_url`, `auth_date`, `hash`).
     - **Ответ**: `ApiResponse<AuthResponse>` с `accessToken` и `refreshToken` в cookie.
@@ -96,31 +96,10 @@ mvn clean
 ### 2. UserSelfController (`/users/self`)
 Контроллер для управления данными текущего аутентифицированного пользователя.
 
-- **GET `/users/self`**
+- **GET `/users/self/`**
     - **Описание**: Получение данных текущего пользователя.
     - **Ответ**: `ApiResponse<UserDto>` с данными пользователя.
     - **Статус**: 200 (успех) или 404 (если пользователь не найден, `UserNotFoundException`).
-
-- **POST `/users/self/connect-telegram`**
-    - **Описание**: Привязка Telegram-аккаунта к учетной записи текущего аутентифицированного пользователя. Проверяет валидность данных Telegram и обновляет `telegramId` пользователя, если Telegram-аккаунт еще не привязан к другой учетной записи.
-    - **Запрос**: `TelegramAuthRequest (JSON с `id`, `first_name`, `last_name`, `username`, `photo_url`, `auth_date`, `hash`).
-    - **Ответ**: `ApiResponse<UserDto>` с обновленными данными пользователя.
-    - **Статус**:
-        - 200 (успех).
-        - 400 (если Telegram-аккаунт уже привязан, `BadRequestException`).
-        - 401 (если данные Telegram недействительны, `InvalidTokenException`).
-        - 404 (если пользователь не найден, `UserNotFoundException`).
-        - 500 (если обновление провалилось, `DatabaseException`).
-
-- **POST `/users/self/disconnect-telegram`**
-    - **Описание**: Отвязка Telegram-аккаунта от учетной записи текущего аутентифицированного пользователя. Устанавливает `telegramId` в `null`, если Telegram-аккаунт был привязан.
-    - **Запрос**: Нет тела запроса.
-    - **Ответ**: `ApiResponse<UserDto>` с обновленными данными пользователя.
-    - **Статус**:
-        - 200 (успех).
-        - 400 (если Telegram-аккаунт не привязан, `BadRequestException`).
-        - 404 (если пользователь не найден, `UserNotFoundException`).
-        - 500 (если обновление провалилось, `DatabaseException`).
 
 - **PUT `/users/self/update`**
     - **Описание**: Обновление данных текущего пользователя.
@@ -215,10 +194,10 @@ mvn clean
 
 ## Модели
 
-- **UserDto**: Содержит поля `id`, `telegramId`, `fullName`, `username`, `avatarUrl`, `role`, `creationDate`. Используется в админских эндпоинтах для полного доступа к данным.
-- **PublicUserDto**: Содержит поля `username`, `fullName`, `avatarUrl`, `role`, `creationDate`. Используется в публичных эндпоинтах для ограниченного доступа.
+- **UserDto**: Содержит поля `id`, `telegramId`, `username`, `avatarUrl`, `role`, `creationDate`. Используется в админских эндпоинтах для полного доступа к данным.
+- **PublicUserDto**: Содержит поля `username`, `avatarUrl`, `role`, `creationDate`. Используется в публичных эндпоинтах для ограниченного доступа.
 - **AuthRequest**: Содержит `username` и `password` для входа.
-- **RegisterRequest**: Содержит `fullName`, `username` и `password` для регистрации.
+- **RegisterRequest**: Содержит `username` и `password` для регистрации.
 - **TelegramAuthRequest**: Содержит данные от Telegram (`id`, `first_name`, `last_name`, `username`, `photo_url`, `auth_date`, `hash`).
 - **UpdatePasswordRequest**: Содержит `currentPassword` и `newPassword` для обновления пароля.
 - **AuthResponse**: Содержит `accessToken`.
