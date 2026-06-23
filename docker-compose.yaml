@@ -1,0 +1,164 @@
+services:
+  # Production services
+  eureka-service:
+    build:
+      context: .
+      dockerfile: eurekaService/Dockerfile
+      target: ${TARGET}
+    restart: unless-stopped
+    ports:
+      - "8761:8761"
+    volumes:
+      - maven-repo:/root/.m2/repository
+    env_file: ".env"
+
+  ad-service:
+    build:
+      context: .
+      dockerfile: adService/Dockerfile
+      target: ${TARGET}
+    restart: unless-stopped
+    ports:
+      - "8780:8780"
+    volumes:
+      - maven-repo:/root/.m2/repository
+    depends_on:
+      - gateway-api
+      - eureka-service
+      - lakePayPostgres
+      - kafka
+    env_file: ".env"
+
+  user-service:
+    build:
+      context: .
+      dockerfile: userService/Dockerfile
+      target: ${TARGET}
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    volumes:
+      - maven-repo:/root/.m2/repository
+    depends_on:
+      - gateway-api
+      - eureka-service
+      - lakePayPostgres
+      - kafka
+    env_file: ".env"
+
+  gateway-api:
+    build:
+      context: .
+      dockerfile: gatewayApi/Dockerfile
+      target: ${TARGET}
+    restart: unless-stopped
+    ports:
+      - "8990:8990"
+    volumes:
+      - maven-repo:/root/.m2/repository
+    depends_on:
+      - eureka-service
+    env_file: ".env"
+
+  chat-service:
+    build:
+      context: .
+      dockerfile: chatService/Dockerfile
+      target: ${TARGET}
+    restart: unless-stopped
+    ports:
+      - "8082:8082"
+    volumes:
+      - maven-repo:/root/.m2/repository
+    depends_on:
+      - lakePayPostgres
+      - eureka-service
+    env_file: ".env"
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: notificationService/Dockerfile
+      target: ${TARGET}
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - maven-repo:/root/.m2/repository
+    depends_on:
+      - kafka
+    env_file: ".env"
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: paymentService/Dockerfile
+      target: ${TARGET}
+    restart: unless-stopped
+    ports:
+      - "8083:8083"
+    volumes:
+      - maven-repo:/root/.m2/repository
+    depends_on:
+      - eureka-service
+      - lakePayRedis
+      - gateway-api
+      - zookeeper
+      - lakePayPostgres
+      - kafka
+    env_file: ".env"
+
+  # External Images
+  zookeeper:
+    image: zookeeper:3.9.3
+    restart: unless-stopped
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.9.0
+    restart: unless-stopped
+    ports:
+      - "29092:29092"
+      - "9092:9092"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    depends_on:
+      - zookeeper
+
+  lakePayPostgres:
+    image: postgres:17.4
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: lakepay_db
+
+  lakePayRedis:
+    image: redis:latest
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    environment:
+      - REDIS_PORT=6379
+
+volumes:
+  maven-repo:
+  userPostgres_data:
+  redis_data:
+  adPostgres_data:
+  kafka_data:
+  postgres_data:

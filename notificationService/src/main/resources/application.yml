@@ -1,0 +1,28 @@
+server:
+  port: 9090
+
+spring:
+  kafka:
+    bootstrap-servers: kafka:29092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+  application:
+    name: notificationService
+
+
+  data:
+    redis:
+      port: ${SPRING_REDIS_PORT:6379}
+      host: ${SPRING_REDIS_HOST:lakePayRedis}
+
+token:
+  telegram:
+    bot: ${TG_BOT_TOKEN}
+
+debug: ${DEBUG_MODE}

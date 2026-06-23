@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: gatewayApi
+  cloud:
+    gateway:
+      routes:
+        - id: userService
+          uri: lb://userService
+          predicates:
+            - Path=/user/**
+        - id: adService
+          uri: lb://adService
+          predicates:
+            - Path=/product/**
+        - id: paymentService
+          uri: lb://paymentService
+          predicates:
+            - Path=/payment/**
+        - id: chatService
+          uri: lb://chatService
+          predicates:
+            - Path=/chat/**
+
+server:
+  port: 8990
+  tomcat:
+    remote-ip-header: X-Forwarded-For
+    protocol-header: X-Forwarded-Proto
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-service:8761/eureka/
+
+debug: ${DEBUG_MODE:false}
